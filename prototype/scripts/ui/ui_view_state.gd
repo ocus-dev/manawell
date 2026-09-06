@@ -89,6 +89,7 @@ static func _expedition_view(account: RefCounted, catalog: RefCounted, destinati
 	var well_definition: Dictionary = catalog.get_well(destination_id)
 	var selected_loadout_id: String = account.get_loadout_for_well(destination_id)
 	var well_commissioned: bool = account.is_well_commissioned(destination_id)
+	var first_expedition: bool = destination_id == "well_1" and account.commissioned_wells.is_empty()
 	var well_2_commissioned: bool = account.is_well_commissioned("well_2")
 	var loadouts: Array[Dictionary] = []
 	for loadout_id in LoadoutScript.IDS:
@@ -104,11 +105,11 @@ static func _expedition_view(account: RefCounted, catalog: RefCounted, destinati
 	var active_hero_id: String = account.get_active_hero_id()
 	var guard_id: String = account.get_guard_for_well(destination_id)
 	var ready: bool = run_state == null or run_state.phase == RunStateScript.Phase.READY or run_state.phase == RunStateScript.Phase.SUCCESS or run_state.phase == RunStateScript.Phase.FAILED
-	var start_available: bool = ready and well_commissioned and not active_hero_id.is_empty() and LoadoutScript.is_available(selected_loadout_id, well_2_commissioned)
+	var start_available: bool = ready and (well_commissioned or first_expedition) and not active_hero_id.is_empty() and LoadoutScript.is_available(selected_loadout_id, well_2_commissioned)
 	var disabled_reason: String = ""
 	if not ready:
 		disabled_reason = "Finish the current extraction before starting another."
-	elif not well_commissioned:
+	elif not well_commissioned and not first_expedition:
 		disabled_reason = "Commission this well through a qualifying harvest first."
 	elif active_hero_id.is_empty():
 		disabled_reason = "Choose an expedition hero first."
@@ -135,6 +136,7 @@ static func _well_view(account: RefCounted, catalog: RefCounted, well_id: String
 	var commissioned: bool = account.is_well_commissioned(well_id)
 	var guard_id: String = account.get_guard_for_well(well_id)
 	var active_here: bool = well_id == active_well_id
+	var first_expedition: bool = well_id == "well_1" and account.commissioned_wells.is_empty()
 	var rate: float = float(rates.get(well_id, 0.0)) * 60.0
 	var state_id: String = "locked"
 	var state_label: String = "Locked"
@@ -162,6 +164,7 @@ static func _well_view(account: RefCounted, catalog: RefCounted, well_id: String
 		"availability_reason": availability_reason,
 		"selected": well_id == destination_id,
 		"prepare_available": unlocked and not active_here,
+		"start_available": unlocked and not active_here and (commissioned or first_expedition),
 		"activity_label": "You are here · %s" % _hero_label(catalog, account.get_active_hero_id()) if active_here else "",
 		"passive_rate_per_minute": rate if commissioned and not active_here else 0.0,
 		"guard": {

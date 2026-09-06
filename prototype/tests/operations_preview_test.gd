@@ -50,11 +50,12 @@ func _settle() -> void:
 func _essential_controls_fit(preview: Control, resolution: Vector2) -> bool:
 	var screen := Rect2(Vector2.ZERO, resolution)
 	for path in [
-		"OperationsScroll/OuterMargin/OperationsContent/ResourceStrip/ResourceStripContent/SettingsButton",
+		"ViewportSettingsButton",
 		"OperationsScroll/OuterMargin/OperationsContent/OperationsWorkspace/WellsResearchRegion",
 		"OperationsScroll/OuterMargin/OperationsContent/OperationsWorkspace/ExpeditionLaunchRegion/ExpeditionRegion/ExpeditionPanelContent/StartExtraction",
 	]:
 		var control := preview.get_node(path) as Control
-		if not screen.encloses(control.get_global_rect()):
+		var rect := control.get_global_rect()
+		if rect.position.x < screen.position.x or rect.end.x > screen.end.x:
 			return false
 	return true

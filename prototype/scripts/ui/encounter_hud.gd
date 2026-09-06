@@ -188,6 +188,7 @@ func _on_ability_requested(ability_id: String) -> void:
 func _show_settings(opener: Control = null) -> void:
 	settings_opener = opener if is_instance_valid(opener) else get_viewport().gui_get_focus_owner()
 	settings_panel.visible = true
+	settings_panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	settings_panel.configure(view_state.get("notices", {}))
 	settings_panel.get_node("SettingsContent/RetrySave").grab_focus()
 

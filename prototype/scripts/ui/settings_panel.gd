@@ -7,7 +7,7 @@ signal developer_toggle_requested
 signal closed
 
 var developer_section: VBoxContainer
-var confirmation: PanelContainer
+var confirmation_dialog: ConfirmationDialog
 
 func _ready() -> void:
 	if developer_section == null:
@@ -19,32 +19,25 @@ func configure(view_data: Dictionary) -> void:
 	developer_section.visible = bool(view_data.get("developer_mode", false))
 	get_node("SettingsContent/RetrySave").disabled = not bool(view_data.get("pending_save", false))
 	get_node("SettingsContent/RetrySettlement").disabled = float(view_data.get("offline_pending_total", 0.0)) <= 0.0
-	_hide_confirmation()
 
 func request_clear() -> void:
-	confirmation.visible = true
-	confirmation.custom_minimum_size = Vector2(0, 136)
-	confirmation.move_to_front()
-	confirmation.get_node("ClearConfirmationContent/CancelClear").grab_focus()
+	confirmation_dialog.popup_centered()
+	confirmation_dialog.get_ok_button().grab_focus()
 
 func _on_confirm_clear() -> void:
-	confirmation.visible = false
+	confirmation_dialog.hide()
 	clear_requested.emit()
 
 func _on_cancel_clear() -> void:
-	_hide_confirmation()
-
-func _hide_confirmation() -> void:
-	if confirmation != null:
-		confirmation.visible = false
+	confirmation_dialog.hide()
 
 func _input(event: InputEvent) -> void:
 	if not visible or not event is InputEventKey or not event.pressed or event.echo:
 		return
 	if event.keycode == KEY_ESCAPE:
 		get_viewport().set_input_as_handled()
-		if confirmation.visible:
-			_hide_confirmation()
+		if confirmation_dialog.visible:
+			confirmation_dialog.hide()
 		else:
 			closed.emit()
 	elif event.keycode == KEY_E or event.keycode == KEY_SPACE:
@@ -100,27 +93,12 @@ func _build() -> void:
 	close_button.custom_minimum_size = Vector2(0, 40)
 	close_button.pressed.connect(closed.emit)
 	content.add_child(close_button)
-	confirmation = PanelContainer.new()
-	confirmation.name = "ClearConfirmation"
-	confirmation.custom_minimum_size = Vector2(0, 136)
-	confirmation.visible = false
-	content.add_child(confirmation)
-	var confirmation_content := VBoxContainer.new()
-	confirmation_content.name = "ClearConfirmationContent"
-	confirmation.add_child(confirmation_content)
-	var warning := Label.new()
-	warning.text = "Clear saved progress? This restores the fresh Well 1 and Hero 1 account."
-	warning.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	confirmation_content.add_child(warning)
-	var confirm := Button.new()
-	confirm.name = "ConfirmClear"
-	confirm.text = "Confirm clear"
-	confirm.custom_minimum_size = Vector2(0, 40)
-	confirm.pressed.connect(_on_confirm_clear)
-	confirmation_content.add_child(confirm)
-	var cancel := Button.new()
-	cancel.name = "CancelClear"
-	cancel.text = "Cancel"
-	cancel.custom_minimum_size = Vector2(0, 40)
-	cancel.pressed.connect(_on_cancel_clear)
-	confirmation_content.add_child(cancel)
+	confirmation_dialog = ConfirmationDialog.new()
+	confirmation_dialog.name = "ClearConfirmation"
+	confirmation_dialog.title = "Clear saved progress"
+	confirmation_dialog.dialog_text = "Clear saved progress? This restores the fresh Well 1 and Hero 1 account."
+	confirmation_dialog.ok_button_text = "Confirm clear"
+	confirmation_dialog.add_cancel_button("Cancel")
+	confirmation_dialog.confirmed.connect(_on_confirm_clear)
+	confirmation_dialog.canceled.connect(_on_cancel_clear)
+	add_child(confirmation_dialog)

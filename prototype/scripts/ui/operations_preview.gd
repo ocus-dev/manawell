@@ -8,11 +8,15 @@ const HeroPickerScript = preload("res://scripts/ui/hero_picker.gd")
 const ExpeditionPanelScript = preload("res://scripts/ui/expedition_panel.gd")
 const ResourceStripScript = preload("res://scripts/ui/resource_strip.gd")
 const UpgradeCardScript = preload("res://scripts/ui/upgrade_card.gd")
+const ResponsiveWorkspaceScript = preload("res://scripts/ui/responsive_workspace.gd")
+const ResponsiveContentScript = preload("res://scripts/ui/responsive_content.gd")
+const ResponsiveViewportScript = preload("res://scripts/ui/responsive_viewport.gd")
 
 @export var fixture_id: String = "one_well_commissioned"
 var include_notice_placeholder: bool = true
 
 var body: BoxContainer
+var operations_scroll: ScrollContainer
 var left_column: VBoxContainer
 var right_column: VBoxContainer
 var view_state: Dictionary = {}
@@ -20,6 +24,7 @@ var hero_picker
 var expedition_panel
 var resource_strip
 var research_panel
+var viewport_settings_button: Button
 
 signal destination_requested(well_id: String)
 signal guard_picker_requested(well_id: String)
@@ -42,23 +47,32 @@ func _notification(what: int) -> void:
 func _build() -> void:
 	name = "OperationsPreview"
 	view_state = UiPreviewFixturesScript.make(fixture_id).view_state
-	var margin := MarginContainer.new()
+	var margin := ResponsiveViewportScript.new()
 	margin.name = "OuterMargin"
-	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	margin.add_theme_constant_override("margin_left", 24)
-	margin.add_theme_constant_override("margin_right", 24)
-	margin.add_theme_constant_override("margin_top", 24)
-	margin.add_theme_constant_override("margin_bottom", 24)
+	margin.anchor_left = 0.0
+	margin.anchor_top = 0.0
+	margin.anchor_right = 0.0
+	margin.anchor_bottom = 0.0
+	margin.offset_left = 0.0
+	margin.offset_top = 0.0
+	margin.offset_right = 0.0
+	margin.offset_bottom = 0.0
 	var scroll := ScrollContainer.new()
+	operations_scroll = scroll
 	scroll.name = "OperationsScroll"
-	scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	scroll.anchor_left = 0.0
+	scroll.anchor_top = 0.0
+	scroll.anchor_right = 0.0
+	scroll.anchor_bottom = 0.0
+	scroll.offset_left = 0.0
+	scroll.offset_top = 0.0
+	scroll.offset_right = 0.0
+	scroll.offset_bottom = 0.0
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	add_child(scroll)
 	scroll.add_child(margin)
-	var content := VBoxContainer.new()
+	var content := ResponsiveContentScript.new()
 	content.name = "OperationsContent"
 	content.add_theme_constant_override("separation", 16)
 	margin.add_child(content)
@@ -67,7 +81,17 @@ func _build() -> void:
 	resource_strip.settings_requested.connect(func(opener: Control): settings_requested.emit(opener))
 	resource_strip.configure(view_state.operations.research)
 	content.add_child(resource_strip)
-	body = BoxContainer.new()
+	var overflow_settings := resource_strip.get_node("ResourceStripContent/SettingsButton") as Button
+	overflow_settings.visible = false
+	viewport_settings_button = Button.new()
+	viewport_settings_button.name = "ViewportSettingsButton"
+	viewport_settings_button.text = "Settings"
+	viewport_settings_button.custom_minimum_size = Vector2(110, 40)
+	viewport_settings_button.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	viewport_settings_button.position = Vector2(-134, 12)
+	viewport_settings_button.pressed.connect(func(): settings_requested.emit(viewport_settings_button))
+	add_child(viewport_settings_button)
+	body = ResponsiveWorkspaceScript.new()
 	body.name = "OperationsWorkspace"
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_theme_constant_override("separation", 16)
@@ -207,11 +231,29 @@ func _label(text: String, size: int) -> Label:
 	return label
 
 func _update_responsive_layout() -> void:
+	if operations_scroll != null:
+		operations_scroll.position = Vector2.ZERO
+		operations_scroll.size = size
+		var margin := operations_scroll.get_node("OuterMargin") as Control
+		var content := margin.get_node("OperationsContent") as Control
+		margin.position = Vector2.ZERO
+		margin.size = operations_scroll.size
+		content.position = Vector2(24.0, 24.0)
+		content.size = Vector2(maxf(0.0, margin.size.x - 48.0), content.get_combined_minimum_size().y)
 	body.vertical = size.x < 960.0
 	body.queue_sort()
+	call_deferred("_fit_resource_strip")
 	var grid := get_node_or_null("OperationsScroll/OuterMargin/OperationsContent/OperationsWorkspace/WellsResearchRegion/WellsRegion/WellsContent/WellCardsPlaceholder")
 	if grid != null:
 		grid.columns = 1 if size.x < 960.0 else 2
 	var cards := get_node_or_null("OperationsScroll/OuterMargin/OperationsContent/OperationsWorkspace/WellsResearchRegion/ResearchRegion/ResearchContent/UpgradeCards")
 	if cards != null:
 		cards.vertical = size.x < 960.0
+
+func _fit_resource_strip() -> void:
+	if resource_strip == null or operations_scroll == null:
+		return
+	var width := maxf(0.0, operations_scroll.size.x - 48.0)
+	resource_strip.size.x = width
+	var row := resource_strip.get_node("ResourceStripContent") as Control
+	row.size.x = width

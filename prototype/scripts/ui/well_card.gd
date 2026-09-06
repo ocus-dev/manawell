@@ -39,8 +39,8 @@ func configure(next_data: Dictionary) -> void:
 	guard_slot.configure(guard_data, well_id)
 	prepare_button.disabled = not bool(view_data.get("prepare_available", false))
 	var selected: bool = bool(view_data.get("selected", false))
-	var commissioned: bool = str(view_data.get("state_id", "")) == "commissioned"
-	prepare_button.text = "Start extraction" if selected and commissioned else "Selected destination" if selected else "Prepare here"
+	var can_start: bool = bool(view_data.get("start_available", false))
+	prepare_button.text = "Start extraction" if selected and can_start else "Selected destination" if selected else "Prepare here"
 	prepare_button.tooltip_text = str(view_data.get("availability_reason", ""))
 	update_minimum_size()
 
@@ -49,7 +49,7 @@ func refresh(next_data: Dictionary) -> void:
 
 func request_prepare() -> void:
 	if not prepare_button.disabled:
-		if bool(view_data.get("selected", false)) and str(view_data.get("state_id", "")) == "commissioned":
+		if bool(view_data.get("selected", false)) and bool(view_data.get("start_available", false)):
 			start_requested.emit()
 		else:
 			destination_requested.emit(well_id)

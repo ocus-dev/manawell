@@ -23,6 +23,7 @@ var pending_recall: bool = false
 func _ready() -> void:
 	visible = false
 	focus_mode = Control.FOCUS_ALL
+	mouse_filter = Control.MOUSE_FILTER_STOP
 	_build()
 
 func _notification(what: int) -> void:
@@ -86,6 +87,7 @@ func refresh_guard_state(well_data: Dictionary, heroes: Array[Dictionary], feedb
 	if mode != "guard" or str(well_data.get("id", "")) != well_id:
 		return
 	var next_guard_id := str(well_data.get("guard", {}).get("id", ""))
+	var guard_changed := next_guard_id != current_guard_id
 	var assignment_succeeded := not pending_selection_id.is_empty() and next_guard_id == pending_selection_id
 	var recall_succeeded := pending_recall and next_guard_id.is_empty()
 	current_guard_id = next_guard_id
@@ -101,7 +103,10 @@ func refresh_guard_state(well_data: Dictionary, heroes: Array[Dictionary], feedb
 		if pending_save:
 			message += " Applied in memory; save is pending."
 		reason_label.text = message
-	_render_rows(heroes)
+		_render_rows(heroes)
+	elif guard_changed or hero_data != heroes:
+		# Keep hovered/pressed controls alive across ordinary frame refreshes.
+		_render_rows(heroes)
 
 func _input(event: InputEvent) -> void:
 	if not visible or not event is InputEventKey or not event.pressed or event.echo:
@@ -157,8 +162,10 @@ func _render_rows(heroes: Array[Dictionary]) -> void:
 		var hero_id: String = str(hero.get("id", ""))
 		var row := PanelContainer.new()
 		row.name = "HeroRow_%s" % hero_id
+		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var row_content := HBoxContainer.new()
 		row_content.name = "HeroRowContent"
+		row_content.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		row_content.add_theme_constant_override("separation", 12)
 		row.add_child(row_content)
 		var initials := Label.new()
@@ -185,6 +192,8 @@ func _render_rows(heroes: Array[Dictionary]) -> void:
 		row_content.add_child(copy)
 		var action := Button.new()
 		action.name = "HeroAction"
+		action.mouse_filter = Control.MOUSE_FILTER_STOP
+		action.focus_mode = Control.FOCUS_ALL
 		action.custom_minimum_size = Vector2(112, 40)
 		action.text = _action_text(hero)
 		action.disabled = not _is_available(hero)
@@ -211,6 +220,10 @@ func _action_text(hero: Dictionary) -> String:
 	var hero_id: String = str(hero.get("id", ""))
 	if mode == "guard" and hero_id == current_guard_id:
 		return "Recall"
+	if mode == "guard" and str(hero.get("role_id", "")) == "active":
+		return "Active hero"
+	if mode == "guard" and str(hero.get("role_id", "")) == "guard":
+		return "Assigned elsewhere"
 	if mode == "expedition" and hero_id == active_hero_id:
 		return "Selected"
 	return "Assign" if mode == "guard" else "Select"
