@@ -1,0 +1,249 @@
+{
+  "prompt": [
+    7,
+    "e16b2420-c907-4f8f-8256-a9f7c41b37b7",
+    {
+      "1": {
+        "class_type": "PrimitiveStringMultiline",
+        "inputs": {
+          "value": "A physically grounded retro-industrial future. Heavy manufactured steel, ceramic armor, rubber seals, smoked glass and canvas. Broad geometric primary masses, functional joints and hydraulics, quiet armor plates with detail clustered at mechanisms. Visible maintenance, chipped paint and purposeful wear. Electromechanical technology, physical switches and phosphor instruments. Roughly 70 percent primary forms, 20 percent secondary structure, 10 percent surface detail. Structural neutrals dominate with small functional saturated accents."
+        }
+      },
+      "2": {
+        "class_type": "PrimitiveStringMultiline",
+        "inputs": {
+          "value": "A hand-painted late-1980s to early-1990s Japanese science-fiction OVA animation frame. Painted gouache backgrounds, selective precise ink lines, hard cel shadow shapes in three value groups, graphic painted metal highlights, restrained gradients and subtle analog grain. Tactile illustrated material weight and clear silhouettes. One coherent finished scene, no collage, no captions or watermark. Avoid glossy CGI, photographic rendering, holograms and indiscriminate tiny panel detail."
+        }
+      },
+      "3": {
+        "class_type": "PrimitiveStringMultiline",
+        "inputs": {
+          "value": "One piloted humanoid industrial combat mech, full body, facing RIGHT. Compact upright red armored silhouette, broad shoulder plates, charcoal articulated knees, heavy boots, one small cyan visor. Practical compact forearm gun pointing right, separated arms and legs in a neutral combat-ready standing pose. No human outside the cockpit. Clear foot contact at one baseline."
+        }
+      },
+      "4": {
+        "class_type": "PrimitiveStringMultiline",
+        "inputs": {
+          "value": "Production concept for a 2D SIDE-VIEW game sprite. Orthographic side elevation at subject mid-height; camera level, no top-down view, no isometric view, no three-quarter turn, no foreshortening. ONE isolated complete subject centered on a perfectly uniform light grey background. Entire silhouette including feet, antennae and weapon visible with at least 12 percent empty margin on every edge. No floor line, cast ground shadow, environment, text, labels, sprite sheet, turnaround, duplicate subject or cropped extremities. Soft upper-left studio illumination, restrained painted shading. Opaque background for a separate segmentation pass; do not draw a checkerboard."
+        }
+      },
+      "5": {
+        "class_type": "PrimitiveStringMultiline",
+        "inputs": {
+          "value": "Muted oxide red armor, charcoal joints, small cyan friendly identification light."
+        }
+      },
+      "6": {
+        "class_type": "StringConcatenate",
+        "inputs": {
+          "string_a": [
+            "1",
+            0
+          ],
+          "string_b": [
+            "2",
+            0
+          ],
+          "delimiter": "\n\n"
+        }
+      },
+      "7": {
+        "class_type": "StringConcatenate",
+        "inputs": {
+          "string_a": [
+            "6",
+            0
+          ],
+          "string_b": [
+            "3",
+            0
+          ],
+          "delimiter": "\n\n"
+        }
+      },
+      "8": {
+        "class_type": "StringConcatenate",
+        "inputs": {
+          "string_a": [
+            "7",
+            0
+          ],
+          "string_b": [
+            "4",
+            0
+          ],
+          "delimiter": "\n\n"
+        }
+      },
+      "9": {
+        "class_type": "StringConcatenate",
+        "inputs": {
+          "string_a": [
+            "8",
+            0
+          ],
+          "string_b": [
+            "5",
+            0
+          ],
+          "delimiter": "\n\n"
+        }
+      },
+      "10": {
+        "class_type": "UNETLoader",
+        "inputs": {
+          "unet_name": "krea2_turbo_fp8_scaled.safetensors",
+          "weight_dtype": "default"
+        }
+      },
+      "11": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "qwen3vl_4b_fp8_scaled.safetensors",
+          "type": "krea2",
+          "device": "default"
+        }
+      },
+      "12": {
+        "class_type": "VAELoader",
+        "inputs": {
+          "vae_name": "qwen_image_vae.safetensors"
+        }
+      },
+      "13": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "11",
+            0
+          ],
+          "text": [
+            "9",
+            0
+          ]
+        }
+      },
+      "14": {
+        "class_type": "ConditioningZeroOut",
+        "inputs": {
+          "conditioning": [
+            "13",
+            0
+          ]
+        }
+      },
+      "15": {
+        "class_type": "EmptyLatentImage",
+        "inputs": {
+          "width": 1024,
+          "height": 1024,
+          "batch_size": 1
+        }
+      },
+      "16": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "10",
+            0
+          ],
+          "positive": [
+            "13",
+            0
+          ],
+          "negative": [
+            "14",
+            0
+          ],
+          "latent_image": [
+            "15",
+            0
+          ],
+          "seed": 9072026,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "euler",
+          "scheduler": "simple",
+          "denoise": 1.0
+        }
+      },
+      "17": {
+        "class_type": "VAEDecode",
+        "inputs": {
+          "samples": [
+            "16",
+            0
+          ],
+          "vae": [
+            "12",
+            0
+          ]
+        }
+      },
+      "18": {
+        "class_type": "SaveImage",
+        "inputs": {
+          "images": [
+            "17",
+            0
+          ],
+          "filename_prefix": "Telos/SideView/01_hero"
+        }
+      }
+    },
+    {
+      "telos_job": "1e0c032c82fc49598b434f2b758e274d",
+      "create_time": 1788779750329
+    },
+    [
+      "18"
+    ]
+  ],
+  "outputs": {
+    "18": {
+      "images": [
+        {
+          "filename": "01_hero_00001_.png",
+          "subfolder": "Telos\\SideView",
+          "type": "output"
+        }
+      ]
+    }
+  },
+  "status": {
+    "status_str": "success",
+    "completed": true,
+    "messages": [
+      [
+        "execution_start",
+        {
+          "prompt_id": "e16b2420-c907-4f8f-8256-a9f7c41b37b7",
+          "timestamp": 1788779750331
+        }
+      ],
+      [
+        "execution_cached",
+        {
+          "nodes": [],
+          "prompt_id": "e16b2420-c907-4f8f-8256-a9f7c41b37b7",
+          "timestamp": 1788779750333
+        }
+      ],
+      [
+        "execution_success",
+        {
+          "prompt_id": "e16b2420-c907-4f8f-8256-a9f7c41b37b7",
+          "timestamp": 1788779789516
+        }
+      ]
+    ]
+  },
+  "meta": {
+    "18": {
+      "node_id": "18",
+      "display_node": "18",
+      "parent_node": null,
+      "real_node_id": "18"
+    }
+  }
+}

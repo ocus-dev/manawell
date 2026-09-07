@@ -1,0 +1,27 @@
+extends SceneTree
+
+const VisualScript = preload("res://scripts/game/side_view_actor_visual.gd")
+const ConfigScript = preload("res://scripts/game/side_view_visual_config.gd")
+
+func _init() -> void:
+    assert(ConfigScript.asset_for("hero")["initial_visible_height"] == 80.0)
+    assert(ConfigScript.asset_for("harvester")["initial_visible_height"] == 190.0)
+    assert(ConfigScript.enemy_asset(0) == "pursuer")
+    assert(ConfigScript.enemy_asset(1) == "breaker")
+    assert(ConfigScript.enemy_asset(2) == "ranged")
+    var visual := VisualScript.new()
+    root.add_child(visual)
+    assert(visual.configure("breaker"))
+    assert(visual.sprite.texture.resource_path == "res://assets/side-view/breaker.png")
+    assert(is_equal_approx(visual.base_scale, 112.0 / 903.0))
+    var anchor_y: float = visual.sprite.position.y + 905.0 * visual.base_scale
+    assert(is_equal_approx(anchor_y, visual.sprite.texture.get_height() * 0.5 * visual.base_scale + 40.0))
+    assert(is_equal_approx(visual.visible_top_local_y(), 40.0 + (3.0 - 905.0) * visual.base_scale))
+    var actor_transform := visual.transform
+    visual.set_facing(-1)
+    assert(visual.sprite.scale.x < 0.0)
+    assert(visual.transform == actor_transform)
+    visual.set_scale_multiplier(1.25)
+    assert(is_equal_approx(visual.visible_top_local_y(), 40.0 + (3.0 - 905.0) * visual.base_scale * 1.25))
+    print("Side-view visual mapping, facing and anchor checks passed")
+    quit(0)

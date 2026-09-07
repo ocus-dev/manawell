@@ -40,7 +40,8 @@ func configure(next_data: Dictionary) -> void:
 	prepare_button.disabled = not bool(view_data.get("prepare_available", false))
 	var selected: bool = bool(view_data.get("selected", false))
 	var can_start: bool = bool(view_data.get("start_available", false))
-	prepare_button.text = "Start extraction" if selected and can_start else "Selected destination" if selected else "Prepare here"
+	var commissioned: bool = bool(view_data.get("commissioned", false))
+	prepare_button.text = "Start extraction" if selected and can_start else "Select Standard loadout" if selected and not commissioned else "Selected destination" if selected else "Prepare here"
 	prepare_button.tooltip_text = str(view_data.get("availability_reason", ""))
 	update_minimum_size()
 

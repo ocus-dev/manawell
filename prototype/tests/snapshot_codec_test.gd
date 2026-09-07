@@ -28,6 +28,7 @@ func _synthetic_snapshot() -> Dictionary:
 			"simulation_elapsed": 23.5,
 			"tank_base": 47.0,
 			"extraction_rate": 2.0,
+			"pressure_time_scale": 1.0,
 			"completed_surges": 1,
 			"multiplier": 1.25,
 			"locked_payout": 58,
@@ -35,27 +36,28 @@ func _synthetic_snapshot() -> Dictionary:
 			"sealing_duration": 2.0,
 			"hero_health": 72.0,
 			"machine_integrity": 133.0,
+			"machine_max_integrity": 150.0,
 			"terminal_reason": "",
 		},
 		"actors": [
-			{"id": "enemy-1", "kind": "pursuer", "position": [3.0, 0.8, -2.0], "health": 9.0, "max_health": 20.0, "cooldown_remaining": 0.4, "windup_remaining": 0.0, "target_id": "hero", "dead": false, "component_state": {"damage_multiplier": 1.0, "attack_damage": 10.0}},
-			{"id": "ranged-1", "kind": "ranged", "position": [-4.0, 0.8, 1.0], "health": 17.0, "max_health": 25.0, "cooldown_remaining": 0.8, "windup_remaining": 0.3, "target_id": "hero", "dead": false, "component_state": {"damage_multiplier": 1.0, "attack_damage": 8.0}, "attack_count": 2},
-			{"id": "hero", "kind": "hero", "position": [0.0, 1.0, 6.0], "health": 72.0, "max_health": 100.0, "cooldown_remaining": 0.0, "windup_remaining": 0.0, "target_id": "", "dead": false, "component_state": {}},
-			{"id": "machine", "kind": "machine", "position": [0.0, 0.7, 0.0], "health": 133.0, "max_health": 150.0, "cooldown_remaining": 0.0, "windup_remaining": 0.0, "target_id": "", "dead": false, "component_state": {}},
+			{"id": "enemy-1", "kind": "pursuer", "position": [3.0, 0.0], "health": 9.0, "max_health": 20.0, "cooldown_remaining": 0.4, "windup_remaining": 0.0, "target_id": "hero", "dead": false, "component_state": {"damage_multiplier": 1.0, "attack_damage": 10.0}},
+			{"id": "ranged-1", "kind": "ranged", "position": [-4.0, 1.0], "health": 17.0, "max_health": 25.0, "cooldown_remaining": 0.8, "windup_remaining": 0.3, "target_id": "hero", "dead": false, "component_state": {"damage_multiplier": 1.0, "attack_damage": 8.0}, "attack_count": 2},
+			{"id": "hero", "kind": "hero", "position": [0.0, 6.0], "health": 72.0, "max_health": 100.0, "cooldown_remaining": 0.0, "windup_remaining": 0.0, "target_id": "", "dead": false, "component_state": {}},
+			{"id": "machine", "kind": "machine", "position": [0.0, 0.0], "health": 133.0, "max_health": 150.0, "cooldown_remaining": 0.0, "windup_remaining": 0.0, "target_id": "", "dead": false, "component_state": {}},
 		],
 		"projectiles": [
-			{"id": "projectile-1", "kind": "hostile", "owner_id": "ranged-1", "target_id": "hero", "position": [-2.0, 0.8, 1.0], "velocity": [8.0, 0.0, 0.0], "damage": 8.0, "lifetime_remaining": 1.2, "hit_target": false},
+			{"id": "projectile-1", "kind": "hostile", "owner_id": "ranged-1", "target_id": "hero", "position": [-2.0, 1.0], "velocity": [8.0, 0.0], "damage": 8.0, "lifetime_remaining": 1.2, "hit_target": false},
 		],
 		"player_abilities": {
 			"dash_cooldown_remaining": 3.2,
 			"pulse_cooldown_remaining": 0.0,
 			"dash_remaining": 0.1,
-			"dash_direction": [1.0, 0.0, 0.0],
+			"dash_direction": [1.0, 0.0],
 			"dash_active": true,
 			"ability_flash_remaining": 0.1,
 		},
 		"weapon_state": {"damage": 6.0, "spread_enabled": true, "attack_interval": 0.6, "shot_accumulator": 0.25},
-		"spawner": {"spawn_timer": 0.7, "spawn_index": 11, "spawn_position": [10.0, 0.8, -10.0], "config_id": "well-1-standard", "next_id": 12},
+		"spawner": {"spawn_timer": 0.7, "spawn_index": 11, "spawn_position": [10.0, 0.0], "config_id": "well-1-standard", "next_id": 12},
 	}
 
 func _test_rejections(payload: Dictionary) -> void:

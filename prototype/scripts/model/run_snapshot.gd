@@ -3,7 +3,7 @@ extends RefCounted
 
 const SNAPSHOT_VERSION: int = 3
 const LEGACY_SNAPSHOT_VERSION: int = 1
-const CONFIG_VERSION: String = "prototype-config-1"
+const CONFIG_VERSION: String = "prototype-2d-config-1"
 const RunStateScript = preload("res://scripts/model/run_state.gd")
 
 static func encode(snapshot: Dictionary) -> Dictionary:
@@ -194,7 +194,7 @@ static func _validate_spawner(spawner: Dictionary) -> Dictionary:
 	return {"valid": true}
 
 static func _valid_vector(value: Variant) -> bool:
-	return value is Array and value.size() == 3 and value.all(func(component): return component is int or component is float and is_finite(float(component)))
+	return value is Array and value.size() == 2 and value.all(func(component): return (component is int or component is float) and is_finite(float(component)))
 
 static func _finite_nonnegative(value: Variant) -> bool:
 	return (value is int or value is float) and is_finite(float(value)) and float(value) >= 0.0

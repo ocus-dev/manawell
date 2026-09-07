@@ -1,0 +1,171 @@
+{
+  "version": 1,
+  "logical_canvas": [
+    1280,
+    720
+  ],
+  "ground_y": 540,
+  "selected_candidate": "07-backdrop-01",
+  "layers": [
+    {
+      "layer": "backdrop",
+      "source_path": "art/side-view/environment/07-backdrop-01/result.png",
+      "source_sha256": "df4e86cc1c8d5637924dea4490fdea6cb7fe74538e2812f86a7910759a95abe7",
+      "output_path": "prototype/assets/side-view/environment/backdrop.png",
+      "output_sha256": "ba6c80955f896788f7b5f40738b0003ff37d260f4906ee856c8453e727f7ac57",
+      "original_dimensions": [
+        1536,
+        864
+      ],
+      "prepared_dimensions": [
+        1280,
+        720
+      ],
+      "transform": {
+        "operation": "exact_resize_then_lane_material_riser_cover",
+        "from": [
+          1536,
+          864
+        ],
+        "to": [
+          1280,
+          720
+        ],
+        "crop": null,
+        "covered_backdrop_edge_y": 414,
+        "riser_height": 126,
+        "riser_source_crop": [
+          0,
+          148,
+          1536,
+          364
+        ],
+        "riser_resize_to": [
+          1280,
+          126
+        ],
+        "perspective_warp": false
+      },
+      "logical_placement": [
+        0,
+        0
+      ],
+      "logical_bounds": [
+        0,
+        0,
+        1280,
+        720
+      ],
+      "draw_order": 0,
+      "filtering": "Godot linear texture filtering; one authored resize for fixed plate",
+      "alpha_expectation": "opaque",
+      "rationale": "Selected V04 candidate; the competing painted retaining-wall edge is covered from y=414 to y=540 with the same lane material before the prepared lane begins."
+    },
+    {
+      "layer": "service_lane",
+      "source_path": "art/side-view/environment/08-lane-01/result.png",
+      "source_sha256": "3db3047211508680775b81f13823289450021dba1d5b6ca3f1ebb554f781edf9",
+      "output_path": "prototype/assets/side-view/environment/lane.png",
+      "output_sha256": "21d6e17844fe6c0718024ee8e64e0b65cabe4f5368403a1b79f138cf59521458",
+      "original_dimensions": [
+        1536,
+        512
+      ],
+      "prepared_dimensions": [
+        1280,
+        180
+      ],
+      "transform": {
+        "operation": "central_crop_then_resize",
+        "crop": [
+          0,
+          148,
+          1536,
+          364
+        ],
+        "resize_to": [
+          1280,
+          180
+        ],
+        "perspective_warp": false
+      },
+      "logical_placement": [
+        0,
+        540
+      ],
+      "logical_bounds": [
+        0,
+        540,
+        1280,
+        180
+      ],
+      "top_edge_y": 540,
+      "draw_order": 1,
+      "filtering": "Godot linear texture filtering; non-tiling fixed-width strip",
+      "alpha_expectation": "opaque",
+      "authored_geometry": {
+        "top_trim_pixels": 4,
+        "top_edge_color": "#b58d4a",
+        "edge_shadow_color": "#303d42"
+      },
+      "rationale": "Covers the backdrop lower edge from y=540 through the bottom without introducing a second floating floor plane."
+    },
+    {
+      "layer": "edge_dressing",
+      "source_path": "art/side-view/environment/09-dressing-01/result.png",
+      "source_sha256": "61b0a56a71fe3f4da62c94b8daea62bcb875a551334180ca2b5adf2227e92f1d",
+      "output_path": null,
+      "original_dimensions": [
+        1024,
+        1024
+      ],
+      "prepared_dimensions": null,
+      "transform": null,
+      "logical_placement": null,
+      "logical_bounds": null,
+      "draw_order": 2,
+      "filtering": null,
+      "alpha_expectation": "omitted; source remains opaque and was not sent through 06_cutout",
+      "rationale": "Omitted because the selected backdrop already has strong lower pipework; adding a prop would compete with actor feet, warnings, and the harvester."
+    }
+  ],
+  "actor_contract": {
+    "source_manifest": "prototype/assets/side-view/side-view-assets.json",
+    "visible_heights_unchanged": {
+      "hero": 80,
+      "pursuer": 58,
+      "harvester": 190,
+      "breaker": 112,
+      "ranged": 90
+    },
+    "ground_anchor_rule": "Actors retain their existing visual-child anchors; environment preparation does not alter actor transforms or collisions."
+  },
+  "visual_config": {
+    "backdrop_tint": [
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "backdrop_contrast": 1.0,
+    "lane_tint": [
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "reversible": true,
+    "rationale": "Neutral preparation preserves the selected V04 palette; later scene tuning should remain configuration-only."
+  },
+  "reviews": [
+    {
+      "path": "art/side-view/environment/reviews/v05-prepared-composition.png",
+      "sha256": "5f483ba799c528a688a853570f98a7be4e20a262d11e8bca5e3be740e2eadf0e"
+    },
+    {
+      "path": "art/side-view/environment/reviews/v05-prepared-debug.png",
+      "sha256": "f44e7b13e25e6d316512d9c55f91d075fee528b877c68a8b8689eefdd09b1a4f"
+    }
+  ],
+  "runtime_note": "Prepared files are runtime-local and intentionally not imported into gameplay during V05."
+}

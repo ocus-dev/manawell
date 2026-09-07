@@ -1,129 +1,127 @@
-class_name MeleeEnemy
-extends CharacterBody3D
+class_name DefenseEnemy
+extends Node2D
 
-const RunStateScript = preload("res://scripts/model/run_state.gd")
+enum EnemyKind { PURSUER, BREAKER, RANGED }
+
 const BalanceData = preload("res://data/balance.gd")
-
-enum EnemyKind {
-	PURSUER,
-	BREAKER,
-}
+const RunStateScript = preload("res://scripts/model/run_state.gd")
+const VisualConfigScript = preload("res://scripts/game/side_view_visual_config.gd")
+const VisualScript = preload("res://scripts/game/side_view_actor_visual.gd")
 
 var enemy_kind: EnemyKind = EnemyKind.PURSUER
-var run_state: RefCounted
-var target: Node3D
+var enemy_id: int = 0
+var side: int = 1
 var health: float = 1.0
 var max_health: float = 1.0
-var movement_speed: float = 0.0
+var speed_pixels: float = 0.0
 var attack_damage: float = 0.0
-var attack_range: float = 0.0
-var attack_cooldown: float = 0.0
+var attack_range_pixels: float = 0.0
 var cooldown_remaining: float = 0.0
-var damage_target: int = 0
-var dead: bool = false
+var windup_remaining: float = 0.0
+var dead := false
+var warning_visible := false
+var warning_remaining := 0.0
+var damage_feedback_remaining := 0.0
+var damage_feedback_amount := 0.0
+var controller: Node
 var damage_multiplier: float = 1.0
-
-func setup(kind: EnemyKind, state: RefCounted, target_node: Node3D, new_damage_multiplier: float = 1.0) -> void:
-	enemy_kind = kind
-	run_state = state
-	target = target_node
-	damage_multiplier = new_damage_multiplier if is_finite(new_damage_multiplier) and new_damage_multiplier > 0.0 else 1.0
-	_apply_stats()
+var visual: Node
 
 func _ready() -> void:
+	visual = VisualScript.new()
+	visual.name = "EnemyVisual"
+	visual.z_index = 1
+	add_child(visual)
+	visual.configure(VisualConfigScript.enemy_asset(enemy_kind))
+	visual.set_facing(-side)
+
+func setup(kind: EnemyKind, id: int, spawn_side: int, owner_controller: Node, new_damage_multiplier: float = 1.0) -> void:
+	enemy_kind = kind
+	enemy_id = id
+	side = -1 if spawn_side < 0 else 1
+	controller = owner_controller
+	damage_multiplier = new_damage_multiplier if is_finite(new_damage_multiplier) and new_damage_multiplier > 0.0 else 1.0
 	_apply_stats()
-	_build_visuals()
+	warning_remaining = 0.8
+	warning_visible = true
+	queue_redraw()
 
 func simulate_tick(delta: float) -> void:
-	if dead or run_state == null or target == null or not is_finite(delta) or delta < 0.0:
-		return
-	if run_state.paused or (run_state.phase != RunStateScript.Phase.EXTRACTING and run_state.phase != RunStateScript.Phase.SEALING):
+	if dead or controller == null or controller.run_state.paused:
 		return
 	cooldown_remaining = maxf(0.0, cooldown_remaining - delta)
-	var target_position: Vector3 = target.global_position if target.is_inside_tree() else target.position
-	var enemy_position: Vector3 = global_position if is_inside_tree() else position
-	var offset := target_position - enemy_position
-	offset.y = 0.0
-	var distance := offset.length()
-	if distance > attack_range:
-		velocity = offset.normalized() * movement_speed if distance > 0.0 else Vector3.ZERO
-		if is_inside_tree():
-			move_and_slide()
+	warning_remaining = maxf(0.0, warning_remaining - delta)
+	damage_feedback_remaining = maxf(0.0, damage_feedback_remaining - delta)
+	warning_visible = warning_remaining > 0.0 or windup_remaining > 0.0
+	if enemy_kind == EnemyKind.RANGED:
+		_simulate_ranged(delta)
 	else:
-		velocity = Vector3.ZERO
-		if cooldown_remaining <= 0.0:
-			if _apply_damage_to_target():
-				cooldown_remaining = attack_cooldown
-
-func _apply_damage_to_target() -> bool:
-	if is_instance_valid(target) and target.has_method("receive_damage"):
-		return target.receive_damage(attack_damage)
-	return run_state.apply_damage(damage_target, attack_damage)
+		_simulate_melee(delta)
+	if visual != null:
+		visual.set_facing(-side)
+	queue_redraw()
 
 func take_damage(amount: float) -> bool:
 	if dead or not is_finite(amount) or amount <= 0.0:
 		return false
 	health = maxf(0.0, health - amount)
+	damage_feedback_amount = amount
+	damage_feedback_remaining = 0.65
 	if health <= 0.0:
-		die()
+		dead = true
+		queue_free()
+		return true
 	return true
 
-func capture_snapshot_state() -> Dictionary:
-	return {"damage_multiplier": damage_multiplier, "attack_damage": attack_damage}
+func _simulate_melee(_delta: float) -> void:
+	var target_x: float = controller.hero.position.x if enemy_kind == EnemyKind.PURSUER else controller.MACHINE_X
+	var distance := absf(target_x - position.x)
+	if distance > attack_range_pixels:
+		var direction := signf(target_x - position.x)
+		position.x += direction * speed_pixels * controller.FIXED_STEP
+	else:
+		if cooldown_remaining <= 0.0:
+			controller.apply_enemy_damage(RunStateScript.DamageTarget.HERO if enemy_kind == EnemyKind.PURSUER else RunStateScript.DamageTarget.MACHINE, attack_damage)
+			cooldown_remaining = BalanceData.MELEE_ATTACK_INTERVAL
 
-func restore_snapshot_state(state: Dictionary) -> void:
-	damage_multiplier = state["damage_multiplier"]
-	attack_damage = state["attack_damage"]
-
-func die() -> void:
-	if dead:
+func _simulate_ranged(delta: float) -> void:
+	var distance := absf(controller.hero.position.x - position.x)
+	if windup_remaining > 0.0:
+		windup_remaining = maxf(0.0, windup_remaining - delta)
+		if is_zero_approx(windup_remaining):
+			controller.spawn_hostile_projectile(position.x, controller.hero.position.x, attack_damage, self)
 		return
-	dead = true
-	queue_free()
+	if distance > BalanceData.RANGED_STOP_RANGE * controller.SPATIAL_PIXELS_PER_UNIT:
+		position.x += signf(controller.hero.position.x - position.x) * speed_pixels * controller.FIXED_STEP
+	elif cooldown_remaining <= 0.0:
+		windup_remaining = BalanceData.RANGED_WINDUP
+		warning_remaining = BalanceData.RANGED_WINDUP
 
 func _apply_stats() -> void:
 	if enemy_kind == EnemyKind.PURSUER:
 		max_health = BalanceData.PURSUER_HEALTH
-		movement_speed = BalanceData.PURSUER_SPEED
+		speed_pixels = BalanceData.PURSUER_SPEED * controller.SPATIAL_PIXELS_PER_UNIT
 		attack_damage = BalanceData.PURSUER_DAMAGE * damage_multiplier
-		attack_range = BalanceData.PURSUER_RANGE
-		attack_cooldown = BalanceData.MELEE_ATTACK_INTERVAL
-		damage_target = 0
-	else:
+		attack_range_pixels = BalanceData.PURSUER_RANGE * controller.SPATIAL_PIXELS_PER_UNIT
+	elif enemy_kind == EnemyKind.BREAKER:
 		max_health = BalanceData.BREAKER_HEALTH
-		movement_speed = BalanceData.BREAKER_SPEED
+		speed_pixels = BalanceData.BREAKER_SPEED * controller.SPATIAL_PIXELS_PER_UNIT
 		attack_damage = BalanceData.BREAKER_DAMAGE * damage_multiplier
-		attack_range = BalanceData.BREAKER_RANGE
-		attack_cooldown = BalanceData.MELEE_ATTACK_INTERVAL
-		damage_target = 1
+		attack_range_pixels = BalanceData.BREAKER_RANGE * controller.SPATIAL_PIXELS_PER_UNIT
+	else:
+		max_health = BalanceData.RANGED_HEALTH
+		speed_pixels = BalanceData.RANGED_SPEED * controller.SPATIAL_PIXELS_PER_UNIT
+		attack_damage = BalanceData.RANGED_DAMAGE * damage_multiplier
 	health = max_health
 
-func _build_visuals() -> void:
-	var mesh_instance := MeshInstance3D.new()
-	var material := StandardMaterial3D.new()
-	if enemy_kind == EnemyKind.PURSUER:
-		var mesh := CapsuleMesh.new()
-		mesh.radius = 0.45
-		mesh.height = 1.4
-		mesh_instance.mesh = mesh
-		material.albedo_color = Color(0.75, 0.12, 0.12, 1)
-		var shape := CapsuleShape3D.new()
-		shape.radius = 0.38
-		shape.height = 1.4
-		_add_collision(shape)
-	else:
-		var mesh := BoxMesh.new()
-		mesh.size = Vector3(1.2, 1.6, 1.2)
-		mesh_instance.mesh = mesh
-		material.albedo_color = Color(0.55, 0.08, 0.08, 1)
-		var shape := BoxShape3D.new()
-		shape.size = Vector3(1.2, 1.6, 1.2)
-		_add_collision(shape)
-	material.roughness = 0.75
-	mesh_instance.material_override = material
-	add_child(mesh_instance)
-
-func _add_collision(shape: Shape3D) -> void:
-	var collision := CollisionShape3D.new()
-	collision.shape = shape
-	add_child(collision)
+func _draw() -> void:
+	var body_top: float = visual.visible_top_local_y() if visual != null else -34.0
+	var health_ratio := clampf(health / max_health, 0.0, 1.0)
+	draw_rect(Rect2(-24.0, body_top - 32.0, 48.0, 6.0), Color("111b21"), true)
+	draw_rect(Rect2(-23.0, body_top - 31.0, 46.0 * health_ratio, 4.0), Color("65d18b") if health_ratio > 0.35 else Color("e56b5d"), true)
+	if warning_visible:
+		draw_arc(Vector2.ZERO, 24.0, 0.0, TAU, 24, Color("ffb347"), 3.0)
+	if damage_feedback_remaining > 0.0:
+		var feedback_alpha := clampf(damage_feedback_remaining / 0.65, 0.0, 1.0)
+		var feedback_y: float = body_top - 40.0 - (1.0 - feedback_alpha) * 16.0
+		draw_string(ThemeDB.fallback_font, Vector2(-24.0, feedback_y), "-%d" % roundi(damage_feedback_amount), HORIZONTAL_ALIGNMENT_CENTER, 48.0, 14, Color(1.0, 0.78, 0.4, feedback_alpha))

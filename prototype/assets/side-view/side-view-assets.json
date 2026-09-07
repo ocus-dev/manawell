@@ -1,0 +1,184 @@
+{
+  "alpha_threshold": 8,
+  "safety_padding": 4,
+  "right_facing_convention": "artwork faces right; mirror the visual child for left-facing presentation",
+  "assets": [
+    {
+      "asset_id": "hero",
+      "source_path": "art/side-view/pilots/hero-01/result.png",
+      "source_sha256": "2dd1d228f3081817dce6cdad9fb08ab0616ea89cafe02e6b020998a77701a15c",
+      "cutout_path": "art/side-view/pilots/hero-cutout-01/result.png",
+      "cutout_sha256": "d4055789d3a1be69958e53e20ec872af0cf8099d6b5c8c70180dc035bec50350",
+      "derived_png": "prototype/assets/side-view/hero.png",
+      "derived_sha256": "31c40f004d18745f398ee24a37b7539b62714cfc2581f377efeaaf80bf6c4c07",
+      "initial_visible_height": 80,
+      "original_dimensions": [
+        1024,
+        1024
+      ],
+      "crop_rectangle": [
+        270,
+        36,
+        863,
+        963
+      ],
+      "visible_bounds": [
+        274,
+        40,
+        859,
+        959
+      ],
+      "ground_anchor": [
+        296,
+        922
+      ],
+      "derived_dimensions": [
+        593,
+        927
+      ],
+      "visible_height": 919
+    },
+    {
+      "asset_id": "harvester",
+      "source_path": "art/side-view/pilots/02_harvester/result.png",
+      "source_sha256": "75fb2e9c5459c2876a2c773e9e26a420487409e61235dfa41cd20ecff6aafbec",
+      "cutout_path": "art/side-view/prepared/harvester-cutout/result.png",
+      "cutout_sha256": "dc85f1f6e8e92a9f08ed62bb2605119fd2b1c9c8e9bbfee1503e3f332b1fb272",
+      "derived_png": "prototype/assets/side-view/harvester.png",
+      "derived_sha256": "431ea34964595778c8987206a4cd3b76aa08bfb4adf87f9960f48578b1f905bf",
+      "initial_visible_height": 190,
+      "original_dimensions": [
+        1024,
+        1024
+      ],
+      "crop_rectangle": [
+        104,
+        103,
+        922,
+        805
+      ],
+      "visible_bounds": [
+        108,
+        107,
+        918,
+        801
+      ],
+      "ground_anchor": [
+        408,
+        697
+      ],
+      "derived_dimensions": [
+        818,
+        702
+      ],
+      "visible_height": 694
+    },
+    {
+      "asset_id": "pursuer",
+      "source_path": "art/side-view/pilots/03_enemy_pursuer-biological/result.png",
+      "source_sha256": "af129773a4648a977abbe77b77105fad725368649c140b7b1cb7a02ab9044e70",
+      "cutout_path": "art/side-view/prepared/pursuer-cutout/result.png",
+      "cutout_sha256": "3f5a8cf0f0271ba34da4a69815422cf1f94b8a6df76d50f30965b812468aced2",
+      "derived_png": "prototype/assets/side-view/pursuer.png",
+      "derived_sha256": "a19ab99742a05d98765a1239038280cbdd682ed12bd54c39e217f2b4d234ad2a",
+      "initial_visible_height": 58,
+      "original_dimensions": [
+        1024,
+        1024
+      ],
+      "crop_rectangle": [
+        21,
+        279,
+        993,
+        825
+      ],
+      "visible_bounds": [
+        25,
+        283,
+        989,
+        821
+      ],
+      "ground_anchor": [
+        485,
+        541
+      ],
+      "derived_dimensions": [
+        972,
+        546
+      ],
+      "visible_height": 538
+    },
+    {
+      "asset_id": "breaker",
+      "source_path": "art/side-view/pilots/04_enemy_breaker-biological/result.png",
+      "source_sha256": "bdc68e3cf5c7ef0136ecfd09afbb7d5e90b63ecd96a2491c208f6538909a3282",
+      "cutout_path": "art/side-view/prepared/breaker-cutout/result.png",
+      "cutout_sha256": "8c00e88ea5aef8dd9a245ae546db1ac617c44e26bcf831a9f90fb14a48cbe6a4",
+      "derived_png": "prototype/assets/side-view/breaker.png",
+      "derived_sha256": "3332d814c42d185e3e00f3e7f654624f8629989c6a14aacbf5dfe2481d8d38d8",
+      "initial_visible_height": 112,
+      "original_dimensions": [
+        1024,
+        1024
+      ],
+      "crop_rectangle": [
+        20,
+        68,
+        907,
+        978
+      ],
+      "visible_bounds": [
+        24,
+        72,
+        903,
+        974
+      ],
+      "ground_anchor": [
+        443,
+        905
+      ],
+      "derived_dimensions": [
+        887,
+        910
+      ],
+      "visible_height": 902,
+      "known_source_characteristic": "Source has an angled pose rather than a strict side profile."
+    },
+    {
+      "asset_id": "ranged",
+      "source_path": "art/side-view/pilots/05_enemy_ranged-biological/result.png",
+      "source_sha256": "9307951b1527d7f9d59d13cf3044e4bbf1ec21e2562763b24817ae4e72b789ae",
+      "cutout_path": "art/side-view/prepared/ranged-cutout/result.png",
+      "cutout_sha256": "1a53395d9a622d69fd90c5dd0aca78f6b881798619968bf2ef72437e31d8785a",
+      "derived_png": "prototype/assets/side-view/ranged.png",
+      "derived_sha256": "3c06e034a03c808427dffe6a46baafa44b690fe40dea6f1093cd114852a6305e",
+      "initial_visible_height": 90,
+      "original_dimensions": [
+        1024,
+        1024
+      ],
+      "crop_rectangle": [
+        130,
+        79,
+        930,
+        996
+      ],
+      "visible_bounds": [
+        134,
+        83,
+        926,
+        992
+      ],
+      "ground_anchor": [
+        399,
+        912
+      ],
+      "derived_dimensions": [
+        800,
+        917
+      ],
+      "visible_height": 909,
+      "known_source_characteristic": "Source has a lifted leg; the lowest planted foot is the ground anchor."
+    }
+  ]
+}

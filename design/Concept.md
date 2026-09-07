@@ -6,7 +6,7 @@
 
 ## 1. High-level vision
 
-**Mana Well is a 3D incremental action-defense game about extracting power from a world that fights back.** Command a heavy industrial suit, install a harvester over a glowing fracture, and defend it as the mana plume attracts increasingly dangerous creatures. Decide when to seal the tank and bank your haul. Another surge could fund your next breakthrough, but defeat costs the unbanked mana. Spend successful harvests on specialized heroes and visibly evolving machinery. Turn conquered wells into automated production sites, then lead a new expedition into richer territory.
+**Mana Well is an incremental action-defense game about extracting power from a world that fights back.** The current prototype presents this loop as a native 2D side view: command a heavy industrial suit, install a harvester over a glowing fracture, and defend it as the mana plume attracts increasingly dangerous creatures. Decide when to seal the tank and bank your haul. Another surge could fund your next breakthrough, but defeat costs the unbanked mana. Spend successful harvests on specialized heroes and visibly evolving machinery. Turn conquered wells into automated production sites, then lead a new expedition into richer territory.
 
 The fantasy grows from **one operator protecting a rattling pump** to **a commander running an extraction network**. Active play provides danger, discovery, and exceptional harvests. Automation makes earlier accomplishments continue working for you.
 
@@ -28,7 +28,7 @@ Support both a short visit to collect income and buy an upgrade, and a longer se
 
 ## 3. What the game looks and feels like
 
-Use compact 3D arenas with an elevated three-quarter camera. The harvester is the visual anchor, surrounded by readable approach routes and enough space to reposition. Normal combat must clearly show attack windups, machine damage, and escape routes. Reserve dramatic low angles for arrivals and extraction celebrations.
+The active prototype uses a fixed side-view 2D arena on a single horizontal ground lane. The harvester is the visual anchor at the center, with a service walkway, gantries, stacks, readable entry warnings, and enough lane space to reposition. Normal combat clearly shows attack windups, machine damage, projectile paths, and escape routes. The former 3D presentation remains historical in the archived runtime, not an active implementation requirement.
 
 Operators wear massive powered armor: chunky plates, exposed joints, vents, chipped paint, and heavy weapon recoil. The harvester unfolds stabilizers, drives a probe into the crack, and fills armored tanks with increasingly unstable light. Creatures contrast with the industrial equipment through organic silhouettes and movement.
 

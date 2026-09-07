@@ -74,13 +74,18 @@ func _create_loadout_button(loadout_id: String) -> Button:
 	var button := Button.new()
 	button.name = "Loadout_%s" % loadout_id
 	button.set_meta("loadout_id", loadout_id)
-	button.custom_minimum_size = Vector2(0, 56)
+	button.custom_minimum_size = Vector2(0, 78)
 	button.toggle_mode = true
 	button.pressed.connect(loadout_requested.emit.bind(loadout_id))
 	var content := VBoxContainer.new()
 	content.name = "LoadoutContent"
 	content.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, 8)
+	content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	content.offset_left = 8
+	content.offset_top = 6
+	content.offset_right = -8
+	content.offset_bottom = -6
+	content.add_theme_constant_override("separation", 2)
 	var label := Label.new()
 	label.name = "LoadoutLabel"
 	label.add_theme_font_size_override("font_size", 16)
@@ -88,7 +93,7 @@ func _create_loadout_button(loadout_id: String) -> Button:
 	var summary := Label.new()
 	summary.name = "LoadoutSummary"
 	summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	summary.add_theme_font_size_override("font_size", 14)
+	summary.add_theme_font_size_override("font_size", 12)
 	content.add_child(summary)
 	button.add_child(content)
 	return button
@@ -100,7 +105,8 @@ func _configure_loadout_button(button: Button, loadout: Dictionary) -> void:
 	button.button_pressed = selected
 	button.tooltip_text = str(loadout.get("availability_reason", ""))
 	button.disabled = not bool(loadout.get("available", false))
-	button.get_node("LoadoutContent/LoadoutLabel").text = ("Selected - " if selected else "") + label
+	var status_prefix := "Selected - " if selected else "Locked - " if button.disabled else ""
+	button.get_node("LoadoutContent/LoadoutLabel").text = status_prefix + label
 	button.get_node("LoadoutContent/LoadoutSummary").text = str(loadout.get("summary", ""))
 
 func request_start() -> void:

@@ -1,0 +1,249 @@
+{
+  "prompt": [
+    21,
+    "8a1ef949-dfa4-45d7-862d-06263919bbcf",
+    {
+      "1": {
+        "class_type": "PrimitiveStringMultiline",
+        "inputs": {
+          "value": "A physically grounded retro-industrial foundry service deck built from reinforced concrete, heavy rubber edge seals and blackened steel plates. Functional wear and repair history, broad quiet forms, no decorative clutter."
+        }
+      },
+      "2": {
+        "class_type": "PrimitiveStringMultiline",
+        "inputs": {
+          "value": "A hand-painted late-1980s to early-1990s Japanese science-fiction OVA animation frame. Painted gouache backgrounds, selective precise ink lines, hard cel shadow shapes in three value groups, graphic painted metal highlights, restrained gradients and subtle analog grain. Tactile illustrated material weight and clear silhouettes. One coherent finished scene, no collage, no captions or watermark. Avoid glossy CGI, photographic rendering, holograms and indiscriminate tiny panel detail."
+        }
+      },
+      "3": {
+        "class_type": "PrimitiveStringMultiline",
+        "inputs": {
+          "value": "A broad horizontal service deck material for a retro-industrial foundry: worn reinforced concrete and inset metal plates, subtle seams, patched edges, restrained oil stains and scuffed maintenance wear. Quiet broad surfaces with no object standing on the deck."
+        }
+      },
+      "4": {
+        "class_type": "PrimitiveStringMultiline",
+        "inputs": {
+          "value": "Wide 3:1 horizontal material source, level side-on view with the deck surface presented as a calm broad band. No painted fake holes, no obstacles, no deep cracks crossing the play lane, no strong baked cast shadows, no perspective convergence, no text, no lettering, no actors, no machine. This is a material source, not a promised seamless tile."
+        }
+      },
+      "5": {
+        "class_type": "PrimitiveStringMultiline",
+        "inputs": {
+          "value": "Charcoal concrete, faded blue-grey metal, small muted ochre maintenance accents, restrained upper-left illumination and soft painted OVA texture. Keep contrast low enough for dark and bright actors to remain readable."
+        }
+      },
+      "6": {
+        "class_type": "StringConcatenate",
+        "inputs": {
+          "string_a": [
+            "1",
+            0
+          ],
+          "string_b": [
+            "2",
+            0
+          ],
+          "delimiter": "\n\n"
+        }
+      },
+      "7": {
+        "class_type": "StringConcatenate",
+        "inputs": {
+          "string_a": [
+            "6",
+            0
+          ],
+          "string_b": [
+            "3",
+            0
+          ],
+          "delimiter": "\n\n"
+        }
+      },
+      "8": {
+        "class_type": "StringConcatenate",
+        "inputs": {
+          "string_a": [
+            "7",
+            0
+          ],
+          "string_b": [
+            "4",
+            0
+          ],
+          "delimiter": "\n\n"
+        }
+      },
+      "9": {
+        "class_type": "StringConcatenate",
+        "inputs": {
+          "string_a": [
+            "8",
+            0
+          ],
+          "string_b": [
+            "5",
+            0
+          ],
+          "delimiter": "\n\n"
+        }
+      },
+      "10": {
+        "class_type": "UNETLoader",
+        "inputs": {
+          "unet_name": "krea2_turbo_fp8_scaled.safetensors",
+          "weight_dtype": "default"
+        }
+      },
+      "11": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "qwen3vl_4b_fp8_scaled.safetensors",
+          "type": "krea2",
+          "device": "default"
+        }
+      },
+      "12": {
+        "class_type": "VAELoader",
+        "inputs": {
+          "vae_name": "qwen_image_vae.safetensors"
+        }
+      },
+      "13": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "11",
+            0
+          ],
+          "text": [
+            "9",
+            0
+          ]
+        }
+      },
+      "14": {
+        "class_type": "ConditioningZeroOut",
+        "inputs": {
+          "conditioning": [
+            "13",
+            0
+          ]
+        }
+      },
+      "15": {
+        "class_type": "EmptyLatentImage",
+        "inputs": {
+          "width": 1536,
+          "height": 512,
+          "batch_size": 1
+        }
+      },
+      "16": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "10",
+            0
+          ],
+          "positive": [
+            "13",
+            0
+          ],
+          "negative": [
+            "14",
+            0
+          ],
+          "latent_image": [
+            "15",
+            0
+          ],
+          "seed": 9072108,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "euler",
+          "scheduler": "simple",
+          "denoise": 1.0
+        }
+      },
+      "17": {
+        "class_type": "VAEDecode",
+        "inputs": {
+          "samples": [
+            "16",
+            0
+          ],
+          "vae": [
+            "12",
+            0
+          ]
+        }
+      },
+      "18": {
+        "class_type": "SaveImage",
+        "inputs": {
+          "images": [
+            "17",
+            0
+          ],
+          "filename_prefix": "Telos/SideView/08_environment_lane"
+        }
+      }
+    },
+    {
+      "telos_job": "b55ec57aa2bc4b259b8f17da96c736b4",
+      "create_time": 1788783124167
+    },
+    [
+      "18"
+    ]
+  ],
+  "outputs": {
+    "18": {
+      "images": [
+        {
+          "filename": "08_environment_lane_00001_.png",
+          "subfolder": "Telos\\SideView",
+          "type": "output"
+        }
+      ]
+    }
+  },
+  "status": {
+    "status_str": "success",
+    "completed": true,
+    "messages": [
+      [
+        "execution_start",
+        {
+          "prompt_id": "8a1ef949-dfa4-45d7-862d-06263919bbcf",
+          "timestamp": 1788783125266
+        }
+      ],
+      [
+        "execution_cached",
+        {
+          "nodes": [],
+          "prompt_id": "8a1ef949-dfa4-45d7-862d-06263919bbcf",
+          "timestamp": 1788783125269
+        }
+      ],
+      [
+        "execution_success",
+        {
+          "prompt_id": "8a1ef949-dfa4-45d7-862d-06263919bbcf",
+          "timestamp": 1788783160619
+        }
+      ]
+    ]
+  },
+  "meta": {
+    "18": {
+      "node_id": "18",
+      "display_node": "18",
+      "parent_node": null,
+      "real_node_id": "18"
+    }
+  }
+}

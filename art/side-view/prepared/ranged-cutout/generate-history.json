@@ -1,0 +1,110 @@
+{
+  "prompt": [
+    19,
+    "5191258a-2607-496d-aeaf-ff1fa84299fb",
+    {
+      "1": {
+        "class_type": "LoadImage",
+        "inputs": {
+          "image": "telos-side-68c89b3726cb4ad8bb595df109e153b3.png"
+        }
+      },
+      "2": {
+        "class_type": "Trellis2RemoveBackground",
+        "inputs": {
+          "image": [
+            "1",
+            0
+          ],
+          "low_vram": true
+        }
+      },
+      "3": {
+        "class_type": "InvertMask",
+        "inputs": {
+          "mask": [
+            "2",
+            1
+          ]
+        }
+      },
+      "4": {
+        "class_type": "JoinImageWithAlpha",
+        "inputs": {
+          "image": [
+            "1",
+            0
+          ],
+          "alpha": [
+            "3",
+            0
+          ]
+        }
+      },
+      "5": {
+        "class_type": "SaveImage",
+        "inputs": {
+          "images": [
+            "4",
+            0
+          ],
+          "filename_prefix": "Telos/SideView/cutouts/asset"
+        }
+      }
+    },
+    {
+      "telos_job": "d0c989a60dd541c1ae1c3edd2d6bebbd",
+      "create_time": 1788781311314
+    },
+    [
+      "5"
+    ]
+  ],
+  "outputs": {
+    "5": {
+      "images": [
+        {
+          "filename": "asset_00005_.png",
+          "subfolder": "Telos\\SideView\\cutouts",
+          "type": "output"
+        }
+      ]
+    }
+  },
+  "status": {
+    "status_str": "success",
+    "completed": true,
+    "messages": [
+      [
+        "execution_start",
+        {
+          "prompt_id": "5191258a-2607-496d-aeaf-ff1fa84299fb",
+          "timestamp": 1788781311315
+        }
+      ],
+      [
+        "execution_cached",
+        {
+          "nodes": [],
+          "prompt_id": "5191258a-2607-496d-aeaf-ff1fa84299fb",
+          "timestamp": 1788781311322
+        }
+      ],
+      [
+        "execution_success",
+        {
+          "prompt_id": "5191258a-2607-496d-aeaf-ff1fa84299fb",
+          "timestamp": 1788781312434
+        }
+      ]
+    ]
+  },
+  "meta": {
+    "5": {
+      "node_id": "5",
+      "display_node": "5",
+      "parent_node": null,
+      "real_node_id": "5"
+    }
+  }
+}

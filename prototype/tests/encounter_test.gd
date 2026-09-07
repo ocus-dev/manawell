@@ -12,6 +12,8 @@ func _init() -> void:
 	assert(controller.run_state.phase == RunStateScript.Phase.EXTRACTING)
 	controller.tick(1.0)
 	assert(controller.run_state.tank_base > 0.0)
+	assert(is_equal_approx(controller.harvest_feedback_amount, controller.run_state.extraction_rate))
+	assert(controller.harvest_feedback_remaining > 0.0)
 	controller.request_start_or_harvest()
 	assert(controller.run_state.phase == RunStateScript.Phase.SEALING)
 	controller.tick(2.0)

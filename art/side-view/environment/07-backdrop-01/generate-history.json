@@ -1,0 +1,249 @@
+{
+  "prompt": [
+    20,
+    "556db6b3-8ea7-465f-bd19-289c91b4fa7a",
+    {
+      "1": {
+        "class_type": "PrimitiveStringMultiline",
+        "inputs": {
+          "value": "A physically grounded retro-industrial foundry frontier: reinforced concrete, painted steel, blackened pipework, cooling equipment, ducts, gantries and practical maintenance structures. Broad engineered forms, sparse meaningful detail, visible function and historical repairs. No sleek futuristic surfaces."
+        }
+      },
+      "2": {
+        "class_type": "PrimitiveStringMultiline",
+        "inputs": {
+          "value": "A hand-painted late-1980s to early-1990s Japanese science-fiction OVA animation frame. Painted gouache backgrounds, selective precise ink lines, hard cel shadow shapes in three value groups, graphic painted metal highlights, restrained gradients and subtle analog grain. Tactile illustrated material weight and clear silhouettes. One coherent finished scene, no collage, no captions or watermark. Avoid glossy CGI, photographic rendering, holograms and indiscriminate tiny panel detail."
+        }
+      },
+      "3": {
+        "class_type": "PrimitiveStringMultiline",
+        "inputs": {
+          "value": "A wide fixed-camera Broken Foundry side-view arena background: distant stepped brutalist foundry buildings, cooling stacks, rear gantries, thick pipes and muted industrial infrastructure arranged only along the rear and far edges. Leave a broad quiet central combat lane and clear machine area. No actors, machines, weapons, UI, lettering, signage text or foreground occlusion."
+        }
+      },
+      "4": {
+        "class_type": "PrimitiveStringMultiline",
+        "inputs": {
+          "value": "Strict level SIDE-ON orthographic game background, 16:9 wide landscape plate, camera parallel to the service deck at actor mid-height. Horizon and distant architecture remain stable and nearly horizontal. Keep the central machine position around x=640 clear, leave open space from x=96 to x=1184, and reserve the lower service lane for a later separate deck layer. No isometric tilt, no elevated courtyard view, no perspective floor plane, no actors, no machine, no UI, no lettering."
+        }
+      },
+      "5": {
+        "class_type": "PrimitiveStringMultiline",
+        "inputs": {
+          "value": "Blue-grey overcast ambient light, muted ochre painted steel, charcoal reinforced concrete, restrained cyan instrumentation far in the distance. Low-contrast atmospheric depth behind the open lane, soft upper-left light, large calm value shapes, readable silhouettes over the center. No dramatic vignette."
+        }
+      },
+      "6": {
+        "class_type": "StringConcatenate",
+        "inputs": {
+          "string_a": [
+            "1",
+            0
+          ],
+          "string_b": [
+            "2",
+            0
+          ],
+          "delimiter": "\n\n"
+        }
+      },
+      "7": {
+        "class_type": "StringConcatenate",
+        "inputs": {
+          "string_a": [
+            "6",
+            0
+          ],
+          "string_b": [
+            "3",
+            0
+          ],
+          "delimiter": "\n\n"
+        }
+      },
+      "8": {
+        "class_type": "StringConcatenate",
+        "inputs": {
+          "string_a": [
+            "7",
+            0
+          ],
+          "string_b": [
+            "4",
+            0
+          ],
+          "delimiter": "\n\n"
+        }
+      },
+      "9": {
+        "class_type": "StringConcatenate",
+        "inputs": {
+          "string_a": [
+            "8",
+            0
+          ],
+          "string_b": [
+            "5",
+            0
+          ],
+          "delimiter": "\n\n"
+        }
+      },
+      "10": {
+        "class_type": "UNETLoader",
+        "inputs": {
+          "unet_name": "krea2_turbo_fp8_scaled.safetensors",
+          "weight_dtype": "default"
+        }
+      },
+      "11": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "qwen3vl_4b_fp8_scaled.safetensors",
+          "type": "krea2",
+          "device": "default"
+        }
+      },
+      "12": {
+        "class_type": "VAELoader",
+        "inputs": {
+          "vae_name": "qwen_image_vae.safetensors"
+        }
+      },
+      "13": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "11",
+            0
+          ],
+          "text": [
+            "9",
+            0
+          ]
+        }
+      },
+      "14": {
+        "class_type": "ConditioningZeroOut",
+        "inputs": {
+          "conditioning": [
+            "13",
+            0
+          ]
+        }
+      },
+      "15": {
+        "class_type": "EmptyLatentImage",
+        "inputs": {
+          "width": 1536,
+          "height": 864,
+          "batch_size": 1
+        }
+      },
+      "16": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "10",
+            0
+          ],
+          "positive": [
+            "13",
+            0
+          ],
+          "negative": [
+            "14",
+            0
+          ],
+          "latent_image": [
+            "15",
+            0
+          ],
+          "seed": 9072107,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "euler",
+          "scheduler": "simple",
+          "denoise": 1.0
+        }
+      },
+      "17": {
+        "class_type": "VAEDecode",
+        "inputs": {
+          "samples": [
+            "16",
+            0
+          ],
+          "vae": [
+            "12",
+            0
+          ]
+        }
+      },
+      "18": {
+        "class_type": "SaveImage",
+        "inputs": {
+          "images": [
+            "17",
+            0
+          ],
+          "filename_prefix": "Telos/SideView/07_environment_backdrop"
+        }
+      }
+    },
+    {
+      "telos_job": "06f9d592804d4cce9ce4f56987513575",
+      "create_time": 1788783079391
+    },
+    [
+      "18"
+    ]
+  ],
+  "outputs": {
+    "18": {
+      "images": [
+        {
+          "filename": "07_environment_backdrop_00001_.png",
+          "subfolder": "Telos\\SideView",
+          "type": "output"
+        }
+      ]
+    }
+  },
+  "status": {
+    "status_str": "success",
+    "completed": true,
+    "messages": [
+      [
+        "execution_start",
+        {
+          "prompt_id": "556db6b3-8ea7-465f-bd19-289c91b4fa7a",
+          "timestamp": 1788783079393
+        }
+      ],
+      [
+        "execution_cached",
+        {
+          "nodes": [],
+          "prompt_id": "556db6b3-8ea7-465f-bd19-289c91b4fa7a",
+          "timestamp": 1788783079395
+        }
+      ],
+      [
+        "execution_success",
+        {
+          "prompt_id": "556db6b3-8ea7-465f-bd19-289c91b4fa7a",
+          "timestamp": 1788783120207
+        }
+      ]
+    ]
+  },
+  "meta": {
+    "18": {
+      "node_id": "18",
+      "display_node": "18",
+      "parent_node": null,
+      "real_node_id": "18"
+    }
+  }
+}

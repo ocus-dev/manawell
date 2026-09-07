@@ -1,12 +1,13 @@
-# Telos prototype
+# Telos prototype 2D
 
-Godot project for the Windows desktop prototype. The current scene contains the arena, controllable hero, extraction encounter flow, surge director, melee and ranged threats, automatic weapon, and HUD.
+Active Godot project for the Windows desktop side-view prototype. The fixed 1280x720 logical canvas uses a single horizontal ground lane, a central harvester, procedural industrial presentation, continuing surge pressure, and the full two-well progression, loadout, production, and recovery loop. The accepted experiment at `../experiments/side-view-defense/` is frozen historical evidence; the original 3D runtime is independently preserved at `../archive/prototype-3d/`. Neither is an active dependency.
 
 ## Verified toolchain
 
 - Godot: `4.8.dev4.official.b56a91878`
 - Editor: `C:\Users\TTOCS\Documents\ChatGPT\Telos Game\Godot_v4.8-dev4_win64.exe\Godot_v4.8-dev4_win64.exe`
 - Console runner: `C:\Users\TTOCS\Documents\ChatGPT\Telos Game\Godot_v4.8-dev4_win64.exe\Godot_v4.8-dev4_win64_console.exe`
+- Active project: `prototype/`, using the isolated 2D profile `user://telos_side_view_defense_experiment`.
 
 The executable directory is kept outside the project. This is a development build; use a stable Godot 4 release before shipping.
 
@@ -25,96 +26,12 @@ To run the main scene without opening the editor:
 & $godot --path '.\prototype'
 ```
 
+For the static-art comparison scene, open the project in the editor and run `scenes/previews/side_view_visual_slice.tscn`. The five trial sprites are in `assets/side-view/`; their source/cutout provenance, alpha bounds, visible heights, and ground anchors are recorded in `assets/side-view/side-view-assets.json`. Native screenshot evidence and the owner review checklist are in `../work/playtests/static-sprite-slice.md`.
+
 The game uses keyboard controls: `WASD` moves, `E` starts extraction or harvests, `Space` dashes, `Q` uses the defensive pulse, and `Escape` pauses or resumes. The HUD exposes the same actions plus preparation, assignment, upgrade, network, retry, abandon, and save-reset controls. Purchases, guard assignments, well selection, and loadout selection are available outside active combat only.
 
-The runtime save is `user://account_save.json`; its temporary and last-good files are `user://account_save.tmp` and `user://account_save.bak`. The **ACCOUNT > Clear saved progress** action removes all three and restores a fresh Well 1/Hero 1 account. Headless tests disable runtime persistence and use separate injected fixture paths, so they do not modify the real profile.
-
-Run snapshots use schema v3. `Hero`, `AutoWeapon`, `MeleeEnemy`, `RangedEnemy`, `Projectile`, and `RangedProjectile` expose explicit `capture_snapshot_state()` and `restore_snapshot_state()` methods. The controller assembles actor and component records, restores known kinds through their owners, and stores projectile positions in world space (local position is used only for detached fixtures). Legacy snapshots missing v3 component or weapon state are rejected rather than silently upgraded into inexact recovery.
-
-`recovery_equivalence_test.gd` drives uninterrupted and save/reload/resume encounters through the same fixed-step scheduler and compares combat state, stable IDs, in-flight projectiles, sealing, payout, and failed-checkpoint retention.
-
-The encounter HUD lives in `scripts/ui/encounter_hud.gd`. It emits semantic ID commands and receives read-only view state; controller commands remain responsible for legality, production settlement, persistence, and account mutations.
-
-Runtime content definitions are centralized in `scripts/model/content_catalog.gd`. The catalog supplies well output and modifiers, hero and upgrade IDs, and authored surge composition rules. Account validation can receive an injected catalog for tests; the runtime uses the default two-well/two-hero catalog.
-
-Run identity is account-owned: `AccountState.allocate_run_id()` advances the persisted sequence, and `complete_run()` validates the active identity before applying payout and commissioning exactly once. Legacy generated IDs migrate into the sequence; unsafe arbitrary legacy IDs preserve banked progress and reject active snapshots with a recovery diagnostic. The focused coverage is in `tests/run_identity_credit_test.gd`.
-
-## Run the headless bootstrap test
-
-```powershell
-$godot_console = 'C:\Users\TTOCS\Documents\ChatGPT\Telos Game\Godot_v4.8-dev4_win64.exe\Godot_v4.8-dev4_win64_console.exe'
-& $godot_console --headless --path '.\prototype' --script 'res://tests/bootstrap_test.gd'
-if ($LASTEXITCODE -ne 0) { throw "Bootstrap test failed with exit code $LASTEXITCODE" }
-```
-
-The test must exit with code `0`. It checks the project name and main scene path without touching a player save.
-
-## Run the test suite
-
-From the repository root in PowerShell, provide the console executable explicitly:
-
-```powershell
-$godot_console = '.\Godot_v4.8-dev4_win64.exe\Godot_v4.8-dev4_win64_console.exe'
-& .\prototype\run_tests.ps1 -GodotPath $godot_console
-```
-
-Use `-TestFilter name` to run one test or an isolated fixture. The runner captures a log per test, enforces a 30-second timeout, and rejects nonzero exits, parse errors, assertions, and `SCRIPT ERROR` diagnostics. The malformed-JSON diagnostic in `account_saves_test.gd` is the only allowed diagnostic. Failure and timeout fixtures live under `tests/fixtures/` and are excluded from ordinary discovery.
-
-## Run the arena movement test
-
-```powershell
-& $godot_console --headless --path '.\prototype' --script 'res://tests/arena_movement_test.gd'
-if ($LASTEXITCODE -ne 0) { throw "Arena movement test failed with exit code $LASTEXITCODE" }
-```
-
-This checks normalized diagonal movement, reserved input actions, and the arena collision node structure. Use the editor or the game window for manual control and readability checks.
-
-## Run the extraction state test
-
-```powershell
-& $godot_console --headless --path '.\prototype' --script 'res://tests/run_state_test.gd'
-if ($LASTEXITCODE -ne 0) { throw "Extraction state test failed with exit code $LASTEXITCODE" }
-```
-
-The scene-independent model is `res://scripts/model/run_state.gd`; tunable extraction values are in `res://data/balance.gd`. `RunState` exposes `start`, `advance`, `request_harvest`, `apply_damage`, `abandon`, `reset`, and `get_terminal_result`. The caller must apply combat damage before calling `advance` on each gameplay tick so lethal damage wins ties with sealing completion.
-
-## Run the encounter integration test
-
-```powershell
-& $godot_console --headless --path '.\prototype' --script 'res://tests/encounter_test.gd'
-if ($LASTEXITCODE -ne 0) { throw "Encounter test failed with exit code $LASTEXITCODE" }
-```
-
-The encounter controller is `res://scripts/game/encounter_controller.gd`. In the running game, `E` or the HUD button starts/harvests, `Escape` pauses/resumes, and `Retry` or `Abandon run` controls terminal encounters. The two `DEV:` buttons apply damage directly to the hero or machine as a temporary stand-in for enemies; they are not enemy AI and are not a shipping control surface.
-
-## Run the melee enemy test
-
-```powershell
-& $godot_console --headless --path '.\prototype' --script 'res://tests/melee_enemy_test.gd'
-if ($LASTEXITCODE -ne 0) { throw "Melee enemy test failed with exit code $LASTEXITCODE" }
-```
-
-Melee enemies use `res://scripts/game/melee_enemy.gd` and expose `setup`, `simulate_tick`, `take_damage`, and `die`. The encounter director spawns authored tier compositions from simulation time, continues pressure during sealing, skips attempts at the 60-enemy cap, and applies late-tier and well-two damage escalation.
-
-## Run the automatic weapon test
-
-```powershell
-& $godot_console --headless --path '.\prototype' --script 'res://tests/auto_weapon_test.gd'
-if ($LASTEXITCODE -ne 0) { throw "Automatic weapon test failed with exit code $LASTEXITCODE" }
-```
-
-`res://scripts/game/auto_weapon.gd` acquires the nearest living enemy within 12 units and fires one 10-damage projectile every 0.6 seconds. Projectiles travel at 18 units/sec, live for 3 seconds, and can damage one enemy once. The controller clears them on retry and terminal states.
-
-## Run the surges and ranged enemy test
-
-```powershell
-& $godot_console --headless --path '.\prototype' --script 'res://tests/surges_ranged_test.gd'
-if ($LASTEXITCODE -ne 0) { throw "Surges and ranged enemy test failed with exit code $LASTEXITCODE" }
-```
-
-Ranged threats stop within 8 units, telegraph for 0.6 seconds, fire 8-damage projectiles at speed 8, and expire after 3 seconds or a hit. Their attack state and projectiles freeze while paused.
-
-## Run the player abilities test
+The active project has no runtime resource loads from the archive or experiment. Its accepted scope is the existing 2D prototype with retained procedural visuals, not a new platformer, final art release, or campaign expansion.
+The focused behavior checks are `movement_test.gd`, `run_state_test.gd`, `encounter_test.gd`, `surge_2d_test.gd`, `weapons_abilities_2d_test.gd`, `progression_2d_test.gd`, `persistence_2d_test.gd`, `presentation_2d_test.gd`, and the remaining model/UI tests discovered by the runner. Legacy 3D fixture names are not active paths; their disposition is recorded in `work/2d/test-matrix.md`.
 
 ```powershell
 & $godot_console --headless --path '.\prototype' --script 'res://tests/player_abilities_test.gd'

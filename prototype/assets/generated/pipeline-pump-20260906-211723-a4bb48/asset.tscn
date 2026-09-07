@@ -1,7 +1,0 @@
-[gd_scene format=3]
-
-[ext_resource type="PackedScene" path="res://assets/generated/pipeline-pump-20260906-211723-a4bb48/model.glb" id="1"]
-
-[node name="GeneratedAsset" type="Node3D"]
-
-[node name="Model" parent="." instance=ExtResource("1")]

@@ -1,5 +1,7 @@
 # Local asset pipeline
 
+For the active **2D side-view game**, use the new [hero, harvester, enemy, and cutout workflows](../../art/side-view/README.md). The mesh pipeline below remains available for the preserved 3D work; it is not required for sprites.
+
 Run this from the Telos Game repository in PowerShell. It uses your installed ComfyUI, existing Krea concept workflow, TRELLIS.2, Blender and Godot. **Routine generation does not call Codex, an image API or a paid cloud service.** Once models are cached, generation runs on your GPU. Initial model/dependency downloads require internet access.
 
 ## First use

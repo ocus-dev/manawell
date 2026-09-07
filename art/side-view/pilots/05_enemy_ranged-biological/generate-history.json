@@ -1,0 +1,249 @@
+{
+  "prompt": [
+    15,
+    "a1f9192c-35b5-4a2f-ade8-6d7495c7feb6",
+    {
+      "1": {
+        "class_type": "PrimitiveStringMultiline",
+        "inputs": {
+          "value": "Native alien fauna inhabiting a retro-industrial science-fiction world. This subject is entirely BIOLOGICAL: matte chitin, rough bone, leathery hide, tendons, muscular limbs and naturally grown irregular shell plates. No manufactured armor, metal panels, bolts, hydraulics, robotic joints, cables, guns or machinery on its body. Broad organic primary masses, readable functional anatomy and clear negative spaces. Restrained surface detail, strong weight and material texture. Keep the graphic painted OVA rendering of the surrounding industrial world while contrasting its manufactured machines."
+        }
+      },
+      "2": {
+        "class_type": "PrimitiveStringMultiline",
+        "inputs": {
+          "value": "A hand-painted late-1980s to early-1990s Japanese science-fiction OVA animation frame. Painted gouache backgrounds, selective precise ink lines, hard cel shadow shapes in three value groups, graphic painted metal highlights, restrained gradients and subtle analog grain. Tactile illustrated material weight and clear silhouettes. One coherent finished scene, no collage, no captions or watermark. Avoid glossy CGI, photographic rendering, holograms and indiscriminate tiny panel detail."
+        }
+      },
+      "3": {
+        "class_type": "PrimitiveStringMultiline",
+        "inputs": {
+          "value": "One alien ranged spitter creature, full body, strict SIDE PROFILE facing RIGHT. Tall narrow tripod-like organic legs, raised arched neck and forward-pointing tubular biological snout, distinct swollen throat reservoir. Clear spaces between legs. Idle poised firing stance, mouth closed, no projectile or smoke. Feet on one baseline. No manufactured weapon."
+        }
+      },
+      "4": {
+        "class_type": "PrimitiveStringMultiline",
+        "inputs": {
+          "value": "Production concept for a 2D SIDE-VIEW game sprite. Orthographic side elevation at subject mid-height; camera level, no top-down view, no isometric view, no three-quarter turn, no foreshortening. ONE isolated complete subject centered on a perfectly uniform light grey background. Entire silhouette including feet, antennae and weapon visible with at least 12 percent empty margin on every edge. No floor line, cast ground shadow, environment, text, labels, sprite sheet, turnaround, duplicate subject or cropped extremities. Soft upper-left studio illumination, restrained painted shading. Opaque background for a separate segmentation pass; do not draw a checkerboard."
+        }
+      },
+      "5": {
+        "class_type": "PrimitiveStringMultiline",
+        "inputs": {
+          "value": "Muted violet-grey shell and pale bone limbs, small amber throat reservoir to support a later windup glow. No friendly cyan."
+        }
+      },
+      "6": {
+        "class_type": "StringConcatenate",
+        "inputs": {
+          "string_a": [
+            "1",
+            0
+          ],
+          "string_b": [
+            "2",
+            0
+          ],
+          "delimiter": "\n\n"
+        }
+      },
+      "7": {
+        "class_type": "StringConcatenate",
+        "inputs": {
+          "string_a": [
+            "6",
+            0
+          ],
+          "string_b": [
+            "3",
+            0
+          ],
+          "delimiter": "\n\n"
+        }
+      },
+      "8": {
+        "class_type": "StringConcatenate",
+        "inputs": {
+          "string_a": [
+            "7",
+            0
+          ],
+          "string_b": [
+            "4",
+            0
+          ],
+          "delimiter": "\n\n"
+        }
+      },
+      "9": {
+        "class_type": "StringConcatenate",
+        "inputs": {
+          "string_a": [
+            "8",
+            0
+          ],
+          "string_b": [
+            "5",
+            0
+          ],
+          "delimiter": "\n\n"
+        }
+      },
+      "10": {
+        "class_type": "UNETLoader",
+        "inputs": {
+          "unet_name": "krea2_turbo_fp8_scaled.safetensors",
+          "weight_dtype": "default"
+        }
+      },
+      "11": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "qwen3vl_4b_fp8_scaled.safetensors",
+          "type": "krea2",
+          "device": "default"
+        }
+      },
+      "12": {
+        "class_type": "VAELoader",
+        "inputs": {
+          "vae_name": "qwen_image_vae.safetensors"
+        }
+      },
+      "13": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "11",
+            0
+          ],
+          "text": [
+            "9",
+            0
+          ]
+        }
+      },
+      "14": {
+        "class_type": "ConditioningZeroOut",
+        "inputs": {
+          "conditioning": [
+            "13",
+            0
+          ]
+        }
+      },
+      "15": {
+        "class_type": "EmptyLatentImage",
+        "inputs": {
+          "width": 1024,
+          "height": 1024,
+          "batch_size": 1
+        }
+      },
+      "16": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "10",
+            0
+          ],
+          "positive": [
+            "13",
+            0
+          ],
+          "negative": [
+            "14",
+            0
+          ],
+          "latent_image": [
+            "15",
+            0
+          ],
+          "seed": 9072030,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "euler",
+          "scheduler": "simple",
+          "denoise": 1.0
+        }
+      },
+      "17": {
+        "class_type": "VAEDecode",
+        "inputs": {
+          "samples": [
+            "16",
+            0
+          ],
+          "vae": [
+            "12",
+            0
+          ]
+        }
+      },
+      "18": {
+        "class_type": "SaveImage",
+        "inputs": {
+          "images": [
+            "17",
+            0
+          ],
+          "filename_prefix": "Telos/SideView/05_enemy_ranged"
+        }
+      }
+    },
+    {
+      "telos_job": "87f7549e791344d488c48308c541df24",
+      "create_time": 1788780133903
+    },
+    [
+      "18"
+    ]
+  ],
+  "outputs": {
+    "18": {
+      "images": [
+        {
+          "filename": "05_enemy_ranged_00002_.png",
+          "subfolder": "Telos\\SideView",
+          "type": "output"
+        }
+      ]
+    }
+  },
+  "status": {
+    "status_str": "success",
+    "completed": true,
+    "messages": [
+      [
+        "execution_start",
+        {
+          "prompt_id": "a1f9192c-35b5-4a2f-ade8-6d7495c7feb6",
+          "timestamp": 1788780134842
+        }
+      ],
+      [
+        "execution_cached",
+        {
+          "nodes": [],
+          "prompt_id": "a1f9192c-35b5-4a2f-ade8-6d7495c7feb6",
+          "timestamp": 1788780134844
+        }
+      ],
+      [
+        "execution_success",
+        {
+          "prompt_id": "a1f9192c-35b5-4a2f-ade8-6d7495c7feb6",
+          "timestamp": 1788780168246
+        }
+      ]
+    ]
+  },
+  "meta": {
+    "18": {
+      "node_id": "18",
+      "display_node": "18",
+      "parent_node": null,
+      "real_node_id": "18"
+    }
+  }
+}

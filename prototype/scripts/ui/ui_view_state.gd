@@ -88,29 +88,33 @@ static func _research_view(account: RefCounted, catalog: RefCounted, run_state: 
 static func _expedition_view(account: RefCounted, catalog: RefCounted, destination_id: String, run_state: RefCounted) -> Dictionary:
 	var well_definition: Dictionary = catalog.get_well(destination_id)
 	var selected_loadout_id: String = account.get_loadout_for_well(destination_id)
+	var unlocked: bool = account.is_well_unlocked(destination_id)
 	var well_commissioned: bool = account.is_well_commissioned(destination_id)
 	var first_expedition: bool = destination_id == "well_1" and account.commissioned_wells.is_empty()
 	var well_2_commissioned: bool = account.is_well_commissioned("well_2")
 	var loadouts: Array[Dictionary] = []
 	for loadout_id in LoadoutScript.IDS:
-		var available: bool = well_commissioned and LoadoutScript.is_available(loadout_id, well_2_commissioned)
+		var available: bool = (well_commissioned or (unlocked and loadout_id == LoadoutScript.STANDARD)) and LoadoutScript.is_available(loadout_id, well_2_commissioned)
 		loadouts.append({
 			"id": loadout_id,
 			"label": LoadoutScript.label(loadout_id),
 			"summary": LoadoutScript.summary(loadout_id),
 			"selected": loadout_id == selected_loadout_id,
 			"available": available,
-			"availability_reason": "Commission this well first." if not well_commissioned else "Commission Well 2 to unlock this loadout." if not LoadoutScript.is_available(loadout_id, well_2_commissioned) else "Ready.",
+			"availability_reason": "Standard is available for this unlocked well." if unlocked and not well_commissioned and loadout_id == LoadoutScript.STANDARD else "Complete a qualifying harvest to commission this well." if not well_commissioned else "Commission Well 2 to unlock this loadout." if not LoadoutScript.is_available(loadout_id, well_2_commissioned) else "Ready.",
 		})
 	var active_hero_id: String = account.get_active_hero_id()
 	var guard_id: String = account.get_guard_for_well(destination_id)
 	var ready: bool = run_state == null or run_state.phase == RunStateScript.Phase.READY or run_state.phase == RunStateScript.Phase.SUCCESS or run_state.phase == RunStateScript.Phase.FAILED
-	var start_available: bool = ready and (well_commissioned or first_expedition) and not active_hero_id.is_empty() and LoadoutScript.is_available(selected_loadout_id, well_2_commissioned)
+	var standard_uncommissioned: bool = unlocked and not well_commissioned and selected_loadout_id == LoadoutScript.STANDARD
+	var start_available: bool = ready and unlocked and not active_hero_id.is_empty() and (well_commissioned or standard_uncommissioned) and LoadoutScript.is_available(selected_loadout_id, well_2_commissioned)
 	var disabled_reason: String = ""
 	if not ready:
 		disabled_reason = "Finish the current extraction before starting another."
-	elif not well_commissioned and not first_expedition:
-		disabled_reason = "Commission this well through a qualifying harvest first."
+	elif not unlocked:
+		disabled_reason = "Complete a qualifying Well 1 harvest to unlock this well."
+	elif not well_commissioned and not standard_uncommissioned:
+		disabled_reason = "Select the Standard loadout for this well's first expedition."
 	elif active_hero_id.is_empty():
 		disabled_reason = "Choose an expedition hero first."
 	elif not LoadoutScript.is_available(selected_loadout_id, well_2_commissioned):
@@ -140,11 +144,11 @@ static func _well_view(account: RefCounted, catalog: RefCounted, well_id: String
 	var rate: float = float(rates.get(well_id, 0.0)) * 60.0
 	var state_id: String = "locked"
 	var state_label: String = "Locked"
-	var availability_reason: String = "Unlock this well through a qualifying harvest."
+	var availability_reason: String = "Reach Surge 1 (20 seconds), then complete sealing to unlock Well 2."
 	if unlocked and not commissioned:
 		state_id = "available"
 		state_label = "Available"
-		availability_reason = "Complete a qualifying harvest first."
+		availability_reason = "Reach Surge 1 (20 seconds), then complete sealing to commission this well."
 	elif commissioned:
 		state_id = "commissioned"
 		state_label = "Commissioned"

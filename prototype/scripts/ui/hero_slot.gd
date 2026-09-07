@@ -24,6 +24,7 @@ func configure(next_data: Dictionary, next_well_id: String) -> void:
 	var state_id: String = str(slot_data.get("well_state_id", "commissioned"))
 	var assigned: bool = bool(slot_data.get("assigned", false))
 	var assignable: bool = state_id == "commissioned"
+	initials_label.visible = assignable
 	Portraits.apply(initials_label, str(slot_data.get("id", "")) if assigned and assignable else "")
 	var unavailable_reason: String = str(slot_data.get("availability_reason", ""))
 	if state_id == "locked":
@@ -61,13 +62,13 @@ func request_guard_picker() -> void:
 
 func _build() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	var row := HBoxContainer.new()
+	var row := VBoxContainer.new()
 	row.name = "HeroSlotContent"
 	row.add_theme_constant_override("separation", 12)
 	add_child(row)
 	initials_label = Label.new()
 	initials_label.name = "HeroInitials"
-	initials_label.custom_minimum_size = Vector2(48, 48)
+	initials_label.custom_minimum_size = Vector2(0, 24)
 	initials_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	initials_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	initials_label.add_theme_font_size_override("font_size", 20)
@@ -81,6 +82,7 @@ func _build() -> void:
 	copy.add_child(name_label)
 	detail_label = Label.new()
 	detail_label.name = "HeroRole"
+	detail_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	detail_label.add_theme_font_size_override("font_size", 14)
 	copy.add_child(detail_label)
 	row.add_child(copy)
@@ -100,3 +102,4 @@ func _initials(label: String) -> String:
 	if words.size() >= 2:
 		return (words[0].left(1) + words[1].left(1)).to_upper()
 	return label.left(2).to_upper()
+

@@ -8,9 +8,6 @@ const HeroPickerScript = preload("res://scripts/ui/hero_picker.gd")
 const ExpeditionPanelScript = preload("res://scripts/ui/expedition_panel.gd")
 const ResourceStripScript = preload("res://scripts/ui/resource_strip.gd")
 const UpgradeCardScript = preload("res://scripts/ui/upgrade_card.gd")
-const ResponsiveWorkspaceScript = preload("res://scripts/ui/responsive_workspace.gd")
-const ResponsiveContentScript = preload("res://scripts/ui/responsive_content.gd")
-const ResponsiveViewportScript = preload("res://scripts/ui/responsive_viewport.gd")
 
 @export var fixture_id: String = "one_well_commissioned"
 var include_notice_placeholder: bool = true
@@ -25,6 +22,13 @@ var expedition_panel
 var resource_strip
 var research_panel
 var viewport_settings_button: Button
+var navigation_bar: HBoxContainer
+var navigation_buttons: Dictionary = {}
+var crew_panel: PanelContainer
+var active_page := "operations"
+
+func _get_minimum_size() -> Vector2:
+	return Vector2.ZERO
 
 signal destination_requested(well_id: String)
 signal guard_picker_requested(well_id: String)
@@ -37,6 +41,13 @@ signal settings_requested(opener: Control)
 
 func _ready() -> void:
 	theme = IndustrialThemeScript.create()
+	theme.set_constant("separation", "VBoxContainer", 6)
+	var panel_style := theme.get_stylebox("panel", "PanelContainer").duplicate()
+	panel_style.content_margin_left = 10
+	panel_style.content_margin_right = 10
+	panel_style.content_margin_top = 8
+	panel_style.content_margin_bottom = 8
+	theme.set_stylebox("panel", "PanelContainer", panel_style)
 	_build()
 	_update_responsive_layout()
 
@@ -47,68 +58,61 @@ func _notification(what: int) -> void:
 func _build() -> void:
 	name = "OperationsPreview"
 	view_state = UiPreviewFixturesScript.make(fixture_id).view_state
-	var margin := ResponsiveViewportScript.new()
-	margin.name = "OuterMargin"
-	margin.anchor_left = 0.0
-	margin.anchor_top = 0.0
-	margin.anchor_right = 0.0
-	margin.anchor_bottom = 0.0
-	margin.offset_left = 0.0
-	margin.offset_top = 0.0
-	margin.offset_right = 0.0
-	margin.offset_bottom = 0.0
 	var scroll := ScrollContainer.new()
 	operations_scroll = scroll
 	scroll.name = "OperationsScroll"
-	scroll.anchor_left = 0.0
-	scroll.anchor_top = 0.0
-	scroll.anchor_right = 0.0
-	scroll.anchor_bottom = 0.0
-	scroll.offset_left = 0.0
-	scroll.offset_top = 0.0
-	scroll.offset_right = 0.0
-	scroll.offset_bottom = 0.0
+	scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	add_child(scroll)
+	var margin := MarginContainer.new()
+	margin.name = "OuterMargin"
+	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for edge in ["left", "right"]:
+		margin.add_theme_constant_override("margin_" + edge, 16)
+	margin.add_theme_constant_override("margin_top", 8)
+	margin.add_theme_constant_override("margin_bottom", 0)
 	scroll.add_child(margin)
-	var content := ResponsiveContentScript.new()
+	var content := VBoxContainer.new()
 	content.name = "OperationsContent"
-	content.add_theme_constant_override("separation", 16)
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	content.add_theme_constant_override("separation", 8)
 	margin.add_child(content)
+	navigation_bar = HBoxContainer.new()
+	navigation_bar.name = "NavigationBar"
+	navigation_bar.add_theme_constant_override("separation", 4)
+	content.add_child(navigation_bar)
+	_add_navigation_button("operations", "OPERATIONS")
+	_add_navigation_button("research", "RESEARCH")
+	_add_navigation_button("crew", "CREW")
 	resource_strip = ResourceStripScript.new()
 	resource_strip.name = "ResourceStrip"
 	resource_strip.settings_requested.connect(func(opener: Control): settings_requested.emit(opener))
 	resource_strip.configure(view_state.operations.research)
 	content.add_child(resource_strip)
-	var overflow_settings := resource_strip.get_node("ResourceStripContent/SettingsButton") as Button
-	overflow_settings.visible = false
-	viewport_settings_button = Button.new()
-	viewport_settings_button.name = "ViewportSettingsButton"
-	viewport_settings_button.text = "Settings"
-	viewport_settings_button.custom_minimum_size = Vector2(110, 40)
-	viewport_settings_button.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	viewport_settings_button.position = Vector2(-134, 12)
-	viewport_settings_button.pressed.connect(func(): settings_requested.emit(viewport_settings_button))
-	add_child(viewport_settings_button)
-	body = ResponsiveWorkspaceScript.new()
+	viewport_settings_button = resource_strip.get_node("ResourceStripContent/SettingsButton") as Button
+	body = BoxContainer.new()
 	body.name = "OperationsWorkspace"
-	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	body.custom_minimum_size.x = 0.0
+	body.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	body.add_theme_constant_override("separation", 16)
 	content.add_child(body)
 	left_column = VBoxContainer.new()
 	left_column.name = "WellsResearchRegion"
+	left_column.custom_minimum_size.x = 0.0
 	left_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	left_column.size_flags_stretch_ratio = 3.0
 	right_column = VBoxContainer.new()
 	right_column.name = "ExpeditionLaunchRegion"
+	right_column.custom_minimum_size.x = 0.0
 	right_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	right_column.size_flags_stretch_ratio = 2.0
 	body.add_child(left_column)
 	body.add_child(right_column)
 	left_column.add_child(_wells_region())
 	research_panel = _research_region()
-	left_column.add_child(research_panel)
+	research_panel.visible = false
+	content.add_child(research_panel)
 	expedition_panel = ExpeditionPanelScript.new()
 	expedition_panel.name = "ExpeditionRegion"
 	expedition_panel.loadout_requested.connect(func(loadout_id: String): loadout_requested.emit(loadout_id))
@@ -118,6 +122,9 @@ func _build() -> void:
 	expedition_panel.configure(view_state.operations.expedition)
 	if include_notice_placeholder:
 		content.add_child(_placeholder_panel("NoticeRegion", "NOTICES", "Save and recovery notices remain separate from the primary instruction."))
+	crew_panel = _crew_region()
+	crew_panel.visible = false
+	content.add_child(crew_panel)
 	hero_picker = HeroPickerScript.new()
 	hero_picker.name = "HeroPicker"
 	hero_picker.set_anchors_preset(Control.PRESET_TOP_LEFT)
@@ -128,6 +135,7 @@ func _build() -> void:
 	hero_picker.hero_selected.connect(func(hero_id: String, mode: String, well_id: String): hero_selected.emit(hero_id, mode, well_id))
 	hero_picker.guard_recall_requested.connect(func(well_id: String): guard_recall_requested.emit(well_id))
 	add_child(hero_picker)
+	_show_page("operations")
 
 func _research_region() -> Control:
 	var panel := _panel("ResearchRegion")
@@ -164,6 +172,7 @@ func _wells_region() -> Control:
 		var card: PanelContainer = WellCardScript.new()
 		card.name = "WellCard_%s" % str(well_data.get("id", ""))
 		card.custom_minimum_size = Vector2(0, 0)
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		card.destination_requested.connect(func(well_id: String): destination_requested.emit(well_id))
 		card.start_requested.connect(func(): start_requested.emit())
 		card.guard_picker_requested.connect(_on_guard_picker_requested)
@@ -184,6 +193,56 @@ func _on_change_hero_requested() -> void:
 	var operations_state: Dictionary = view_state.get("operations", {})
 	hero_picker.open_expedition(operations_state.get("heroes", []), str(operations_state.get("expedition", {}).get("active_hero_id", "")), get_viewport().gui_get_focus_owner())
 
+func _add_navigation_button(page_id: String, label: String) -> void:
+	var button := Button.new()
+	button.name = "%sNavigationButton" % page_id.capitalize()
+	button.text = label
+	button.custom_minimum_size = Vector2(150, 36)
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	button.toggle_mode = true
+	button.pressed.connect(_show_page.bind(page_id))
+	navigation_bar.add_child(button)
+	navigation_buttons[page_id] = button
+
+func _show_page(page_id: String) -> void:
+	active_page = page_id
+	body.visible = page_id == "operations"
+	research_panel.visible = page_id == "research"
+	crew_panel.visible = page_id == "crew"
+	for button_id in navigation_buttons:
+		navigation_buttons[button_id].button_pressed = button_id == page_id
+	_update_responsive_layout()
+
+func _crew_region() -> PanelContainer:
+	var panel := _panel("CrewRegion")
+	var content := VBoxContainer.new()
+	content.name = "CrewContent"
+	content.add_child(_label("CREW", 16))
+	var summary := _label("Assign expedition heroes and guards from the Operations page. This roster keeps role and availability visible as the crew system grows.", 14)
+	summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	content.add_child(summary)
+	var roster := VBoxContainer.new()
+	roster.name = "CrewRoster"
+	roster.add_theme_constant_override("separation", 8)
+	for hero_data in view_state.operations.heroes:
+		var row := PanelContainer.new()
+		row.name = "Crew_%s" % str(hero_data.get("id", ""))
+		var row_content := HBoxContainer.new()
+		row_content.add_theme_constant_override("separation", 16)
+		var name_label := _label(str(hero_data.get("label", "Hero")), 16)
+		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row_content.add_child(name_label)
+		row_content.add_child(_label(str(hero_data.get("role_label", "Reserve")), 14))
+		var reason := _label(str(hero_data.get("availability_reason", "Available to assign.")), 13)
+		reason.custom_minimum_size.x = 300
+		reason.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		row_content.add_child(reason)
+		row.add_child(row_content)
+		roster.add_child(row)
+	content.add_child(roster)
+	panel.add_child(content)
+	return panel
+
 func refresh(next_view_state: Dictionary) -> void:
 	view_state = next_view_state.duplicate(true)
 	var operations_state: Dictionary = view_state.get("operations", {})
@@ -195,6 +254,7 @@ func refresh(next_view_state: Dictionary) -> void:
 				card.configure(upgrade_data)
 				break
 	expedition_panel.configure(operations_state.get("expedition", {}))
+	_refresh_crew(operations_state.get("heroes", []))
 	var grid: GridContainer = get_node("OperationsScroll/OuterMargin/OperationsContent/OperationsWorkspace/WellsResearchRegion/WellsRegion/WellsContent/WellCardsPlaceholder")
 	for card in grid.get_children():
 		if card.has_method("refresh"):
@@ -207,6 +267,18 @@ func refresh(next_view_state: Dictionary) -> void:
 			if str(well_data.get("id", "")) == hero_picker.well_id:
 				hero_picker.refresh_guard_state(well_data, operations_state.get("heroes", []), str(view_state.get("notices", {}).get("assignment", "")), bool(view_state.get("notices", {}).get("pending_save", false)))
 				break
+
+func _refresh_crew(heroes: Array) -> void:
+	if crew_panel == null:
+		return
+	var roster: VBoxContainer = crew_panel.get_node("CrewContent/CrewRoster")
+	for index in heroes.size():
+		if index >= roster.get_child_count():
+			break
+		var row: PanelContainer = roster.get_child(index)
+		var row_content: HBoxContainer = row.get_child(0)
+		(row_content.get_child(1) as Label).text = str(heroes[index].get("role_label", "Reserve"))
+		(row_content.get_child(2) as Label).text = str(heroes[index].get("availability_reason", "Available to assign."))
 
 func _placeholder_panel(panel_name: String, heading: String, copy: String) -> PanelContainer:
 	var panel := _panel(panel_name)
@@ -231,29 +303,12 @@ func _label(text: String, size: int) -> Label:
 	return label
 
 func _update_responsive_layout() -> void:
-	if operations_scroll != null:
-		operations_scroll.position = Vector2.ZERO
-		operations_scroll.size = size
-		var margin := operations_scroll.get_node("OuterMargin") as Control
-		var content := margin.get_node("OperationsContent") as Control
-		margin.position = Vector2.ZERO
-		margin.size = operations_scroll.size
-		content.position = Vector2(24.0, 24.0)
-		content.size = Vector2(maxf(0.0, margin.size.x - 48.0), content.get_combined_minimum_size().y)
-	body.vertical = size.x < 960.0
-	body.queue_sort()
-	call_deferred("_fit_resource_strip")
+	# Breakpoints use logical viewport units, not physical window pixels.
+	var compact_layout := size.x < 1000.0
+	body.vertical = compact_layout
 	var grid := get_node_or_null("OperationsScroll/OuterMargin/OperationsContent/OperationsWorkspace/WellsResearchRegion/WellsRegion/WellsContent/WellCardsPlaceholder")
 	if grid != null:
-		grid.columns = 1 if size.x < 960.0 else 2
+		grid.columns = 1 if compact_layout else 2
 	var cards := get_node_or_null("OperationsScroll/OuterMargin/OperationsContent/OperationsWorkspace/WellsResearchRegion/ResearchRegion/ResearchContent/UpgradeCards")
 	if cards != null:
-		cards.vertical = size.x < 960.0
-
-func _fit_resource_strip() -> void:
-	if resource_strip == null or operations_scroll == null:
-		return
-	var width := maxf(0.0, operations_scroll.size.x - 48.0)
-	resource_strip.size.x = width
-	var row := resource_strip.get_node("ResourceStripContent") as Control
-	row.size.x = width
+		cards.vertical = compact_layout

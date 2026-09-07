@@ -41,6 +41,7 @@ func _build() -> void:
 	add_child(content)
 	title_label = Label.new()
 	title_label.name = "Title"
+	title_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	title_label.add_theme_font_size_override("font_size", 18)
 	content.add_child(title_label)
 	effect_label = Label.new()

@@ -153,6 +153,8 @@ func _configure_commands() -> void:
 		settings_panel.retry_settlement_requested.connect(controller.retry_offline_settlement)
 		settings_panel.clear_requested.connect(_on_clear_requested)
 		settings_panel.developer_toggle_requested.connect(controller._toggle_sealing_setting)
+		settings_panel.resolution_requested.connect(controller.set_resolution)
+		settings_panel.ui_scale_requested.connect(controller.set_ui_scale)
 		settings_panel.closed.connect(_hide_settings)
 
 func _on_destination_requested(well_id: String) -> void:
@@ -190,6 +192,7 @@ func _show_settings(opener: Control = null) -> void:
 	settings_panel.visible = true
 	settings_panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	settings_panel.configure(view_state.get("notices", {}))
+	settings_panel.set_ui_scale(controller.ui_scale)
 	settings_panel.get_node("SettingsContent/RetrySave").grab_focus()
 
 func _hide_settings() -> void:
