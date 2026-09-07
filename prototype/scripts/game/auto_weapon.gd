@@ -1,6 +1,8 @@
 class_name AutoWeapon
 extends Node
 
+signal fired(target_position: Vector3)
+
 const BalanceData = preload("res://data/balance.gd")
 const ProjectileScript = preload("res://scripts/game/projectile.gd")
 const RunStateScript = preload("res://scripts/model/run_state.gd")
@@ -87,6 +89,7 @@ func _nearest_target() -> Node3D:
 	return nearest
 
 func _fire(target: Node3D) -> void:
+	fired.emit(target.global_position if target.is_inside_tree() else target.position)
 	var angles: Array[float] = [0.0]
 	if spread_enabled:
 		angles = [-BalanceData.SPREAD_ANGLE_DEGREES, 0.0, BalanceData.SPREAD_ANGLE_DEGREES]

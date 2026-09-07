@@ -1,0 +1,7 @@
+{
+  "objects": 333,
+  "triangles": 6164,
+  "seed": 9062026,
+  "export": "prototype/assets/environment/broken_foundry_v1.glb",
+  "note": "Triangle value is a conservative face-times-two estimate; inspect import for exact count."
+}

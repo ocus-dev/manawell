@@ -1,0 +1,11 @@
+{
+  "python": "C:/path/to/ComfyUI/python_embeded/python.exe",
+  "comfy_main": "C:/path/to/ComfyUI/ComfyUI/main.py",
+  "concept_url": "http://127.0.0.1:8188",
+  "mesh_url": "http://127.0.0.1:8188",
+  "comfy_output": "C:/path/to/ComfyUI/ComfyUI/output",
+  "blender": "C:/Program Files/Blender Foundation/Blender 5.2/blender.exe",
+  "godot": "C:/path/to/Godot_v4.8-dev4_win64_console.exe",
+  "timeout_seconds": 1800
+}
+

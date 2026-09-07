@@ -1,55 +1,11 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://cev66c4lsodnx"]
 
-[ext_resource type="Script" path="res://scripts/game/player.gd" id="1_player"]
-[ext_resource type="Script" path="res://scripts/game/encounter_controller.gd" id="2_controller"]
-
-[sub_resource type="BoxMesh" id="BoxMesh_floor"]
-size = Vector3(28, 0.2, 28)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
-albedo_color = Color(0.12, 0.14, 0.17, 1)
-roughness = 0.9
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
-size = Vector3(28, 0.2, 28)
-
-[sub_resource type="BoxMesh" id="BoxMesh_boundary_x"]
-size = Vector3(0.5, 1.5, 28)
-
-[sub_resource type="BoxMesh" id="BoxMesh_boundary_z"]
-size = Vector3(28, 1.5, 0.5)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_boundary"]
-albedo_color = Color(0.08, 0.1, 0.13, 1)
-roughness = 0.8
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_boundary_x"]
-size = Vector3(0.5, 1.5, 28)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_boundary_z"]
-size = Vector3(28, 1.5, 0.5)
-
-[sub_resource type="BoxMesh" id="BoxMesh_machine"]
-size = Vector3(2.5, 1.4, 2.5)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_machine"]
-albedo_color = Color(0.9, 0.62, 0.08, 1)
-roughness = 0.65
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_machine"]
-size = Vector3(2.5, 1.4, 2.5)
-
-[sub_resource type="CapsuleMesh" id="CapsuleMesh_hero"]
-radius = 0.5
-height = 1.8
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hero"]
-albedo_color = Color(0.85, 0.1, 0.12, 1)
-roughness = 0.7
-
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_hero"]
-radius = 0.42
-height = 1.8
+[ext_resource type="Script" uid="uid://bb7ryxl0cro6b" path="res://scripts/game/player.gd" id="1_player"]
+[ext_resource type="Script" uid="uid://dmloqbs3fuiw2" path="res://scripts/game/encounter_controller.gd" id="2_controller"]
+[ext_resource type="PackedScene" path="res://assets/generated/pipeline-pump-20260906-211723-a4bb48/asset.tscn" id="2_tbgi4"]
+[ext_resource type="PackedScene" path="res://assets/generated/coolant-pump-20260906-213123-fe60fe/asset.tscn" id="2_tefeu"]
+[ext_resource type="PackedScene" uid="uid://bi1m0tt8at12v" path="res://assets/environment/broken_foundry_v2.glb" id="3_foundry"]
+[ext_resource type="PackedScene" path="res://scenes/mecha_visual.tscn" id="4_mecha"]
 
 [sub_resource type="Environment" id="Environment_main"]
 background_mode = 1
@@ -58,96 +14,161 @@ ambient_light_source = 3
 ambient_light_color = Color(0.55, 0.6, 0.7, 1)
 ambient_light_energy = 0.7
 
-[node name="Main" type="Node3D"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
+albedo_color = Color(0.12, 0.14, 0.17, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="BoxMesh_floor"]
+size = Vector3(28, 0.2, 28)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
+size = Vector3(28, 0.2, 28)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_boundary"]
+albedo_color = Color(0.08, 0.1, 0.13, 1)
+roughness = 0.8
+
+[sub_resource type="BoxMesh" id="BoxMesh_boundary_x"]
+size = Vector3(0.5, 1.5, 28)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_boundary_x"]
+size = Vector3(0.5, 1.5, 28)
+
+[sub_resource type="BoxMesh" id="BoxMesh_boundary_z"]
+size = Vector3(28, 1.5, 0.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_boundary_z"]
+size = Vector3(28, 1.5, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_machine"]
+albedo_color = Color(0.9, 0.62, 0.08, 1)
+roughness = 0.65
+
+[sub_resource type="BoxMesh" id="BoxMesh_machine"]
+size = Vector3(2.5, 1.4, 2.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_machine"]
+size = Vector3(2.5, 1.4, 2.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hero"]
+albedo_color = Color(0.85, 0.1, 0.12, 1)
+roughness = 0.7
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_hero"]
+height = 1.8
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_hero"]
+radius = 0.42
+height = 1.8
+
+[node name="Main" type="Node3D" unique_id=236277156]
 script = ExtResource("2_controller")
 
-[node name="Environment" type="WorldEnvironment" parent="."]
+[node name="Environment" type="WorldEnvironment" parent="." unique_id=1863989505]
 environment = SubResource("Environment_main")
 
-[node name="KeyLight" type="DirectionalLight3D" parent="."]
-rotation_degrees = Vector3(-55, -25, 0)
+[node name="KeyLight" type="DirectionalLight3D" parent="." unique_id=1142579368]
+transform = Transform3D(0.90630776, 0.34618863, -0.24240388, 0, 0.57357645, 0.81915206, 0.42261827, -0.74240386, 0.5198368, 0, 0, 0)
 light_color = Color(0.85, 0.9, 1, 1)
 light_energy = 1.2
 shadow_enabled = true
 
-[node name="Floor" type="MeshInstance3D" parent="."]
-mesh = SubResource("BoxMesh_floor")
+[node name="Floor" type="MeshInstance3D" parent="." unique_id=844096974]
+visible = false
 material_override = SubResource("StandardMaterial3D_floor")
+mesh = SubResource("BoxMesh_floor")
 
-[node name="FloorBody" type="StaticBody3D" parent="."]
+[node name="FloorBody" type="StaticBody3D" parent="." unique_id=1203270659]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="FloorBody"]
-position = Vector3(0, -0.1, 0)
+[node name="CollisionShape3D" type="CollisionShape3D" parent="FloorBody" unique_id=657158005]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
 shape = SubResource("BoxShape3D_floor")
 
-[node name="Boundaries" type="Node3D" parent="."]
+[node name="Boundaries" type="Node3D" parent="." unique_id=651294989]
 
-[node name="West" type="StaticBody3D" parent="Boundaries"]
-position = Vector3(-14.25, 0.75, 0)
+[node name="West" type="StaticBody3D" parent="Boundaries" unique_id=2145400207]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.25, 0.75, 0)
 
-[node name="Mesh" type="MeshInstance3D" parent="Boundaries/West"]
-mesh = SubResource("BoxMesh_boundary_x")
+[node name="Mesh" type="MeshInstance3D" parent="Boundaries/West" unique_id=1477627923]
+visible = false
 material_override = SubResource("StandardMaterial3D_boundary")
+mesh = SubResource("BoxMesh_boundary_x")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Boundaries/West"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Boundaries/West" unique_id=1236344246]
 shape = SubResource("BoxShape3D_boundary_x")
 
-[node name="East" type="StaticBody3D" parent="Boundaries"]
-position = Vector3(14.25, 0.75, 0)
+[node name="East" type="StaticBody3D" parent="Boundaries" unique_id=1555300551]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.25, 0.75, 0)
 
-[node name="Mesh" type="MeshInstance3D" parent="Boundaries/East"]
-mesh = SubResource("BoxMesh_boundary_x")
+[node name="Mesh" type="MeshInstance3D" parent="Boundaries/East" unique_id=795562871]
+visible = false
 material_override = SubResource("StandardMaterial3D_boundary")
+mesh = SubResource("BoxMesh_boundary_x")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Boundaries/East"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Boundaries/East" unique_id=201248864]
 shape = SubResource("BoxShape3D_boundary_x")
 
-[node name="North" type="StaticBody3D" parent="Boundaries"]
-position = Vector3(0, 0.75, -14.25)
+[node name="North" type="StaticBody3D" parent="Boundaries" unique_id=741880020]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, -14.25)
 
-[node name="Mesh" type="MeshInstance3D" parent="Boundaries/North"]
-mesh = SubResource("BoxMesh_boundary_z")
+[node name="Mesh" type="MeshInstance3D" parent="Boundaries/North" unique_id=1738573398]
+visible = false
 material_override = SubResource("StandardMaterial3D_boundary")
+mesh = SubResource("BoxMesh_boundary_z")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Boundaries/North"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Boundaries/North" unique_id=943378551]
 shape = SubResource("BoxShape3D_boundary_z")
 
-[node name="South" type="StaticBody3D" parent="Boundaries"]
-position = Vector3(0, 0.75, 14.25)
+[node name="South" type="StaticBody3D" parent="Boundaries" unique_id=269271345]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 14.25)
 
-[node name="Mesh" type="MeshInstance3D" parent="Boundaries/South"]
-mesh = SubResource("BoxMesh_boundary_z")
+[node name="Mesh" type="MeshInstance3D" parent="Boundaries/South" unique_id=1101524241]
 material_override = SubResource("StandardMaterial3D_boundary")
+mesh = SubResource("BoxMesh_boundary_z")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Boundaries/South"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Boundaries/South" unique_id=1345347111]
 shape = SubResource("BoxShape3D_boundary_z")
 
-[node name="Machine" type="StaticBody3D" parent="."]
-position = Vector3(0, 0.7, 0)
+[node name="Machine" type="StaticBody3D" parent="." unique_id=1104535560]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
 
-[node name="Mesh" type="MeshInstance3D" parent="Machine"]
-mesh = SubResource("BoxMesh_machine")
+[node name="Mesh" type="MeshInstance3D" parent="Machine" unique_id=506035201]
+visible = false
 material_override = SubResource("StandardMaterial3D_machine")
+mesh = SubResource("BoxMesh_machine")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Machine"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Machine" unique_id=1939304043]
 shape = SubResource("BoxShape3D_machine")
 
-[node name="Hero" type="CharacterBody3D" parent="."]
-position = Vector3(0, 1, 6)
+[node name="Node3D" type="Node3D" parent="Machine" unique_id=2068384997]
+
+[node name="GeneratedAsset" parent="Machine/Node3D" unique_id=2053842383 instance=ExtResource("2_tefeu")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.04753855, 0.8086117, -0.3046695)
+
+[node name="GeneratedAsset2" parent="Machine/Node3D" unique_id=1257963848 instance=ExtResource("2_tbgi4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.03168571, -0.5234217, -0.16557598)
+
+[node name="Hero" type="CharacterBody3D" parent="." unique_id=1680890397]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 6)
 script = ExtResource("1_player")
 
-[node name="Mesh" type="MeshInstance3D" parent="Hero"]
-mesh = SubResource("CapsuleMesh_hero")
+[node name="Mesh" type="MeshInstance3D" parent="Hero" unique_id=1497362005]
+visible = false
 material_override = SubResource("StandardMaterial3D_hero")
+mesh = SubResource("CapsuleMesh_hero")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Hero"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hero" unique_id=339589760]
 shape = SubResource("CapsuleShape3D_hero")
 
-[node name="Camera" type="Camera3D" parent="."]
-position = Vector3(0, 18, 18)
-rotation_degrees = Vector3(-42, 0, 0)
+[node name="MechaVisual" parent="Hero" unique_id=1301676031 instance=ExtResource("4_mecha")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0.054769874, -0.93307436, 0.0005784035)
+
+[node name="Camera" type="Camera3D" parent="." unique_id=1086339778]
+transform = Transform3D(1, 0, 0, 0, 0.7431448, 0.6691306, 0, -0.6691306, 0.7431448, 0, 18, 18)
 current = true
 
-[node name="CameraLight" type="OmniLight3D" parent="Camera"]
-omni_range = 30.0
+[node name="CameraLight" type="OmniLight3D" parent="Camera" unique_id=564066764]
 light_energy = 0.35
+omni_range = 30.0
+
+[node name="FoundryScenery" parent="." unique_id=639280412 instance=ExtResource("3_foundry")]

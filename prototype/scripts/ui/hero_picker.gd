@@ -1,6 +1,8 @@
 class_name HeroPicker
 extends PanelContainer
 
+const Portraits = preload("res://scripts/ui/hero_portraits.gd")
+
 signal hero_selected(hero_id: String, mode: String, well_id: String)
 signal guard_recall_requested(well_id: String)
 signal cancelled
@@ -176,6 +178,7 @@ func _render_rows(heroes: Array[Dictionary]) -> void:
 		initials.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		initials.add_theme_font_size_override("font_size", 18)
 		row_content.add_child(initials)
+		Portraits.apply(initials, hero_id)
 		var copy := VBoxContainer.new()
 		copy.name = "HeroCopy"
 		copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL

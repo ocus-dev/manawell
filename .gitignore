@@ -1,0 +1,37 @@
+# Downloaded development tools (install these separately on each workstation).
+/Godot_v4.8-dev4_win64.exe/
+
+# Godot's generated import/cache directory. Keep adjacent *.import metadata.
+**/.godot/
+*.translation
+*.tmp
+
+# Python caches and local environments.
+**/__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Machine-specific asset-pipeline configuration.
+/tools/asset_pipeline/config.json
+
+# Regenerable asset-pipeline runs and experimental scratch work.
+/art/generated/
+/art/mecha-trial/
+/art/shape-studies/*
+!/art/shape-studies/pump-comparison.md
+*.lock
+*.blend1
+
+# Generated logs and review evidence. Keep authored Markdown reviews/scripts.
+*.log
+/work/reviews/logs/
+
+# Common editor and operating-system files.
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+

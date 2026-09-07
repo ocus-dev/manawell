@@ -1,6 +1,8 @@
 class_name HeroSlot
 extends PanelContainer
 
+const Portraits = preload("res://scripts/ui/hero_portraits.gd")
+
 signal guard_picker_requested(well_id: String)
 
 var well_id: String = ""
@@ -22,6 +24,7 @@ func configure(next_data: Dictionary, next_well_id: String) -> void:
 	var state_id: String = str(slot_data.get("well_state_id", "commissioned"))
 	var assigned: bool = bool(slot_data.get("assigned", false))
 	var assignable: bool = state_id == "commissioned"
+	Portraits.apply(initials_label, str(slot_data.get("id", "")) if assigned and assignable else "")
 	var unavailable_reason: String = str(slot_data.get("availability_reason", ""))
 	if state_id == "locked":
 		initials_label.text = "LOCK"

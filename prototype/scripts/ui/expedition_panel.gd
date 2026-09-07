@@ -1,6 +1,9 @@
 class_name ExpeditionPanel
 extends PanelContainer
 
+const Portraits = preload("res://scripts/ui/hero_portraits.gd")
+var hero_initials: Label
+
 signal change_hero_requested
 signal loadout_requested(loadout_id: String)
 signal start_requested
@@ -26,6 +29,7 @@ func configure(next_data: Dictionary) -> void:
 	if hero_label == null:
 		_build()
 	hero_label.text = str(view_data.get("active_hero_label", "No hero selected"))
+	Portraits.apply(hero_initials, str(view_data.get("active_hero_id", "")))
 	capability_label.text = str(view_data.get("capability_summary", ""))
 	destination_label.text = str(view_data.get("destination_label", ""))
 	rate_label.text = "Base extraction: %.2f mana/sec" % float(view_data.get("base_extraction_rate", 0.0))
@@ -128,7 +132,7 @@ func _build() -> void:
 	content.add_child(heading)
 	var hero_row := HBoxContainer.new()
 	hero_row.name = "ControlledHero"
-	var hero_initials := Label.new()
+	hero_initials = Label.new()
 	hero_initials.text = "YOU"
 	hero_initials.custom_minimum_size = Vector2(56, 48)
 	hero_initials.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

@@ -98,6 +98,17 @@ var pending_pause: bool = false
 var offline_pending_total: float = 0.0
 var offline_pending_utc_timestamp: float = 0.0
 var offline_return_notice: String = ""
+var battle_camera: Camera3D
+var camera_distance: float = 25.46
+var camera_yaw: float = 0.0
+var camera_pitch: float = 0.785398
+var camera_rotating: bool = false
+const CAMERA_MIN_DISTANCE: float = 10.0
+const CAMERA_MAX_DISTANCE: float = 40.0
+const CAMERA_ZOOM_STEP: float = 2.0
+const CAMERA_ROTATION_SENSITIVITY: float = 0.01
+const CAMERA_MIN_PITCH: float = 0.2
+const CAMERA_MAX_PITCH: float = 1.3
 
 func _ready() -> void:
 	_ensure_session_persistence()
@@ -108,6 +119,7 @@ func _ready() -> void:
 		monotonic_settlement_cursor = session_persistence.now_monotonic()
 		production.reset_cursor(monotonic_settlement_cursor)
 	_ensure_runtime()
+	_setup_battle_camera()
 	encounter_hud = EncounterHUDScript.new()
 	add_child(encounter_hud)
 	encounter_hud.well_selected.connect(select_well_by_id)
@@ -152,13 +164,39 @@ func _ensure_runtime() -> void:
 	auto_weapon = AutoWeaponScript.new()
 	add_child(auto_weapon)
 	auto_weapon.setup(get_node("Hero"), run_state)
+	auto_weapon.fired.connect(get_node("Hero/MechaVisual").show_shot)
 	auto_weapon.set_id_allocator(Callable(self, "_allocate_snapshot_id").bind("projectile"))
 	get_node("Hero").setup_abilities(run_state)
 
 func _process(delta: float) -> void:
 	_settle_production()
 	_checkpoint_real_time(delta)
+	_update_battle_camera()
 	_update_hud()
+
+func _input(event: InputEvent) -> void:
+	if not _encounter_active():
+		camera_rotating = false
+		return
+	if run_state.paused:
+		return
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_MIDDLE:
+			camera_rotating = event.pressed
+			get_viewport().set_input_as_handled()
+			return
+		if event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_UP:
+			_zoom_battle_camera(-CAMERA_ZOOM_STEP)
+			get_viewport().set_input_as_handled()
+			return
+		if event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			_zoom_battle_camera(CAMERA_ZOOM_STEP)
+			get_viewport().set_input_as_handled()
+			return
+	if event is InputEventMouseMotion and camera_rotating:
+		camera_yaw -= event.relative.x * CAMERA_ROTATION_SENSITIVITY
+		camera_pitch = clampf(camera_pitch - event.relative.y * CAMERA_ROTATION_SENSITIVITY, CAMERA_MIN_PITCH, CAMERA_MAX_PITCH)
+		get_viewport().set_input_as_handled()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not event.is_pressed() or event.is_echo():
@@ -172,6 +210,33 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("pause_game"):
 		pending_pause = true
 	get_viewport().set_input_as_handled()
+
+func _setup_battle_camera() -> void:
+	battle_camera = get_node_or_null("Camera") as Camera3D
+	if battle_camera == null:
+		return
+	var target := get_node("Hero") as Node3D
+	var offset := battle_camera.global_position - target.global_position
+	var horizontal_distance := Vector2(offset.x, offset.z).length()
+	camera_distance = clampf(offset.length(), CAMERA_MIN_DISTANCE, CAMERA_MAX_DISTANCE)
+	camera_yaw = atan2(offset.x, offset.z)
+	camera_pitch = clampf(atan2(offset.y, horizontal_distance), CAMERA_MIN_PITCH, CAMERA_MAX_PITCH)
+	_update_battle_camera()
+
+func _zoom_battle_camera(amount: float) -> void:
+	camera_distance = clampf(camera_distance + amount, CAMERA_MIN_DISTANCE, CAMERA_MAX_DISTANCE)
+	_update_battle_camera()
+
+func _update_battle_camera() -> void:
+	if battle_camera == null or not is_instance_valid(battle_camera):
+		return
+	var target := get_node_or_null("Hero") as Node3D
+	if target == null:
+		return
+	var horizontal_distance := cos(camera_pitch) * camera_distance
+	var offset := Vector3(sin(camera_yaw) * horizontal_distance, sin(camera_pitch) * camera_distance, cos(camera_yaw) * horizontal_distance)
+	battle_camera.global_position = target.global_position + offset
+	battle_camera.look_at(target.global_position)
 
 func _checkpoint_real_time(delta: float) -> void:
 	checkpoint_elapsed += maxf(0.0, delta)
@@ -775,6 +840,8 @@ func _well_name(well_id: String) -> String:
 
 func _apply_hero_visual(hero_id: String) -> void:
 	var hero_mesh := get_node("Hero/Mesh") as MeshInstance3D
+	hero_mesh.visible = hero_id == "hero_2"
+	get_node("Hero/MechaVisual").visible = hero_id != "hero_2"
 	var material := StandardMaterial3D.new()
 	if hero_id == "hero_2":
 		var box := BoxMesh.new()
