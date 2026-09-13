@@ -14,6 +14,10 @@ signal active_hero_selected(hero_id: String)
 signal guard_assigned(hero_id: String, well_id: String)
 signal guard_recalled(well_id: String)
 signal upgrade_requested(upgrade_id: String)
+signal research_purchase_requested(research_id: String, expected_rank: int, expected_cost: int)
+signal research_equipment_requested(choice_id: String)
+signal campaign_node_selected(act_id: String, node_id: String)
+signal campaign_node_activate(act_id: String, node_id: String)
 
 var view_state: Dictionary = {}
 var selected_well_id: String = "well_1"
@@ -139,7 +143,16 @@ func _configure_commands() -> void:
 		operations.loadout_requested.connect(_on_loadout_requested)
 		operations.start_requested.connect(_on_start_requested)
 		operations.purchase_requested.connect(_on_purchase_requested)
+		operations.research_purchase_requested.connect(_on_research_purchase_requested)
+		operations.research_equipment_requested.connect(_on_research_equipment_requested)
+		operations.inventory_item_inspected.connect(func(id: String): controller.inspect_inventory_item(id))
+		operations.inventory_equip_requested.connect(func(hero_id: String, slot: String, instance_id: String): controller.equip_inventory_item(hero_id, slot, instance_id))
+		operations.inventory_unequip_requested.connect(func(hero_id: String, slot: String): controller.unequip_inventory_item(hero_id, slot))
+		operations.inventory_lock_toggled.connect(func(instance_id: String, locked: bool): controller.lock_inventory_item(instance_id, locked))
+		operations.inventory_discard_requested.connect(func(instance_id: String, confirmed_name: String): controller.discard_inventory_item(instance_id, confirmed_name))
 		operations.settings_requested.connect(_show_settings)
+		operations.campaign_node_selected.connect(func(act_id: String, node_id: String): campaign_node_selected.emit(act_id, node_id))
+		operations.campaign_node_activate.connect(func(act_id: String, node_id: String): campaign_node_activate.emit(act_id, node_id))
 		combat.pause_requested.connect(controller.toggle_pause)
 		combat.harvest_requested.connect(controller.request_start_or_harvest)
 		combat.ability_requested.connect(_on_ability_requested)
@@ -180,6 +193,12 @@ func _on_start_requested() -> void:
 
 func _on_purchase_requested(upgrade_id: String) -> void:
 	upgrade_requested.emit(upgrade_id)
+
+func _on_research_purchase_requested(research_id: String, expected_rank: int, expected_cost: int) -> void:
+	controller.purchase_research(research_id, expected_rank, expected_cost)
+
+func _on_research_equipment_requested(choice_id: String) -> void:
+	controller.equip_research_choice(choice_id)
 
 func _on_ability_requested(ability_id: String) -> void:
 	if ability_id == "dash":

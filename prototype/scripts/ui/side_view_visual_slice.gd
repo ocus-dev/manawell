@@ -3,6 +3,7 @@ extends Node2D
 const ConfigScript = preload("res://scripts/game/side_view_visual_config.gd")
 const VisualScript = preload("res://scripts/game/side_view_actor_visual.gd")
 const EnvironmentScript = preload("res://scripts/game/side_view_environment_visual.gd")
+const ArenaLayoutScript = preload("res://data/arena_layout.gd")
 const LOGICAL_SIZE := Vector2(1280.0, 720.0)
 const BASELINE_Y := 540.0
 const COMPARISON_BASELINE_Y := 680.0
@@ -114,6 +115,9 @@ func _on_resolution_selected(index: int) -> void:
 	var size := Vector2i(1280, 720) if index == 0 else Vector2i(1920, 1080)
 	DisplayServer.window_set_size(size)
 
+func get_platform_rects() -> Array[Dictionary]:
+	return ArenaLayoutScript.platform_supports()
+
 func _update_comparison() -> void:
 	if comparison_left == null or comparison_right == null:
 		return
@@ -128,6 +132,14 @@ func _process(_delta: float) -> void:
 	queue_redraw()
 
 func _draw() -> void:
+	for support in ArenaLayoutScript.platform_supports():
+		var rect: Rect2 = support["rect"]
+		draw_rect(Rect2(rect.position + Vector2(0.0, 5.0), Vector2(rect.size.x, 22.0)), Color("17282d"), true)
+		draw_rect(Rect2(rect.position, Vector2(rect.size.x, 6.0)), Color("c38a43"), true)
+		draw_line(rect.position + Vector2(0.0, 7.0), rect.position + Vector2(rect.size.x, 7.0), Color("5f7778"), 2.0)
+		if show_debug:
+			draw_rect(rect, Color(0.2, 0.8, 0.75, 0.35), false, 2.0)
+			draw_string(ThemeDB.fallback_font, rect.position + Vector2(4.0, -6.0), str(support["id"]), HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("8ed9df"))
 	draw_string(ThemeDB.fallback_font, Vector2(32.0, 150.0), "INITIAL GAMEPLAY HEIGHTS // SHARED BASELINE", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("7d9a9f"))
 	draw_line(Vector2(32.0, BASELINE_Y), Vector2(1248.0, BASELINE_Y), Color("d2a14c"), 2.0)
 	draw_line(Vector2(32.0, COMPARISON_BASELINE_Y), Vector2(1248.0, COMPARISON_BASELINE_Y), Color("d2a14c"), 2.0)
@@ -136,6 +148,9 @@ func _draw() -> void:
 		var x := 128.0 + index * 256.0
 		draw_string(ThemeDB.fallback_font, Vector2(x - 40.0, BASELINE_Y + 30.0), role_ids[index].to_upper(), HORIZONTAL_ALIGNMENT_CENTER, 80.0, 13, Color("d7e4e6"))
 	if show_debug:
+		for visual in role_visuals:
+			var hero_collider := Rect2(visual.position + Vector2(-ArenaLayoutScript.HERO_HALF_WIDTH, -ArenaLayoutScript.HERO_FEET_OFFSET), Vector2(ArenaLayoutScript.HERO_HALF_WIDTH * 2.0, ArenaLayoutScript.HERO_FEET_OFFSET))
+			draw_rect(hero_collider, Color(0.95, 0.45, 0.2, 0.32), false, 1.0)
 		for visual in role_visuals + [comparison_left, comparison_right]:
 			if visual == null:
 				continue

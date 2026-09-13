@@ -4,6 +4,7 @@ extends Node2D
 enum EnemyKind { PURSUER, BREAKER, RANGED }
 
 const BalanceData = preload("res://data/balance.gd")
+const CombatGeometryScript = preload("res://data/combat_geometry.gd")
 const RunStateScript = preload("res://scripts/model/run_state.gd")
 const VisualConfigScript = preload("res://scripts/game/side_view_visual_config.gd")
 const VisualScript = preload("res://scripts/game/side_view_actor_visual.gd")
@@ -18,6 +19,7 @@ var attack_damage: float = 0.0
 var attack_range_pixels: float = 0.0
 var cooldown_remaining: float = 0.0
 var windup_remaining: float = 0.0
+var locked_target_point := Vector2.ZERO
 var dead := false
 var warning_visible := false
 var warning_remaining := 0.0
@@ -59,6 +61,9 @@ func simulate_tick(delta: float) -> void:
 		_simulate_melee(delta)
 	if visual != null:
 		visual.set_facing(-side)
+		var locomotion_distance := absf(position.x - (controller.hero.position.x if enemy_kind == EnemyKind.PURSUER else controller.MACHINE_X))
+		var locomotion_threshold: float = attack_range_pixels if enemy_kind != EnemyKind.RANGED else BalanceData.RANGED_STOP_RANGE * controller.SPATIAL_PIXELS_PER_UNIT
+		visual.set_locomotion(locomotion_distance > locomotion_threshold)
 	queue_redraw()
 
 func take_damage(amount: float) -> bool:
@@ -69,19 +74,24 @@ func take_damage(amount: float) -> bool:
 	damage_feedback_remaining = 0.65
 	if health <= 0.0:
 		dead = true
-		queue_free()
+		if controller != null and controller.has_method("enqueue_enemy_death"):
+			controller.enqueue_enemy_death(self)
 		return true
 	return true
 
 func _simulate_melee(_delta: float) -> void:
-	var target_x: float = controller.hero.position.x if enemy_kind == EnemyKind.PURSUER else controller.MACHINE_X
+	var target_kind := "hero" if enemy_kind == EnemyKind.PURSUER else "machine"
+	var target_position: Vector2 = controller.hero.position if enemy_kind == EnemyKind.PURSUER else Vector2(controller.MACHINE_X, controller.GROUND_Y)
+	var target_x: float = target_position.x
 	var distance := absf(target_x - position.x)
 	if distance > attack_range_pixels:
 		var direction := signf(target_x - position.x)
 		position.x += direction * speed_pixels * controller.FIXED_STEP
 	else:
-		if cooldown_remaining <= 0.0:
+		if cooldown_remaining <= 0.0 and CombatGeometryScript.melee_hits("pursuer" if enemy_kind == EnemyKind.PURSUER else "breaker", position, target_kind, target_position, attack_range_pixels):
 			controller.apply_enemy_damage(RunStateScript.DamageTarget.HERO if enemy_kind == EnemyKind.PURSUER else RunStateScript.DamageTarget.MACHINE, attack_damage)
+			if visual != null:
+				visual.play_attack()
 			cooldown_remaining = BalanceData.MELEE_ATTACK_INTERVAL
 
 func _simulate_ranged(delta: float) -> void:
@@ -89,13 +99,16 @@ func _simulate_ranged(delta: float) -> void:
 	if windup_remaining > 0.0:
 		windup_remaining = maxf(0.0, windup_remaining - delta)
 		if is_zero_approx(windup_remaining):
-			controller.spawn_hostile_projectile(position.x, controller.hero.position.x, attack_damage, self)
+			locked_target_point = CombatGeometryScript.body_center("hero", controller.hero.position)
+			controller.spawn_hostile_projectile(position.x, locked_target_point.x, attack_damage, self, locked_target_point.y)
 		return
 	if distance > BalanceData.RANGED_STOP_RANGE * controller.SPATIAL_PIXELS_PER_UNIT:
 		position.x += signf(controller.hero.position.x - position.x) * speed_pixels * controller.FIXED_STEP
 	elif cooldown_remaining <= 0.0:
 		windup_remaining = BalanceData.RANGED_WINDUP
 		warning_remaining = BalanceData.RANGED_WINDUP
+		if visual != null:
+			visual.play_attack()
 
 func _apply_stats() -> void:
 	if enemy_kind == EnemyKind.PURSUER:
@@ -113,6 +126,20 @@ func _apply_stats() -> void:
 		speed_pixels = BalanceData.RANGED_SPEED * controller.SPATIAL_PIXELS_PER_UNIT
 		attack_damage = BalanceData.RANGED_DAMAGE * damage_multiplier
 	health = max_health
+
+func capture_snapshot_state() -> Dictionary:
+	return {"side": side, "enemy_id": enemy_id, "damage_multiplier": damage_multiplier, "locked_target_point": [locked_target_point.x, locked_target_point.y], "warning_remaining": warning_remaining, "warning_visible": warning_visible, "damage_feedback_remaining": damage_feedback_remaining, "damage_feedback_amount": damage_feedback_amount}
+
+func restore_snapshot_state(state: Dictionary) -> void:
+	side = -1 if int(state.get("side", side)) < 0 else 1
+	enemy_id = int(state.get("enemy_id", enemy_id))
+	damage_multiplier = float(state.get("damage_multiplier", damage_multiplier))
+	var locked_point: Array = state.get("locked_target_point", [0.0, 0.0])
+	locked_target_point = Vector2(float(locked_point[0]), float(locked_point[1]))
+	warning_remaining = maxf(0.0, float(state.get("warning_remaining", 0.0)))
+	warning_visible = bool(state.get("warning_visible", false))
+	damage_feedback_remaining = maxf(0.0, float(state.get("damage_feedback_remaining", 0.0)))
+	damage_feedback_amount = maxf(0.0, float(state.get("damage_feedback_amount", 0.0)))
 
 func _draw() -> void:
 	var body_top: float = visual.visible_top_local_y() if visual != null else -34.0

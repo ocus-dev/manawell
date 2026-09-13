@@ -1,0 +1,15 @@
+{
+  "source_sha256": "ede2ec13b4bd803c2560bbd74defd2b9148c9febfc2e35338cacc67f0ce05a87",
+  "master_sha256": "e570ff9a47523324a629a3b37953081984ce279664d880a63387c32ce4caf93d",
+  "source_size": [
+    1536,
+    864
+  ],
+  "master_size": [
+    2048,
+    1152
+  ],
+  "method": "uniform Lanczos 4/3, no cropping or stretching",
+  "layout_sha256": "eefdd7ed8d391b36f7abca2787581dcd459cd8a59020fb7d81ed06b562acec4d",
+  "design_approved": false
+}

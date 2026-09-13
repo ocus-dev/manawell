@@ -1,0 +1,279 @@
+{
+  "schema_version": 1,
+  "act_id": "act_01",
+  "display_name": "Broken Foundry",
+  "status": "draft_design_not_runtime",
+  "layout_revision": "C_terraces-landmarks-02",
+  "theme": "Ruined industrial valley; raw mana",
+  "master_size": [
+    2048,
+    1152
+  ],
+  "generation_size": [
+    1536,
+    864
+  ],
+  "display": "contain",
+  "safe_margin": 0.06,
+  "nodes": [
+    {
+      "id": "act_01_node_01",
+      "display_name": "Scrap Approach",
+      "type": "monster",
+      "position": [
+        0.1,
+        0.85
+      ],
+      "prerequisites": [],
+      "encounter_key": "draft.act_01.monster_01"
+    },
+    {
+      "id": "act_01_node_02",
+      "display_name": "Intake Well",
+      "type": "well",
+      "position": [
+        0.075,
+        0.52
+      ],
+      "prerequisites": [
+        "act_01_node_01"
+      ],
+      "encounter_key": "draft.act_01.well_02",
+      "well_id": "well_1"
+    },
+    {
+      "id": "act_01_node_03",
+      "display_name": "Broken Viaduct",
+      "type": "monster",
+      "position": [
+        0.2,
+        0.3
+      ],
+      "prerequisites": [
+        "act_01_node_02"
+      ],
+      "encounter_key": "draft.act_01.monster_03"
+    },
+    {
+      "id": "act_01_node_04",
+      "display_name": "Cinder Crossing",
+      "type": "monster",
+      "position": [
+        0.47,
+        0.3
+      ],
+      "prerequisites": [
+        "act_01_node_03"
+      ],
+      "encounter_key": "draft.act_01.monster_04"
+    },
+    {
+      "id": "act_01_node_05",
+      "display_name": "Pressure Well",
+      "type": "well",
+      "position": [
+        0.38,
+        0.46
+      ],
+      "prerequisites": [
+        "act_01_node_04"
+      ],
+      "encounter_key": "draft.act_01.well_05",
+      "well_id": "well_2"
+    },
+    {
+      "id": "act_01_node_06",
+      "display_name": "Rail Graveyard",
+      "type": "monster",
+      "position": [
+        0.49,
+        0.6
+      ],
+      "prerequisites": [
+        "act_01_node_05"
+      ],
+      "encounter_key": "draft.act_01.monster_06"
+    },
+    {
+      "id": "act_01_node_07",
+      "display_name": "Furnace Rampart",
+      "type": "monster",
+      "position": [
+        0.43,
+        0.82
+      ],
+      "prerequisites": [
+        "act_01_node_06"
+      ],
+      "encounter_key": "draft.act_01.monster_07"
+    },
+    {
+      "id": "act_01_node_08",
+      "display_name": "Crown Well",
+      "type": "well",
+      "position": [
+        0.6,
+        0.74
+      ],
+      "prerequisites": [
+        "act_01_node_07"
+      ],
+      "encounter_key": "draft.act_01.well_08",
+      "well_id": "well_3"
+    },
+    {
+      "id": "act_01_node_09",
+      "display_name": "The Crown Furnace",
+      "type": "boss",
+      "position": [
+        0.735,
+        0.19
+      ],
+      "prerequisites": [
+        "act_01_node_08"
+      ],
+      "encounter_key": "draft.act_01.boss_09"
+    }
+  ],
+  "boss_requires": [
+    "act_01_node_01",
+    "act_01_node_02",
+    "act_01_node_03",
+    "act_01_node_04",
+    "act_01_node_05",
+    "act_01_node_06",
+    "act_01_node_07",
+    "act_01_node_08"
+  ],
+  "paths": [
+    {
+      "from": "act_01_node_01",
+      "to": "act_01_node_02",
+      "points": [
+        [
+          0.1,
+          0.85
+        ],
+        [
+          0.075,
+          0.52
+        ]
+      ]
+    },
+    {
+      "from": "act_01_node_02",
+      "to": "act_01_node_03",
+      "points": [
+        [
+          0.075,
+          0.52
+        ],
+        [
+          0.2,
+          0.3
+        ]
+      ]
+    },
+    {
+      "from": "act_01_node_03",
+      "to": "act_01_node_04",
+      "points": [
+        [
+          0.2,
+          0.3
+        ],
+        [
+          0.47,
+          0.3
+        ]
+      ]
+    },
+    {
+      "from": "act_01_node_04",
+      "to": "act_01_node_05",
+      "points": [
+        [
+          0.47,
+          0.3
+        ],
+        [
+          0.38,
+          0.46
+        ]
+      ]
+    },
+    {
+      "from": "act_01_node_05",
+      "to": "act_01_node_06",
+      "points": [
+        [
+          0.38,
+          0.46
+        ],
+        [
+          0.49,
+          0.6
+        ]
+      ]
+    },
+    {
+      "from": "act_01_node_06",
+      "to": "act_01_node_07",
+      "points": [
+        [
+          0.49,
+          0.6
+        ],
+        [
+          0.43,
+          0.82
+        ]
+      ]
+    },
+    {
+      "from": "act_01_node_07",
+      "to": "act_01_node_08",
+      "points": [
+        [
+          0.43,
+          0.82
+        ],
+        [
+          0.6,
+          0.74
+        ]
+      ]
+    },
+    {
+      "from": "act_01_node_08",
+      "to": "act_01_node_09",
+      "points": [
+        [
+          0.6,
+          0.74
+        ],
+        [
+          0.76,
+          0.63
+        ],
+        [
+          0.8,
+          0.51
+        ],
+        [
+          0.78,
+          0.39
+        ],
+        [
+          0.73,
+          0.3
+        ],
+        [
+          0.735,
+          0.19
+        ]
+      ]
+    }
+  ],
+  "next_act_id": null
+}

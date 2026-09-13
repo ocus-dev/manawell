@@ -1,0 +1,475 @@
+{
+  "union_crop": [
+    66,
+    64,
+    509,
+    503
+  ],
+  "ground_anchor": [
+    222,
+    431
+  ],
+  "recommended_scale": 0.25986078886310904,
+  "cell_size": [
+    443,
+    439
+  ],
+  "loop_premultiplied_rgb_difference": 0.011931570246815681,
+  "frame_metrics": [
+    {
+      "frame": 0,
+      "bbox": [
+        20,
+        16,
+        425,
+        431
+      ],
+      "alpha_area": 109581.109375,
+      "alpha_change_from_previous": 0.0
+    },
+    {
+      "frame": 1,
+      "bbox": [
+        19,
+        11,
+        425,
+        431
+      ],
+      "alpha_area": 110194.28125,
+      "alpha_change_from_previous": 0.02780166082084179
+    },
+    {
+      "frame": 2,
+      "bbox": [
+        16,
+        8,
+        425,
+        429
+      ],
+      "alpha_area": 109686.8046875,
+      "alpha_change_from_previous": 0.040978264063596725
+    },
+    {
+      "frame": 3,
+      "bbox": [
+        13,
+        8,
+        425,
+        429
+      ],
+      "alpha_area": 109000.4296875,
+      "alpha_change_from_previous": 0.025495046749711037
+    },
+    {
+      "frame": 4,
+      "bbox": [
+        9,
+        8,
+        426,
+        428
+      ],
+      "alpha_area": 108189.3984375,
+      "alpha_change_from_previous": 0.021100027486681938
+    },
+    {
+      "frame": 5,
+      "bbox": [
+        7,
+        10,
+        427,
+        427
+      ],
+      "alpha_area": 107410.34375,
+      "alpha_change_from_previous": 0.025762008503079414
+    },
+    {
+      "frame": 6,
+      "bbox": [
+        5,
+        14,
+        427,
+        427
+      ],
+      "alpha_area": 107512.8515625,
+      "alpha_change_from_previous": 0.030214691534638405
+    },
+    {
+      "frame": 7,
+      "bbox": [
+        5,
+        17,
+        427,
+        427
+      ],
+      "alpha_area": 108928.2578125,
+      "alpha_change_from_previous": 0.033813443034887314
+    },
+    {
+      "frame": 8,
+      "bbox": [
+        6,
+        18,
+        428,
+        427
+      ],
+      "alpha_area": 109246.09375,
+      "alpha_change_from_previous": 0.02185876853764057
+    },
+    {
+      "frame": 9,
+      "bbox": [
+        6,
+        15,
+        429,
+        425
+      ],
+      "alpha_area": 110211.0625,
+      "alpha_change_from_previous": 0.03048376739025116
+    },
+    {
+      "frame": 10,
+      "bbox": [
+        7,
+        11,
+        430,
+        424
+      ],
+      "alpha_area": 110662.828125,
+      "alpha_change_from_previous": 0.03905805945396423
+    },
+    {
+      "frame": 11,
+      "bbox": [
+        8,
+        8,
+        431,
+        423
+      ],
+      "alpha_area": 110797.2421875,
+      "alpha_change_from_previous": 0.041070252656936646
+    },
+    {
+      "frame": 12,
+      "bbox": [
+        10,
+        5,
+        433,
+        422
+      ],
+      "alpha_area": 111187.9609375,
+      "alpha_change_from_previous": 0.03557692840695381
+    },
+    {
+      "frame": 13,
+      "bbox": [
+        10,
+        4,
+        435,
+        422
+      ],
+      "alpha_area": 111257.40625,
+      "alpha_change_from_previous": 0.035073939710855484
+    },
+    {
+      "frame": 14,
+      "bbox": [
+        10,
+        4,
+        436,
+        421
+      ],
+      "alpha_area": 111488.1015625,
+      "alpha_change_from_previous": 0.027877910062670708
+    },
+    {
+      "frame": 15,
+      "bbox": [
+        8,
+        6,
+        438,
+        421
+      ],
+      "alpha_area": 109745.859375,
+      "alpha_change_from_previous": 0.02692090906202793
+    },
+    {
+      "frame": 16,
+      "bbox": [
+        5,
+        9,
+        439,
+        420
+      ],
+      "alpha_area": 108950.140625,
+      "alpha_change_from_previous": 0.027683233842253685
+    },
+    {
+      "frame": 17,
+      "bbox": [
+        4,
+        12,
+        439,
+        423
+      ],
+      "alpha_area": 109447.625,
+      "alpha_change_from_previous": 0.030771581456065178
+    },
+    {
+      "frame": 18,
+      "bbox": [
+        5,
+        15,
+        439,
+        435
+      ],
+      "alpha_area": 110075.0078125,
+      "alpha_change_from_previous": 0.03732297196984291
+    },
+    {
+      "frame": 19,
+      "bbox": [
+        5,
+        18,
+        438,
+        435
+      ],
+      "alpha_area": 109821.1875,
+      "alpha_change_from_previous": 0.027919545769691467
+    },
+    {
+      "frame": 20,
+      "bbox": [
+        6,
+        17,
+        437,
+        434
+      ],
+      "alpha_area": 109663.96875,
+      "alpha_change_from_previous": 0.019644157961010933
+    },
+    {
+      "frame": 21,
+      "bbox": [
+        7,
+        13,
+        435,
+        433
+      ],
+      "alpha_area": 109529.109375,
+      "alpha_change_from_previous": 0.027572190389037132
+    },
+    {
+      "frame": 22,
+      "bbox": [
+        8,
+        10,
+        433,
+        432
+      ],
+      "alpha_area": 110610.96875,
+      "alpha_change_from_previous": 0.033136092126369476
+    },
+    {
+      "frame": 23,
+      "bbox": [
+        9,
+        8,
+        431,
+        431
+      ],
+      "alpha_area": 111693.3828125,
+      "alpha_change_from_previous": 0.03589095175266266
+    },
+    {
+      "frame": 24,
+      "bbox": [
+        9,
+        6,
+        431,
+        430
+      ],
+      "alpha_area": 111314.9609375,
+      "alpha_change_from_previous": 0.0373513363301754
+    },
+    {
+      "frame": 25,
+      "bbox": [
+        9,
+        5,
+        429,
+        429
+      ],
+      "alpha_area": 110744.9921875,
+      "alpha_change_from_previous": 0.031527552753686905
+    },
+    {
+      "frame": 26,
+      "bbox": [
+        8,
+        6,
+        429,
+        429
+      ],
+      "alpha_area": 109660.90625,
+      "alpha_change_from_previous": 0.025700140744447708
+    },
+    {
+      "frame": 27,
+      "bbox": [
+        6,
+        7,
+        428,
+        428
+      ],
+      "alpha_area": 108555.390625,
+      "alpha_change_from_previous": 0.024652766063809395
+    },
+    {
+      "frame": 28,
+      "bbox": [
+        5,
+        10,
+        427,
+        427
+      ],
+      "alpha_area": 107835.953125,
+      "alpha_change_from_previous": 0.034183766692876816
+    },
+    {
+      "frame": 29,
+      "bbox": [
+        6,
+        15,
+        427,
+        427
+      ],
+      "alpha_area": 109227.3828125,
+      "alpha_change_from_previous": 0.04015173017978668
+    },
+    {
+      "frame": 30,
+      "bbox": [
+        9,
+        19,
+        426,
+        426
+      ],
+      "alpha_area": 108672.59375,
+      "alpha_change_from_previous": 0.03333292156457901
+    },
+    {
+      "frame": 31,
+      "bbox": [
+        13,
+        15,
+        425,
+        430
+      ],
+      "alpha_area": 109584.6015625,
+      "alpha_change_from_previous": 0.034697867929935455
+    },
+    {
+      "frame": 32,
+      "bbox": [
+        20,
+        16,
+        425,
+        432
+      ],
+      "alpha_area": 109704.4140625,
+      "alpha_change_from_previous": 0.06873539090156555
+    },
+    {
+      "frame": 33,
+      "bbox": [
+        20,
+        16,
+        425,
+        432
+      ],
+      "alpha_area": 109652.71875,
+      "alpha_change_from_previous": 0.0006923546898178756
+    },
+    {
+      "frame": 34,
+      "bbox": [
+        20,
+        16,
+        425,
+        432
+      ],
+      "alpha_area": 109584.1875,
+      "alpha_change_from_previous": 0.001091635669581592
+    },
+    {
+      "frame": 35,
+      "bbox": [
+        20,
+        16,
+        425,
+        432
+      ],
+      "alpha_area": 109515.3671875,
+      "alpha_change_from_previous": 0.0010619935346767306
+    },
+    {
+      "frame": 36,
+      "bbox": [
+        20,
+        16,
+        425,
+        432
+      ],
+      "alpha_area": 109552.421875,
+      "alpha_change_from_previous": 0.0005271453410387039
+    }
+  ],
+  "review_required": true,
+  "note": "Metrics flag candidates for review, not proof of good motion. No automatic temporal mask smoothing or loop crossfade.",
+  "source_indices": [
+    0,
+    2,
+    4,
+    6,
+    8,
+    10,
+    12,
+    14,
+    16,
+    18,
+    20,
+    22,
+    24,
+    26,
+    28,
+    30,
+    32,
+    34,
+    36,
+    38,
+    40,
+    42,
+    44,
+    46,
+    48,
+    50,
+    52,
+    54,
+    56,
+    58,
+    60,
+    62,
+    64,
+    66,
+    68,
+    70,
+    72
+  ],
+  "source_fps": 24.0,
+  "playback_fps": 12.0,
+  "motion": "walk",
+  "loop_requested": true,
+  "damage_event": null,
+  "last_frame_duration_multiplier": 0.4999999999999982,
+  "warnings": []
+}

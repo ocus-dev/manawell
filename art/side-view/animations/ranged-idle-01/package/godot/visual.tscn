@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3]
+[ext_resource type="SpriteFrames" path="animation.tres" id="1"]
+[node name="AnimationVisual" type="Node2D"]
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+texture_filter = 2
+position = Vector2(0.1079136690647482, -44.7841726618705)
+scale = Vector2(0.2158273381294964, 0.2158273381294964)
+sprite_frames = ExtResource("1")
+animation = &"idle"
+autoplay = "idle"

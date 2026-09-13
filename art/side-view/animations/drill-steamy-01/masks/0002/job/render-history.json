@@ -1,0 +1,110 @@
+{
+  "prompt": [
+    445,
+    "869d8544-5f75-4c9b-9f07-781b83cbf309",
+    {
+      "1": {
+        "class_type": "LoadImage",
+        "inputs": {
+          "image": "telos_animation_b5ff08a746d0478a9948880d763ff7f3.png"
+        }
+      },
+      "2": {
+        "class_type": "Trellis2RemoveBackground",
+        "inputs": {
+          "image": [
+            "1",
+            0
+          ],
+          "low_vram": true
+        }
+      },
+      "3": {
+        "class_type": "InvertMask",
+        "inputs": {
+          "mask": [
+            "2",
+            1
+          ]
+        }
+      },
+      "4": {
+        "class_type": "JoinImageWithAlpha",
+        "inputs": {
+          "image": [
+            "1",
+            0
+          ],
+          "alpha": [
+            "3",
+            0
+          ]
+        }
+      },
+      "5": {
+        "class_type": "SaveImage",
+        "inputs": {
+          "images": [
+            "4",
+            0
+          ],
+          "filename_prefix": "Telos/Animation/masks/drill-steamy-01/0002"
+        }
+      }
+    },
+    {
+      "telos_job": "7611956db5fd4d41a66745f714a824fb",
+      "create_time": 1788835419227
+    },
+    [
+      "5"
+    ]
+  ],
+  "outputs": {
+    "5": {
+      "images": [
+        {
+          "filename": "0002_00001_.png",
+          "subfolder": "Telos\\Animation\\masks\\drill-steamy-01",
+          "type": "output"
+        }
+      ]
+    }
+  },
+  "status": {
+    "status_str": "success",
+    "completed": true,
+    "messages": [
+      [
+        "execution_start",
+        {
+          "prompt_id": "869d8544-5f75-4c9b-9f07-781b83cbf309",
+          "timestamp": 1788835419228
+        }
+      ],
+      [
+        "execution_cached",
+        {
+          "nodes": [],
+          "prompt_id": "869d8544-5f75-4c9b-9f07-781b83cbf309",
+          "timestamp": 1788835419253
+        }
+      ],
+      [
+        "execution_success",
+        {
+          "prompt_id": "869d8544-5f75-4c9b-9f07-781b83cbf309",
+          "timestamp": 1788835419938
+        }
+      ]
+    ]
+  },
+  "meta": {
+    "5": {
+      "node_id": "5",
+      "display_node": "5",
+      "parent_node": null,
+      "real_node_id": "5"
+    }
+  }
+}

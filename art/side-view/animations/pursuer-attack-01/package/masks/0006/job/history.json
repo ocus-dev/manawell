@@ -1,0 +1,110 @@
+{
+  "prompt": [
+    198,
+    "79bb218e-6bb2-441d-a1c4-76a351f65d63",
+    {
+      "1": {
+        "class_type": "LoadImage",
+        "inputs": {
+          "image": "telos_animation_8879fbc1e2fd404ba67d81246cfd26c1.png"
+        }
+      },
+      "2": {
+        "class_type": "Trellis2RemoveBackground",
+        "inputs": {
+          "image": [
+            "1",
+            0
+          ],
+          "low_vram": true
+        }
+      },
+      "3": {
+        "class_type": "InvertMask",
+        "inputs": {
+          "mask": [
+            "2",
+            1
+          ]
+        }
+      },
+      "4": {
+        "class_type": "JoinImageWithAlpha",
+        "inputs": {
+          "image": [
+            "1",
+            0
+          ],
+          "alpha": [
+            "3",
+            0
+          ]
+        }
+      },
+      "5": {
+        "class_type": "SaveImage",
+        "inputs": {
+          "images": [
+            "4",
+            0
+          ],
+          "filename_prefix": "Telos/Animation/masks/package/0006"
+        }
+      }
+    },
+    {
+      "telos_job": "0faac06332694f2781a5a6b0a403e0bf",
+      "create_time": 1788832501187
+    },
+    [
+      "5"
+    ]
+  ],
+  "outputs": {
+    "5": {
+      "images": [
+        {
+          "filename": "0006_00006_.png",
+          "subfolder": "Telos\\Animation\\masks\\package",
+          "type": "output"
+        }
+      ]
+    }
+  },
+  "status": {
+    "status_str": "success",
+    "completed": true,
+    "messages": [
+      [
+        "execution_start",
+        {
+          "prompt_id": "79bb218e-6bb2-441d-a1c4-76a351f65d63",
+          "timestamp": 1788832501188
+        }
+      ],
+      [
+        "execution_cached",
+        {
+          "nodes": [],
+          "prompt_id": "79bb218e-6bb2-441d-a1c4-76a351f65d63",
+          "timestamp": 1788832501205
+        }
+      ],
+      [
+        "execution_success",
+        {
+          "prompt_id": "79bb218e-6bb2-441d-a1c4-76a351f65d63",
+          "timestamp": 1788832501990
+        }
+      ]
+    ]
+  },
+  "meta": {
+    "5": {
+      "node_id": "5",
+      "display_node": "5",
+      "parent_node": null,
+      "real_node_id": "5"
+    }
+  }
+}

@@ -1,16 +1,26 @@
 # Prototype work assignments
 
+> **Current loot queue:** [Monster loot and hero builds](loot/README.md). Low-probability monster drops, rarity, individual item rolls, per-hero equipment and deeper stats. L01 and primary-assistant D02 review are complete; start Luna at L02 using the updated prompt and approved contracts. This supersedes unimplemented E01–E06 assumptions. Existing fixed collection behavior remains live until migration/cutover. No new tasks dispatched by this handoff.
+
+> **New planned queue:** [Research trees — Luna R01–R07](research/README.md). Two trees cover harvesting amount/cadence and weapon damage/rate/multishot/projectile speed, with selectable Rapid Seal, Deep Draw and Lance specializations. Begin with catalog/balance, then state, mechanics, compact UI and measured campaign acceptance. Coordinate shared files with remaining map/animation work; no tasks dispatched.
+
+> **New staged queue:** [Act campaign maps — Luna M01–M07](world-map/README.md). Generate themed map candidates first, then stop at M03 for explicit owner design approval. Only afterward implement campaign progression, compact interactive markers and real level routing. Each act has nine nodes: three wells, five monster-only levels and one terminal boss. This queue does not cancel current platforming or icon work.
+
+> **Parallel asset queue:** [UI item and skill icons — Luna I01–I05](ui-assets/README.md). I01–I04 build workflows, assets and an isolated gallery without editing live HUD/platforming files. I05 integrates only after P03/P04 are complete and the relevant widget files are idle. This does not replace or pause P01–P08.
+
+> **Current next queue:** [Compact combat UI and platforming — Luna P01–P08](platforming/README.md). Following the completed visual slice, compact health/pressure and icon skills first, then implement jumping, platforms, height-aware combat and recovery. Card 57's historical acceptance remains explicitly open. Earlier next-queue directions below are historical.
+
 > **Planned after architecture:** [interface revamp assignments 35–45](interface/README.md), based on [the interface design](../design/Interface.md). Finish 22–34 before starting this queue.
 
 > **Next queue:** prototype assignments 01–21 are complete. Continue with [architecture repair assignments 22–34](architecture/README.md). That index contains the current Luna prompt, dependencies, scope, and status tracking. The completed queue below is retained as history.
 
-These assignments implement the first prototype from `design/Concept.md`. They are written for **GPT-5.6 Luna**, one assignment per task. No implementation has been performed by creating this backlog.
+These assignments implement the first prototype from `design/Concept.md`. The active result is the approved 2D side-view project in `prototype/`; the earlier 3D specification below is retained as historical assignment context. They are written for **GPT-5.6 Luna**, one assignment per task. No implementation has been performed by creating this backlog.
 
 ## Start here
 
 Use `work/PROTOTYPE.md` as the compact specification and `work/CONTRACTS.md` for shared behavior. Do not load the entire design document, visual bible, or concept-art directory for every assignment. Read extra material only when the assigned work needs it.
 
-Provisional technical choice: **Godot 4, GDScript, desktop Windows, keyboard and mouse, primitive 3D art**. Assignment 01 verifies available tooling and records an exact version. This is a practical default for this backlog, not an engine decision previously made in the concept. If the user selects another engine, revise the contracts and paths once before implementing downstream cards.
+Historical technical choice for assignments 01-21: **Godot 4, GDScript, desktop Windows, keyboard and mouse, primitive 3D art**. The current active implementation is the approved native 2D side view documented in `work/2d/README.md`.
 
 ## How to run a card
 

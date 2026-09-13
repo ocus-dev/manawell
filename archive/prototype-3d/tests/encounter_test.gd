@@ -1,0 +1,48 @@
+extends SceneTree
+
+const ControllerScript = preload("res://scripts/game/encounter_controller.gd")
+const RunStateScript = preload("res://scripts/model/run_state.gd")
+
+func _init() -> void:
+	var controller: Node = load("res://scenes/main.tscn").instantiate()
+	controller.persistence_enabled = false
+	get_root().add_child(controller)
+	assert(controller.run_state.phase == RunStateScript.Phase.READY)
+	controller.request_start_or_harvest()
+	assert(controller.run_state.phase == RunStateScript.Phase.EXTRACTING)
+	controller.tick(1.0)
+	assert(controller.run_state.tank_base > 0.0)
+	controller.request_start_or_harvest()
+	assert(controller.run_state.phase == RunStateScript.Phase.SEALING)
+	controller.tick(2.0)
+	assert(controller.run_state.phase == RunStateScript.Phase.SUCCESS)
+	assert(controller.account_state.bank == 2)
+	controller.tick(5.0)
+	assert(controller.account_state.bank == 2)
+	assert(not controller.run_state.request_harvest())
+
+	controller.retry()
+	assert(controller.run_state.phase == RunStateScript.Phase.EXTRACTING)
+	controller.toggle_pause()
+	var paused_tank: float = controller.run_state.tank_base
+	controller.tick(5.0)
+	assert(is_equal_approx(controller.run_state.tank_base, paused_tank))
+	controller.toggle_pause()
+	controller.run_state.apply_damage(RunStateScript.DamageTarget.HERO, 100.0)
+	assert(controller.run_state.phase == RunStateScript.Phase.FAILED)
+	assert(controller.account_state.bank == 2)
+	controller.retry()
+	controller.run_state.apply_damage(RunStateScript.DamageTarget.MACHINE, 150.0)
+	assert(controller.run_state.phase == RunStateScript.Phase.FAILED)
+	assert(controller.account_state.bank == 2)
+
+	controller.retry()
+	controller.tick(1.0)
+	controller.request_start_or_harvest()
+	assert(controller.run_state.phase == RunStateScript.Phase.SEALING)
+	controller.run_state.apply_damage(RunStateScript.DamageTarget.HERO, 100.0)
+	controller.tick(2.0)
+	assert(controller.run_state.phase == RunStateScript.Phase.FAILED)
+	assert(controller.account_state.bank == 2)
+	controller.queue_free()
+	quit(0)

@@ -1,0 +1,630 @@
+{
+  "prompt": [
+    156,
+    "acf4a401-0984-4d03-93db-832cb09ecfd9",
+    {
+      "1": {
+        "class_type": "LoadImage",
+        "inputs": {
+          "image": "telos_animation_d723eca81e744419949e051cfdc5522f.png"
+        }
+      },
+      "2": {
+        "class_type": "LoadImage",
+        "inputs": {
+          "image": "telos_animation_d723eca81e744419949e051cfdc5522f.png"
+        }
+      },
+      "3": {
+        "class_type": "UNETLoader",
+        "inputs": {
+          "unet_name": "minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+          "weight_dtype": "default"
+        }
+      },
+      "4": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+          "type": "minimax",
+          "device": "default"
+        }
+      },
+      "5": {
+        "class_type": "VAELoader",
+        "inputs": {
+          "vae_name": "minimax_h3_video_vae_fp16.safetensors"
+        }
+      },
+      "6": {
+        "class_type": "VAELoader",
+        "inputs": {
+          "vae_name": "minimax_h3_audio_vae_fp32.safetensors"
+        }
+      },
+      "7": {
+        "class_type": "MiniMaxH3ImageToVideo",
+        "inputs": {
+          "clip": [
+            "4",
+            0
+          ],
+          "vae": [
+            "5",
+            0
+          ],
+          "first_frame": [
+            "1",
+            0
+          ],
+          "last_frame": [
+            "2",
+            0
+          ],
+          "prompt": "Locked-off side-view game animation of the single reference creature facing right. Preserve its shell pattern, anatomy, silhouette, colors, scale and screen position. Uniform neutral background and constant lighting. Entire body and claws stay inside the canvas. No body rotation, camera movement, zoom, cuts, new limbs, particles, changing shadows or other objects. One complete slow in-place walking stride, with alternating planted feet, clear weight transfer and small natural torso motion. Body stays centered with no net forward travel. Return to the initial stride phase by the end with continuous cyclic motion. No attack or claw strike. No music or dialogue.",
+          "width": 576,
+          "height": 576,
+          "length": 73
+        }
+      },
+      "8": {
+        "class_type": "RandomNoise",
+        "inputs": {
+          "noise_seed": 234508078907053
+        }
+      },
+      "9": {
+        "class_type": "KSamplerSelect",
+        "inputs": {
+          "sampler_name": "res_multistep"
+        }
+      },
+      "10": {
+        "class_type": "BasicScheduler",
+        "inputs": {
+          "model": [
+            "3",
+            0
+          ],
+          "scheduler": "simple",
+          "steps": 15,
+          "denoise": 1.0
+        }
+      },
+      "11": {
+        "class_type": "BasicGuider",
+        "inputs": {
+          "model": [
+            "3",
+            0
+          ],
+          "conditioning": [
+            "7",
+            0
+          ]
+        }
+      },
+      "12": {
+        "class_type": "SamplerCustomAdvanced",
+        "inputs": {
+          "noise": [
+            "8",
+            0
+          ],
+          "guider": [
+            "11",
+            0
+          ],
+          "sampler": [
+            "9",
+            0
+          ],
+          "sigmas": [
+            "10",
+            0
+          ],
+          "latent_image": [
+            "7",
+            1
+          ]
+        }
+      },
+      "13": {
+        "class_type": "VAEDecode",
+        "inputs": {
+          "samples": [
+            "12",
+            0
+          ],
+          "vae": [
+            "5",
+            0
+          ]
+        }
+      },
+      "14": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "12",
+            0
+          ],
+          "vae": [
+            "6",
+            0
+          ]
+        }
+      },
+      "15": {
+        "class_type": "CreateVideo",
+        "inputs": {
+          "images": [
+            "13",
+            0
+          ],
+          "audio": [
+            "14",
+            0
+          ],
+          "fps": 24.0,
+          "bit_depth": 8
+        }
+      },
+      "16": {
+        "class_type": "SaveVideo",
+        "inputs": {
+          "video": [
+            "15",
+            0
+          ],
+          "filename_prefix": "Telos/Animation/pursuer-walk-01/walk/preview",
+          "format": "mp4",
+          "codec": "auto"
+        }
+      },
+      "17": {
+        "class_type": "SaveImage",
+        "inputs": {
+          "images": [
+            "13",
+            0
+          ],
+          "filename_prefix": "Telos/Animation/pursuer-walk-01/walk/master"
+        }
+      }
+    },
+    {
+      "telos_job": "8f7183f14ce047f6b9c69c4b9e2bf917",
+      "create_time": 1788832139455
+    },
+    [
+      "17",
+      "16"
+    ]
+  ],
+  "outputs": {
+    "17": {
+      "images": [
+        {
+          "filename": "master_00001_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00002_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00003_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00004_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00005_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00006_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00007_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00008_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00009_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00010_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00011_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00012_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00013_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00014_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00015_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00016_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00017_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00018_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00019_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00020_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00021_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00022_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00023_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00024_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00025_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00026_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00027_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00028_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00029_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00030_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00031_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00032_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00033_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00034_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00035_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00036_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00037_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00038_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00039_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00040_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00041_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00042_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00043_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00044_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00045_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00046_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00047_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00048_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00049_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00050_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00051_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00052_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00053_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00054_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00055_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00056_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00057_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00058_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00059_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00060_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00061_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00062_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00063_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00064_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00065_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00066_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00067_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00068_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00069_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00070_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00071_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00072_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        },
+        {
+          "filename": "master_00073_.png",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        }
+      ]
+    },
+    "16": {
+      "images": [
+        {
+          "filename": "preview_00001_.mp4",
+          "subfolder": "Telos\\Animation\\pursuer-walk-01\\walk",
+          "type": "output"
+        }
+      ],
+      "animated": [
+        true
+      ]
+    }
+  },
+  "status": {
+    "status_str": "success",
+    "completed": true,
+    "messages": [
+      [
+        "execution_start",
+        {
+          "prompt_id": "acf4a401-0984-4d03-93db-832cb09ecfd9",
+          "timestamp": 1788832139456
+        }
+      ],
+      [
+        "execution_cached",
+        {
+          "nodes": [],
+          "prompt_id": "acf4a401-0984-4d03-93db-832cb09ecfd9",
+          "timestamp": 1788832139476
+        }
+      ],
+      [
+        "execution_success",
+        {
+          "prompt_id": "acf4a401-0984-4d03-93db-832cb09ecfd9",
+          "timestamp": 1788832246757
+        }
+      ]
+    ]
+  },
+  "meta": {
+    "17": {
+      "node_id": "17",
+      "display_node": "17",
+      "parent_node": null,
+      "real_node_id": "17"
+    },
+    "16": {
+      "node_id": "16",
+      "display_node": "16",
+      "parent_node": null,
+      "real_node_id": "16"
+    }
+  }
+}

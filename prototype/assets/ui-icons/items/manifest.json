@@ -1,0 +1,167 @@
+{
+  "version": 1,
+  "items": {
+    "core.heavy_breech": {
+      "path": "res://assets/ui-icons/items/core.heavy_breech.png",
+      "source": "art/ui-items/sources/core.heavy_breech.png",
+      "source_sha256": "d466c2da3f2f4511767d882185f0c3a7fa3dfeb72c6efed292c2a24855fc574e",
+      "sha256": "0a7014a1f35a7dd0506a73438d91ef2e03aa87585e0ff3eb919e96444932cc63",
+      "canvas": [
+        256,
+        256
+      ],
+      "visible_bounds": [
+        31,
+        42,
+        225,
+        213
+      ],
+      "prompt": "Use case: stylized-concept. Asset type: polished inventory item icon for Telos, a 2D industrial sci-fi action RPG. ONE isolated equipment object, square canvas, genuinely transparent background with alpha, no floor or background shadow. Painted semi-realistic game art with chunky engineered shapes, steel, aged brass and muted ochre accents, subtle wear, restrained tiny cyan details. Three-quarter view, consistent soft light from upper left, strong readable outer silhouette, three broad value groups, quiet surfaces, selective thick edge highlights. Center object occupying about 72 percent of canvas, completely inside generous padding. Readable at 48 pixels. No text, numbers, UI, frame, border, rarity glow, logos, characters, hands, multiple panels or extraneous props. Subject: a short massive gun breech block, blocky rectangular steel receiver with a thick circular barrel socket, brass locking clamp and a small red latch. Generate only Heavy Breech.",
+      "generator": "built-in image_gen"
+    },
+    "core.cycler": {
+      "path": "res://assets/ui-icons/items/core.cycler.png",
+      "source": "art/ui-items/sources/core.cycler.png",
+      "source_sha256": "af550b57b4d288646975f54bc1791740c912fc68bc384c9ccddf890ece63f530",
+      "sha256": "a3f77122214d6534f4b97cdbb00d1bd574a3d3fd8533bc9e172d60ea0dfdc1cf",
+      "canvas": [
+        256,
+        256
+      ],
+      "visible_bounds": [
+        31,
+        39,
+        225,
+        217
+      ],
+      "prompt": "Use case: stylized-concept. Asset type: polished inventory item icon for Telos, a 2D industrial sci-fi action RPG. ONE isolated equipment object, square canvas, genuinely transparent background with alpha, no floor or background shadow. Painted semi-realistic game art with chunky engineered shapes, steel, aged brass and muted ochre accents, subtle wear, restrained tiny cyan details. Three-quarter view, consistent soft light from upper left, strong readable outer silhouette, three broad value groups, quiet surfaces, selective thick edge highlights. Center object occupying about 72 percent of canvas, completely inside generous padding. Readable at 48 pixels. No text, numbers, UI, frame, border, rarity glow, logos, characters, hands, multiple panels or extraneous props. Subject: a compact gun autoloader mechanism with an unmistakable exposed six-chamber rotary drum, two stout feed rails and a brass motor housing. Generate only Cycle Driver.",
+      "generator": "built-in image_gen"
+    },
+    "core.accelerator": {
+      "path": "res://assets/ui-icons/items/core.accelerator.png",
+      "source": "art/ui-items/sources/core.accelerator.png",
+      "source_sha256": "7fe81c103df04e246a0df17de713d846a57d69e38eb1dc97cfa524293675076b",
+      "sha256": "226600376e640b18f26959faf0e3e341c89dbf8d1e2ea0c0da9bbc1fb4414531",
+      "canvas": [
+        256,
+        256
+      ],
+      "visible_bounds": [
+        31,
+        50,
+        225,
+        205
+      ],
+      "prompt": "Use case: stylized-concept. Asset type: polished inventory item icon for Telos, a 2D industrial sci-fi action RPG. ONE isolated equipment object, square canvas, genuinely transparent background with alpha, no floor or background shadow. Painted semi-realistic game art with chunky engineered shapes, steel, aged brass and muted ochre accents, subtle wear, restrained tiny cyan details. Three-quarter view, consistent soft light from upper left, strong readable outer silhouette, three broad value groups, quiet surfaces, selective thick edge highlights. Center object occupying about 72 percent of canvas, completely inside generous padding. Readable at 48 pixels. No text, numbers, UI, frame, border, rarity glow, logos, characters, hands, multiple panels or extraneous props. Subject: a long slim electromagnetic gun barrel module, paired steel rails surrounding three cyan induction coils, chunky brass rear connector. Generate only Long Accelerator.",
+      "generator": "built-in image_gen"
+    },
+    "chassis.bulwark": {
+      "path": "res://assets/ui-icons/items/chassis.bulwark.png",
+      "source": "art/ui-items/sources/chassis.bulwark.png",
+      "source_sha256": "9e5eb9622d1fbf2af742070b19ae3d2f268ad35617f5f1f7e9dc5903abbb92dc",
+      "sha256": "05b7dce9030520cda6cb6d3e5415ad0b1aefc57dd8355d013524e8c20f04b39c",
+      "canvas": [
+        256,
+        256
+      ],
+      "visible_bounds": [
+        31,
+        35,
+        225,
+        220
+      ],
+      "prompt": "Use case: stylized-concept. Asset type: polished inventory item icon for Telos, a 2D industrial sci-fi action RPG. ONE isolated equipment object, square canvas, genuinely transparent background with alpha, no floor or background shadow. Painted semi-realistic game art with chunky engineered shapes, steel, aged brass and muted ochre accents, subtle wear, restrained tiny cyan details. Three-quarter view, consistent soft light from upper left, strong readable outer silhouette, three broad value groups, quiet surfaces, selective thick edge highlights. Center object occupying about 72 percent of canvas, completely inside generous padding. Readable at 48 pixels. No text, numbers, UI, frame, border, rarity glow, logos, characters, hands, multiple panels or extraneous props. Subject: a single broad armored chest plate, heavy overlapping steel panels, wide shoulders, ochre hazard-yellow corner plates, no human body. Generate only Bulwark Plating.",
+      "generator": "built-in image_gen"
+    },
+    "chassis.runner": {
+      "path": "res://assets/ui-icons/items/chassis.runner.png",
+      "source": "art/ui-items/sources/chassis.runner.png",
+      "source_sha256": "a12d7616c9f8846e66a8a2db0a5d471f13164c090c7599930ac6ba929efed86c",
+      "sha256": "5171192073654f0034c823365fb1000a3254eb9f0d26fa7f299978df08f3e767",
+      "canvas": [
+        256,
+        256
+      ],
+      "visible_bounds": [
+        51,
+        31,
+        204,
+        225
+      ],
+      "prompt": "Use case: stylized-concept. Asset type: polished inventory item icon for Telos, a 2D industrial sci-fi action RPG. ONE isolated equipment object, square canvas, genuinely transparent background with alpha, no floor or background shadow. Painted semi-realistic game art with chunky engineered shapes, steel, aged brass and muted ochre accents, subtle wear, restrained tiny cyan details. Three-quarter view, consistent soft light from upper left, strong readable outer silhouette, three broad value groups, quiet surfaces, selective thick edge highlights. Center object occupying about 72 percent of canvas, completely inside generous padding. Readable at 48 pixels. No text, numbers, UI, frame, border, rarity glow, logos, characters, hands, multiple panels or extraneous props. Subject: a lightweight skeletal torso exoskeleton frame, narrow open waist, two curved silver structural ribs and small ochre shoulder mounts, no human body. Generate only Runner Frame.",
+      "generator": "built-in image_gen"
+    },
+    "chassis.jump_servos": {
+      "path": "res://assets/ui-icons/items/chassis.jump_servos.png",
+      "source": "art/ui-items/sources/chassis.jump_servos.png",
+      "source_sha256": "3963f0a73467b6dff612e70122d647768bc8c58d222749e72ee5676c747dc6ff",
+      "sha256": "366a985e2973e65acf382a1a1f2449efc382874fef57222dac3ee0ae02498683",
+      "canvas": [
+        256,
+        256
+      ],
+      "visible_bounds": [
+        52,
+        31,
+        204,
+        225
+      ],
+      "prompt": "Use case: stylized-concept. Asset type: polished inventory item icon for Telos, a 2D industrial sci-fi action RPG. ONE isolated equipment object, square canvas, genuinely transparent background with alpha, no floor or background shadow. Painted semi-realistic game art with chunky engineered shapes, steel, aged brass and muted ochre accents, subtle wear, restrained tiny cyan details. Three-quarter view, consistent soft light from upper left, strong readable outer silhouette, three broad value groups, quiet surfaces, selective thick edge highlights. Center object occupying about 72 percent of canvas, completely inside generous padding. Readable at 48 pixels. No text, numbers, UI, frame, border, rarity glow, logos, characters, hands, multiple panels or extraneous props. Subject: a matched pair of compact industrial leg piston servos arranged together as ONE equipment icon, stout silver hydraulic cylinders and bent angular ochre mounting brackets, no human body. Generate only Jump Servos.",
+      "generator": "built-in image_gen"
+    },
+    "module.high_volume": {
+      "path": "res://assets/ui-icons/items/module.high_volume.png",
+      "source": "art/ui-items/sources/module.high_volume.png",
+      "source_sha256": "6a77c3690a1054fbb7990438a3047dbb6cb1064d189140be8c3e87bd5c018bf7",
+      "sha256": "c4c93637661bce695bd560d71ccbe0e66f3a39aedac0aa27b8aeef3676c168ec",
+      "canvas": [
+        256,
+        256
+      ],
+      "visible_bounds": [
+        31,
+        50,
+        225,
+        205
+      ],
+      "prompt": "Use case: stylized-concept. Asset type: polished inventory item icon for Telos, a 2D industrial sci-fi action RPG. ONE isolated equipment object, square canvas, genuinely transparent background with alpha, no floor or background shadow. Painted semi-realistic game art with chunky engineered shapes, steel, aged brass and muted ochre accents, subtle wear, restrained tiny cyan details. Three-quarter view, consistent soft light from upper left, strong readable outer silhouette, three broad value groups, quiet surfaces, selective thick edge highlights. Center object occupying about 72 percent of canvas, completely inside generous padding. Readable at 48 pixels. No text, numbers, UI, frame, border, rarity glow, logos, characters, hands, multiple panels or extraneous props. Subject: a squat wide industrial pump cylinder tank with a broad brass pressure chamber, two thick steel end caps and a small cyan sight glass. Generate only High-volume Cylinder.",
+      "generator": "built-in image_gen"
+    },
+    "module.fast_cycle": {
+      "path": "res://assets/ui-icons/items/module.fast_cycle.png",
+      "source": "art/ui-items/sources/module.fast_cycle.png",
+      "source_sha256": "ea55a0bc3f7746a5d07cadc78b9abc9a79b92d1ccb4b8747d0dd557e3cf42460",
+      "sha256": "c2de2a504cc73b233e5ce38ad19f7279f0ed3308cf7da0cc6bc803f7baaf2791",
+      "canvas": [
+        256,
+        256
+      ],
+      "visible_bounds": [
+        32,
+        31,
+        224,
+        225
+      ],
+      "prompt": "Use case: stylized-concept. Asset type: polished inventory item icon for Telos, a 2D industrial sci-fi action RPG. ONE isolated equipment object, square canvas, genuinely transparent background with alpha, no floor or background shadow. Painted semi-realistic game art with chunky engineered shapes, steel, aged brass and muted ochre accents, subtle wear, restrained tiny cyan details. Three-quarter view, consistent soft light from upper left, strong readable outer silhouette, three broad value groups, quiet surfaces, selective thick edge highlights. Center object occupying about 72 percent of canvas, completely inside generous padding. Readable at 48 pixels. No text, numbers, UI, frame, border, rarity glow, logos, characters, hands, multiple panels or extraneous props. Subject: an exposed turbine rotor module with five broad steel fan blades around a brass hub, small cyan center bearing, compact mechanical silhouette. Generate only Fast-cycle Rotor.",
+      "generator": "built-in image_gen"
+    },
+    "module.bracing": {
+      "path": "res://assets/ui-icons/items/module.bracing.png",
+      "source": "art/ui-items/sources/module.bracing.png",
+      "source_sha256": "e3753d96d6566d85e17ba49d617a6655da7c39ef5c1649f20b04b5dd7c87c0bc",
+      "sha256": "5e552349797b71829194f608e8a57a6db60896fd5eddbd3c484854f6ea9ac10f",
+      "canvas": [
+        256,
+        256
+      ],
+      "visible_bounds": [
+        31,
+        57,
+        225,
+        199
+      ],
+      "prompt": "Use case: stylized-concept. Asset type: polished inventory item icon for Telos, a 2D industrial sci-fi action RPG. ONE isolated equipment object, square canvas, genuinely transparent background with alpha, no floor or background shadow. Painted semi-realistic game art with chunky engineered shapes, steel, aged brass and muted ochre accents, subtle wear, restrained tiny cyan details. Three-quarter view, consistent soft light from upper left, strong readable outer silhouette, three broad value groups, quiet surfaces, selective thick edge highlights. Center object occupying about 72 percent of canvas, completely inside generous padding. Readable at 48 pixels. No text, numbers, UI, frame, border, rarity glow, logos, characters, hands, multiple panels or extraneous props. Subject: a heavy inverted U shaped industrial stabilizer brace, two wide splayed steel feet, ochre yellow reinforced crossbar and thick bolted gussets. Generate only Anchor Bracing.",
+      "generator": "built-in image_gen"
+    }
+  }
+}

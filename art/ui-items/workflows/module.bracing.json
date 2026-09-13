@@ -1,0 +1,895 @@
+{
+  "last_node_id": 19,
+  "last_link_id": 18,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "PrimitiveStringMultiline",
+      "pos": [
+        30,
+        0
+      ],
+      "size": [
+        340,
+        235
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            1
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PrimitiveStringMultiline"
+      },
+      "widgets_values": [
+        "Telos industrial science-fiction equipment inventory icon."
+      ],
+      "title": "01 WORLD \u2014 shared invariant"
+    },
+    {
+      "id": 2,
+      "type": "PrimitiveStringMultiline",
+      "pos": [
+        30,
+        280
+      ],
+      "size": [
+        340,
+        235
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PrimitiveStringMultiline"
+      },
+      "widgets_values": [
+        "Use case: stylized-concept. Asset type: polished inventory item icon for Telos, a 2D industrial sci-fi action RPG. ONE isolated equipment object, square canvas, plain solid neutral grey background for subsequent cutout, no floor or background shadow. Painted semi-realistic game art with chunky engineered shapes, steel, aged brass and muted ochre accents, subtle wear, restrained tiny cyan details. Three-quarter view, consistent soft light from upper left, strong readable outer silhouette, three broad value groups, quiet surfaces, selective thick edge highlights. Center object occupying about 72 percent of canvas, completely inside generous padding. Readable at 48 pixels. No text, numbers, UI, frame, border, rarity glow, logos, characters, hands, multiple panels or extraneous props. "
+      ],
+      "title": "02 RENDERING \u2014 shared invariant"
+    },
+    {
+      "id": 3,
+      "type": "PrimitiveStringMultiline",
+      "pos": [
+        30,
+        560
+      ],
+      "size": [
+        340,
+        235
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            4
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PrimitiveStringMultiline"
+      },
+      "widgets_values": [
+        "a heavy inverted U shaped industrial stabilizer brace, two wide splayed steel feet, ochre yellow reinforced crossbar and thick bolted gussets"
+      ],
+      "title": "03 ENVIRONMENT \u2014 change per concept"
+    },
+    {
+      "id": 4,
+      "type": "PrimitiveStringMultiline",
+      "pos": [
+        30,
+        840
+      ],
+      "size": [
+        340,
+        235
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            6
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PrimitiveStringMultiline"
+      },
+      "widgets_values": [
+        "One centered object, square composition, generous safe margins, three-quarter view. No text, frame or UI."
+      ],
+      "title": "04 COMPOSITION \u2014 camera and framing"
+    },
+    {
+      "id": 5,
+      "type": "PrimitiveStringMultiline",
+      "pos": [
+        30,
+        1120
+      ],
+      "size": [
+        340,
+        235
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            8
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PrimitiveStringMultiline"
+      },
+      "widgets_values": [
+        "Soft upper-left lighting, worn steel and brass, muted ochre, selective highlights, quiet surface detail."
+      ],
+      "title": "05 MOOD \u2014 lighting and palette"
+    },
+    {
+      "id": 6,
+      "type": "StringConcatenate",
+      "pos": [
+        440,
+        160
+      ],
+      "size": [
+        340,
+        150
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string_a",
+          "type": "STRING",
+          "link": 1,
+          "widget": {
+            "name": "string_a"
+          }
+        },
+        {
+          "name": "string_b",
+          "type": "STRING",
+          "link": 2,
+          "widget": {
+            "name": "string_b"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "StringConcatenate"
+      },
+      "widgets_values": [
+        "",
+        "",
+        "\n\n"
+      ],
+      "title": "Assemble prompt 1"
+    },
+    {
+      "id": 7,
+      "type": "StringConcatenate",
+      "pos": [
+        440,
+        410
+      ],
+      "size": [
+        340,
+        150
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string_a",
+          "type": "STRING",
+          "link": 3,
+          "widget": {
+            "name": "string_a"
+          }
+        },
+        {
+          "name": "string_b",
+          "type": "STRING",
+          "link": 4,
+          "widget": {
+            "name": "string_b"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "StringConcatenate"
+      },
+      "widgets_values": [
+        "",
+        "",
+        "\n\n"
+      ],
+      "title": "Assemble prompt 2"
+    },
+    {
+      "id": 8,
+      "type": "StringConcatenate",
+      "pos": [
+        440,
+        660
+      ],
+      "size": [
+        340,
+        150
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string_a",
+          "type": "STRING",
+          "link": 5,
+          "widget": {
+            "name": "string_a"
+          }
+        },
+        {
+          "name": "string_b",
+          "type": "STRING",
+          "link": 6,
+          "widget": {
+            "name": "string_b"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            7
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "StringConcatenate"
+      },
+      "widgets_values": [
+        "",
+        "",
+        "\n\n"
+      ],
+      "title": "Assemble prompt 3"
+    },
+    {
+      "id": 9,
+      "type": "StringConcatenate",
+      "pos": [
+        440,
+        910
+      ],
+      "size": [
+        340,
+        150
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string_a",
+          "type": "STRING",
+          "link": 7,
+          "widget": {
+            "name": "string_a"
+          }
+        },
+        {
+          "name": "string_b",
+          "type": "STRING",
+          "link": 8,
+          "widget": {
+            "name": "string_b"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            10
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "StringConcatenate"
+      },
+      "widgets_values": [
+        "",
+        "",
+        "\n\n"
+      ],
+      "title": "Assemble prompt 4"
+    },
+    {
+      "id": 10,
+      "type": "UNETLoader",
+      "pos": [
+        860,
+        0
+      ],
+      "size": [
+        340,
+        150
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            12
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "UNETLoader"
+      },
+      "widgets_values": [
+        "krea2_turbo_fp8_scaled.safetensors",
+        "default"
+      ],
+      "title": "PRIMARY \u2014 Krea 2 Turbo FP8"
+    },
+    {
+      "id": 11,
+      "type": "CLIPLoader",
+      "pos": [
+        860,
+        210
+      ],
+      "size": [
+        340,
+        150
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            9
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPLoader"
+      },
+      "widgets_values": [
+        "qwen3vl_4b_fp8_scaled.safetensors",
+        "krea2",
+        "default"
+      ],
+      "title": "Krea 2 text encoder"
+    },
+    {
+      "id": 12,
+      "type": "VAELoader",
+      "pos": [
+        860,
+        420
+      ],
+      "size": [
+        340,
+        150
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            17
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAELoader"
+      },
+      "widgets_values": [
+        "qwen_image_vae.safetensors"
+      ],
+      "title": "Qwen image VAE"
+    },
+    {
+      "id": 13,
+      "type": "CLIPTextEncode",
+      "pos": [
+        860,
+        650
+      ],
+      "size": [
+        340,
+        150
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 9
+        },
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 10,
+          "widget": {
+            "name": "text"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            11,
+            13
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        ""
+      ],
+      "title": "Encode assembled prompt"
+    },
+    {
+      "id": 14,
+      "type": "ConditioningZeroOut",
+      "pos": [
+        1260,
+        630
+      ],
+      "size": [
+        340,
+        150
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 11
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            14
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ConditioningZeroOut"
+      },
+      "widgets_values": [],
+      "title": "Unused negative at CFG 1"
+    },
+    {
+      "id": 15,
+      "type": "EmptyLatentImage",
+      "pos": [
+        1260,
+        880
+      ],
+      "size": [
+        340,
+        150
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            15
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "EmptyLatentImage"
+      },
+      "widgets_values": [
+        1024,
+        1024,
+        1
+      ],
+      "title": "RESOLUTION \u2014 batch 1"
+    },
+    {
+      "id": 16,
+      "type": "KSampler",
+      "pos": [
+        1660,
+        130
+      ],
+      "size": [
+        350,
+        340
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 12
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 13
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 14
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 15
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            16
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KSampler"
+      },
+      "widgets_values": [
+        9102608,
+        "fixed",
+        8,
+        1,
+        "euler",
+        "simple",
+        1
+      ],
+      "title": "GENERATE \u2014 fixed seed; increment to explore"
+    },
+    {
+      "id": 17,
+      "type": "VAEDecode",
+      "pos": [
+        2060,
+        150
+      ],
+      "size": [
+        340,
+        150
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 16
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 17
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            18
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode"
+      },
+      "widgets_values": [],
+      "title": "Decode image"
+    },
+    {
+      "id": 18,
+      "type": "SaveImage",
+      "pos": [
+        2460,
+        150
+      ],
+      "size": [
+        440,
+        520
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 18
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "SaveImage"
+      },
+      "widgets_values": [
+        "Telos/UI_Items/module.bracing"
+      ],
+      "title": "SAVE \u2014 PNG with workflow metadata"
+    },
+    {
+      "id": 19,
+      "type": "Note",
+      "pos": [
+        1660,
+        1000
+      ],
+      "size": [
+        650,
+        250
+      ],
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "Note"
+      },
+      "widgets_values": [
+        "TELOS ITEM: Anchor Bracing. Edit subject node 3. Generate, review, then run cutout. Do not bake rarity borders into the image."
+      ],
+      "title": "Jungle industrial complex \u2014 Read me"
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      6,
+      0,
+      "STRING"
+    ],
+    [
+      2,
+      2,
+      0,
+      6,
+      1,
+      "STRING"
+    ],
+    [
+      3,
+      6,
+      0,
+      7,
+      0,
+      "STRING"
+    ],
+    [
+      4,
+      3,
+      0,
+      7,
+      1,
+      "STRING"
+    ],
+    [
+      5,
+      7,
+      0,
+      8,
+      0,
+      "STRING"
+    ],
+    [
+      6,
+      4,
+      0,
+      8,
+      1,
+      "STRING"
+    ],
+    [
+      7,
+      8,
+      0,
+      9,
+      0,
+      "STRING"
+    ],
+    [
+      8,
+      5,
+      0,
+      9,
+      1,
+      "STRING"
+    ],
+    [
+      9,
+      11,
+      0,
+      13,
+      0,
+      "CLIP"
+    ],
+    [
+      10,
+      9,
+      0,
+      13,
+      1,
+      "STRING"
+    ],
+    [
+      11,
+      13,
+      0,
+      14,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      12,
+      10,
+      0,
+      16,
+      0,
+      "MODEL"
+    ],
+    [
+      13,
+      13,
+      0,
+      16,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      14,
+      14,
+      0,
+      16,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      15,
+      15,
+      0,
+      16,
+      3,
+      "LATENT"
+    ],
+    [
+      16,
+      16,
+      0,
+      17,
+      0,
+      "LATENT"
+    ],
+    [
+      17,
+      12,
+      0,
+      17,
+      1,
+      "VAE"
+    ],
+    [
+      18,
+      17,
+      0,
+      18,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "Telos": {
+      "asset_id": "module.bracing",
+      "stage": "item-concept"
+    }
+  },
+  "version": 0.4
+}

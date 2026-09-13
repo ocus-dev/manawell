@@ -1,0 +1,110 @@
+{
+  "prompt": [
+    31,
+    "e282eaf5-374c-4ec0-8ab0-6061a46257b8",
+    {
+      "1": {
+        "class_type": "LoadImage",
+        "inputs": {
+          "image": "telos_animation_c93957fcba5c46368f28e63b9fd3a863.png"
+        }
+      },
+      "2": {
+        "class_type": "Trellis2RemoveBackground",
+        "inputs": {
+          "image": [
+            "1",
+            0
+          ],
+          "low_vram": true
+        }
+      },
+      "3": {
+        "class_type": "InvertMask",
+        "inputs": {
+          "mask": [
+            "2",
+            1
+          ]
+        }
+      },
+      "4": {
+        "class_type": "JoinImageWithAlpha",
+        "inputs": {
+          "image": [
+            "1",
+            0
+          ],
+          "alpha": [
+            "3",
+            0
+          ]
+        }
+      },
+      "5": {
+        "class_type": "SaveImage",
+        "inputs": {
+          "images": [
+            "4",
+            0
+          ],
+          "filename_prefix": "Telos/Animation/masks/pipeline-pilot/0056"
+        }
+      }
+    },
+    {
+      "telos_job": "167ef387e0f947e8838c8c43607f2c7f",
+      "create_time": 1788828688886
+    },
+    [
+      "5"
+    ]
+  ],
+  "outputs": {
+    "5": {
+      "images": [
+        {
+          "filename": "0056_00001_.png",
+          "subfolder": "Telos\\Animation\\masks\\pipeline-pilot",
+          "type": "output"
+        }
+      ]
+    }
+  },
+  "status": {
+    "status_str": "success",
+    "completed": true,
+    "messages": [
+      [
+        "execution_start",
+        {
+          "prompt_id": "e282eaf5-374c-4ec0-8ab0-6061a46257b8",
+          "timestamp": 1788828688887
+        }
+      ],
+      [
+        "execution_cached",
+        {
+          "nodes": [],
+          "prompt_id": "e282eaf5-374c-4ec0-8ab0-6061a46257b8",
+          "timestamp": 1788828688897
+        }
+      ],
+      [
+        "execution_success",
+        {
+          "prompt_id": "e282eaf5-374c-4ec0-8ab0-6061a46257b8",
+          "timestamp": 1788828689878
+        }
+      ]
+    ]
+  },
+  "meta": {
+    "5": {
+      "node_id": "5",
+      "display_node": "5",
+      "parent_node": null,
+      "real_node_id": "5"
+    }
+  }
+}

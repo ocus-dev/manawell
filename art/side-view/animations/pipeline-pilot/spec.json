@@ -1,0 +1,16 @@
+{
+  "source": "C:\\Users\\TTOCS\\Documents\\ChatGPT\\Telos Game\\art\\side-view\\animations\\breaker_animation.mp4",
+  "source_hash": "58d22f64db45c67fab6e24d5a1faec4d4105cd48516273aa1914483f8853933d",
+  "source_fps": 24,
+  "fps": 12.0,
+  "start": 0,
+  "end": null,
+  "anchor": [
+    288.0,
+    550.0
+  ],
+  "height": 112.0,
+  "motion": "idle",
+  "loop": true,
+  "shifts": null
+}

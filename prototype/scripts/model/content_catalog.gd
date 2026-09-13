@@ -2,10 +2,12 @@ class_name ContentCatalog
 extends RefCounted
 
 const BalanceData = preload("res://data/balance.gd")
+const ResearchCatalogScript = preload("res://scripts/model/research_catalog.gd")
 
 var wells: Dictionary = {
 	"well_1": {"label": "Well 1", "base_output": BalanceData.WELL_1_BASE_OUTPUT, "spawn_interval_factor": 1.0, "enemy_damage_factor": 1.0},
 	"well_2": {"label": "Well 2", "base_output": BalanceData.WELL_2_BASE_OUTPUT, "spawn_interval_factor": 0.8, "enemy_damage_factor": 1.25},
+	"well_3": {"label": "Well 3", "base_output": BalanceData.WELL_3_BASE_OUTPUT, "spawn_interval_factor": 0.7, "enemy_damage_factor": 1.4},
 }
 var heroes: Dictionary = {
 	"hero_1": {"label": "Hero 1"},
@@ -16,6 +18,8 @@ var upgrades: Dictionary = {
 	"pump_1": {"cost": BalanceData.PUMP_UPGRADE_COST, "label": "Pump +25% output", "effect": "Pump +25% output"},
 	"spread_1": {"cost": BalanceData.SPREAD_UPGRADE_COST, "label": "Spread: three shots", "effect": "Spread: three shots"},
 }
+var research_tracks: Dictionary = ResearchCatalogScript.TRACKS.duplicate(true)
+var research_unlocks: Dictionary = ResearchCatalogScript.UNLOCKS.duplicate(true)
 var surge_rules: Array[Dictionary] = [
 	{"tier": 0, "spawn_interval": 3.0, "breaker_cycle": -1, "ranged_cycle": -1},
 	{"tier": 1, "spawn_interval": 2.5, "breaker_cycle": 3, "ranged_cycle": -1},
@@ -43,6 +47,17 @@ func has_hero(hero_id: String) -> bool:
 
 func has_upgrade(upgrade_id: String) -> bool:
 	return upgrades.has(upgrade_id)
+
+func has_research(research_id: String) -> bool:
+	return research_tracks.has(research_id) or research_unlocks.has(research_id)
+
+func get_research(research_id: String) -> Dictionary:
+	if research_tracks.has(research_id):
+		return research_tracks[research_id].duplicate(true)
+	return research_unlocks.get(research_id, {}).duplicate(true)
+
+func research_ids() -> Array[String]:
+	return ResearchCatalogScript.all_ids()
 
 func get_well(well_id: String) -> Dictionary:
 	return wells.get(well_id, {})

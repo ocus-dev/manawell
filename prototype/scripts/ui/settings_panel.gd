@@ -141,6 +141,8 @@ func _build() -> void:
 	confirmation_dialog.canceled.connect(_on_cancel_clear)
 	add_child(confirmation_dialog)
 	_select_current_resolution()
+	get_window().size_changed.connect(_select_current_resolution)
+	visibility_changed.connect(_select_current_resolution)
 
 func _on_resolution_selected(index: int) -> void:
 	var size: Vector2i = resolution_selector.get_item_metadata(index)
@@ -159,13 +161,12 @@ func set_ui_scale(value: float) -> void:
 func _select_current_resolution() -> void:
 	if resolution_selector == null:
 		return
-	var current := DisplayServer.window_get_size()
-	var closest_index := 1
-	var closest_distance := INF
+	var current := get_window().size
+	var selected_index := -1
 	for index in resolution_selector.item_count:
 		var size: Vector2i = resolution_selector.get_item_metadata(index)
-		var distance := absf(float(size.x - current.x)) + absf(float(size.y - current.y))
-		if distance < closest_distance:
-			closest_distance = distance
-			closest_index = index
-	resolution_selector.select(closest_index)
+		if size == current:
+			selected_index = index
+	resolution_selector.select(selected_index)
+	if selected_index == -1:
+		resolution_selector.text = "%d x %d (current)" % [current.x, current.y]

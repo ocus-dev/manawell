@@ -1,0 +1,273 @@
+{
+  "version": 0.4,
+  "last_node_id": 99,
+  "last_link_id": 5,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadImage",
+      "title": "LoadImage",
+      "pos": [
+        0,
+        0
+      ],
+      "size": [
+        410,
+        300
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1,
+            3
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "telos_animation_a5137d128c9740b78082689d015b4591.png",
+        "image"
+      ]
+    },
+    {
+      "id": 2,
+      "type": "Trellis2RemoveBackground",
+      "title": "Trellis2RemoveBackground",
+      "pos": [
+        0,
+        350
+      ],
+      "size": [
+        410,
+        300
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": []
+        },
+        {
+          "name": "mask",
+          "type": "MASK",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Trellis2RemoveBackground"
+      },
+      "widgets_values": [
+        true
+      ]
+    },
+    {
+      "id": 3,
+      "type": "InvertMask",
+      "title": "InvertMask",
+      "pos": [
+        0,
+        700
+      ],
+      "size": [
+        410,
+        300
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": [
+            4
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "InvertMask"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 4,
+      "type": "JoinImageWithAlpha",
+      "title": "JoinImageWithAlpha",
+      "pos": [
+        0,
+        1050
+      ],
+      "size": [
+        410,
+        300
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 3
+        },
+        {
+          "name": "alpha",
+          "type": "MASK",
+          "link": 4
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "JoinImageWithAlpha"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 5,
+      "type": "SaveImage",
+      "title": "SaveImage",
+      "pos": [
+        440,
+        0
+      ],
+      "size": [
+        410,
+        300
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 5
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveImage"
+      },
+      "widgets_values": [
+        "Telos/Animation/mask-review"
+      ]
+    },
+    {
+      "id": 99,
+      "type": "MarkdownNote",
+      "title": "READ FIRST \u2014 frame cutout \u2014 one frame only",
+      "pos": [
+        -470,
+        0
+      ],
+      "size": [
+        440,
+        560
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "TELOS frame cutout \u2014 one frame only\nFirst/last are prepared references with identical canvas/scale. Same image is a loop/recovery constraint, not proof of a seamless cycle. Change both selectors for a different actor. Width/height and supported frame count are on H3 node; defaults 576 square, 73 frames at 24 fps. Seed is fixed. SaveImage exports ALL decoded frames as lossless PNG masters; SaveVideo is preview/audio only. Use animation.ps1 package for frame selection, per-frame cutout, ONE union crop/pivot, QC and Godot export. Review alpha/loop artifacts before game use. Damage events belong to the simulation. No live game changes."
+      ]
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "IMAGE"
+    ],
+    [
+      2,
+      2,
+      1,
+      3,
+      0,
+      "MASK"
+    ],
+    [
+      3,
+      1,
+      0,
+      4,
+      0,
+      "IMAGE"
+    ],
+    [
+      4,
+      3,
+      0,
+      4,
+      1,
+      "MASK"
+    ],
+    [
+      5,
+      4,
+      0,
+      5,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "Telos": {
+      "motion": "frame cutout \u2014 one frame only"
+    }
+  }
+}

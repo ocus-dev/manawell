@@ -22,7 +22,7 @@ func _run() -> void:
 	assert(controller.purchase_upgrade("spread_1"))
 	assert(controller.start_run())
 	assert(is_equal_approx(controller.run_state.extraction_rate, BalanceData.WELL_1_BASE_OUTPUT * BalanceData.PUMP_OUTPUT_MULTIPLIER))
-	assert(is_equal_approx(controller.weapon_damage, BalanceData.WEAPON_DAMAGE + BalanceData.DAMAGE_UPGRADE_BONUS))
+	assert(is_equal_approx(controller.weapon_damage, 9.75))
 	var bank_before_refresh: float = controller.account_state.bank
 	controller._update_hud()
 	assert(is_equal_approx(controller.account_state.bank, bank_before_refresh))

@@ -1,0 +1,9 @@
+# R03 — Harvest cadence, displacement and risk specializations
+
+Depends on R02; coordinate controller/model files. Use resolved amount/interval instead of a UI-only tick animation. Accumulate fractional cycle progress with simulation time; completed cycles deposit their amount, preserving total earned fraction on sealing so players neither lose accrued output nor gain an extra full cycle. Capture cycle phase/amount/interval in active snapshots. Pause freezes progress; restart/failure resets only the new run, not research.
+
+Keep 60 Hz scheduler ordering and lethal-damage priority. Account for large delta crossing multiple cycles and extraction-to-sealing boundary once. Apply existing payout/surge/loadout factors once. Animate one restrained machine pulse/tank update per completed cycle without floating-text spam. Rapid Seal changes seal duration; Deep Draw changes output and pressure advancement, not global simulation speed. Monster-only/boss objectives must not acquire a dummy harvester.
+
+Production accounting uses the same core rate formula and existing guarded/non-active rules; offline settlement stays analytical. Settle elapsed income under the old rate before purchase changes the rate, then start the new rate at that transition. Neither specialization affects passive income in this slice. UI estimates and credited production must agree.
+
+Acceptance: rank-zero total parity; independent amount/cadence tests; fractional seal, tick boundary, pause, multi-cycle delta, snapshot resume and terminal tie; no rate stacking; old/new-rate settlement; all three wells; no non-well production changes. Show one slow/large and one fast/small cycle clip or screenshot sequence. Completion note: resolver-backed cycle capture and passive core-rank accounting implemented; production and snapshot commands pass.

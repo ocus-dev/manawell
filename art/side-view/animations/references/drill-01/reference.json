@@ -1,0 +1,24 @@
+{
+  "source": "C:\\Users\\TTOCS\\Documents\\ChatGPT\\Telos Game\\art\\side-view\\environment\\drill\\new-drill-cutout-01\\result.png",
+  "source_sha256": "39802bbebef4100179384f6d77dcb9234efcf324980b770ba9c18a5f2dbe8ca8",
+  "canvas": [
+    576,
+    576
+  ],
+  "source_crop": [
+    43,
+    97,
+    827,
+    768
+  ],
+  "uniform_scale": 0.5142857142857142,
+  "paste": [
+    87,
+    150
+  ],
+  "ground_anchor": [
+    288,
+    495
+  ],
+  "note": "Default anchor uses visible bottom-center; review actual planted feet. Last-frame references must share this transform."
+}

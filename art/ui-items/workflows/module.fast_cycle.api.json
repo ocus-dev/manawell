@@ -1,0 +1,189 @@
+{
+  "1": {
+    "class_type": "PrimitiveStringMultiline",
+    "inputs": {
+      "value": "Telos industrial science-fiction equipment inventory icon."
+    }
+  },
+  "2": {
+    "class_type": "PrimitiveStringMultiline",
+    "inputs": {
+      "value": "Use case: stylized-concept. Asset type: polished inventory item icon for Telos, a 2D industrial sci-fi action RPG. ONE isolated equipment object, square canvas, plain solid neutral grey background for subsequent cutout, no floor or background shadow. Painted semi-realistic game art with chunky engineered shapes, steel, aged brass and muted ochre accents, subtle wear, restrained tiny cyan details. Three-quarter view, consistent soft light from upper left, strong readable outer silhouette, three broad value groups, quiet surfaces, selective thick edge highlights. Center object occupying about 72 percent of canvas, completely inside generous padding. Readable at 48 pixels. No text, numbers, UI, frame, border, rarity glow, logos, characters, hands, multiple panels or extraneous props. "
+    }
+  },
+  "3": {
+    "class_type": "PrimitiveStringMultiline",
+    "inputs": {
+      "value": "an exposed turbine rotor module with five broad steel fan blades around a brass hub, small cyan center bearing, compact mechanical silhouette"
+    }
+  },
+  "4": {
+    "class_type": "PrimitiveStringMultiline",
+    "inputs": {
+      "value": "One centered object, square composition, generous safe margins, three-quarter view. No text, frame or UI."
+    }
+  },
+  "5": {
+    "class_type": "PrimitiveStringMultiline",
+    "inputs": {
+      "value": "Soft upper-left lighting, worn steel and brass, muted ochre, selective highlights, quiet surface detail."
+    }
+  },
+  "6": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": [
+        "1",
+        0
+      ],
+      "string_b": [
+        "2",
+        0
+      ],
+      "delimiter": "\n\n"
+    }
+  },
+  "7": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": [
+        "6",
+        0
+      ],
+      "string_b": [
+        "3",
+        0
+      ],
+      "delimiter": "\n\n"
+    }
+  },
+  "8": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": [
+        "7",
+        0
+      ],
+      "string_b": [
+        "4",
+        0
+      ],
+      "delimiter": "\n\n"
+    }
+  },
+  "9": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": [
+        "8",
+        0
+      ],
+      "string_b": [
+        "5",
+        0
+      ],
+      "delimiter": "\n\n"
+    }
+  },
+  "10": {
+    "class_type": "UNETLoader",
+    "inputs": {
+      "unet_name": "krea2_turbo_fp8_scaled.safetensors",
+      "weight_dtype": "default"
+    }
+  },
+  "11": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+      "clip_name": "qwen3vl_4b_fp8_scaled.safetensors",
+      "type": "krea2",
+      "device": "default"
+    }
+  },
+  "12": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "qwen_image_vae.safetensors"
+    }
+  },
+  "13": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": [
+        "11",
+        0
+      ],
+      "text": [
+        "9",
+        0
+      ]
+    }
+  },
+  "14": {
+    "class_type": "ConditioningZeroOut",
+    "inputs": {
+      "conditioning": [
+        "13",
+        0
+      ]
+    }
+  },
+  "15": {
+    "class_type": "EmptyLatentImage",
+    "inputs": {
+      "width": 1024,
+      "height": 1024,
+      "batch_size": 1
+    }
+  },
+  "16": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": [
+        "10",
+        0
+      ],
+      "positive": [
+        "13",
+        0
+      ],
+      "negative": [
+        "14",
+        0
+      ],
+      "latent_image": [
+        "15",
+        0
+      ],
+      "seed": 9102607,
+      "steps": 8,
+      "cfg": 1.0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1.0
+    }
+  },
+  "17": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "16",
+        0
+      ],
+      "vae": [
+        "12",
+        0
+      ]
+    }
+  },
+  "18": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "17",
+        0
+      ],
+      "filename_prefix": "Telos/UI_Items/module.fast_cycle"
+    }
+  }
+}

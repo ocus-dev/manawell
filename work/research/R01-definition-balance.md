@@ -1,0 +1,11 @@
+# R01 — Define research and establish an affordable first slice
+
+Read the queue design and actual catalog/account, balance, weapon scheduling, projectile, run-state, production, save and UI-view-state code. Current evidence: three boolean upgrades; controller branches on damage_1/pump_1/spread_1; continuous extraction accrual; fixed weapon interval/speed and snapshot fields. Verify this remains true before changing anything.
+
+Create one authored research catalog and a pure derived-stat resolver, separate from ownership/UI. Implement the six core tracks and three specialization/mode unlocks in the index with stable IDs, max ranks, exact rank costs, prerequisites, effects and descriptions. Validate all prerequisite references, bounds and acyclic dependencies. Do not invent a general-purpose expression engine.
+
+Write `work/research/balance-sheet.md` with exact initial costs, formulas and example builds at equal mana budgets. Start from existing first-rank anchors (damage 40, amount 60, shots 100); derive cadence/rate/speed costs and later ranks from actual Act 1 rewards/extraction income. Target at least one useful purchase after an early successful encounter and several meaningful choices before the boss; do not promise pacing without measured earnings. Keep costs integral, positive and finite, rank effects bounded, and total spend explicit. Compare base/full-rank throughput, per-projectile damage, attacks/sec and full-connect volley DPS; clearly separate theoretical DPS from actual hits.
+
+Write the run-start snapshot/effect ownership contract: account owns ranks/equipment, resolver owns all formulas, active run captures resolved stats, widgets only read/emit commands. Purchases/equipment changes are blocked during active or suspended runs. Document legacy mappings and passive-production scope. Add meaningful resolver and malformed-definition tests. Do not change actual damage/harvesting behavior or build the tree UI in this card.
+
+Acceptance: validated catalog; formula tests including mode exclusivity and rank-zero parity with current one-shot defaults; exact proposed costs and affordability evidence; next-card interfaces documented. Completion note: catalog, resolver, balance sheet, and resolver test implemented; focused resolver command passes.

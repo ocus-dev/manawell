@@ -6,13 +6,13 @@ Prove that defending a mana extractor, deciding when to cash out, and reinvestin
 
 ## Scope
 
-Windows desktop prototype in Godot 4/GDScript. Use an elevated fixed 3D camera, flat arena, simple collision, and primitive meshes. No downloaded assets are required. Store the Godot project under `prototype/`. Keep developer/playtest documentation under `work/`.
+Windows desktop prototype in Godot 4/GDScript. The active project is a native 2D side view with a fixed 1280x720 logical canvas, one horizontal ground lane, a central harvester, and procedural industrial visuals. Store the active Godot project under `prototype/`. The original 3D runtime is frozen at `archive/prototype-3d/`, and the accepted experiment is frozen at `experiments/side-view-defense/`; neither is an active dependency.
 
 Milestone A: one hero, one well, three enemies, four authored surge tiers followed by escalating repeats, extraction and loss, two abilities, three upgrades, a clear HUD, and instant-versus-delayed sealing settings.
 
 Milestone B: two wells using the same arena, two guaranteed heroes, one guard per well, deterministic passive income, capped offline settlement, persistent progress, exact enough encounter recovery to prevent rerolling, and two machine loadouts.
 
-Excluded: route stages, bosses, full acts, random recruitment, prestige, regional currencies, public chat, co-op, leaderboards, server security, cloud saves, asset generation, detailed art, elaborate animation, procedural terrain, controller support, and engine comparisons. These are deferred, not removed from the long-term concept.
+Excluded from this prototype: route stages, bosses, full acts, random recruitment, prestige, regional currencies, public chat, co-op, leaderboards, server security, cloud saves, final art production, and engine comparisons. These are product-scope exclusions, not unresolved conversion work.
 
 ## Play
 

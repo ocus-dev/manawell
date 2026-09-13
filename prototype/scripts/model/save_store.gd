@@ -3,8 +3,9 @@ extends RefCounted
 
 const AccountStateScript = preload("res://scripts/model/account_state.gd")
 const SnapshotScript = preload("res://scripts/model/run_snapshot.gd")
+const CampaignStateScript = preload("res://scripts/model/campaign_state.gd")
 
-const CURRENT_VERSION: int = 4
+const CURRENT_VERSION: int = 6
 const DEFAULT_LIVE_PATH: String = "user://account_save.json"
 const DEFAULT_TEMP_PATH: String = "user://account_save.tmp"
 const DEFAULT_BACKUP_PATH: String = "user://account_save.bak"
@@ -21,6 +22,7 @@ var recovery_message: String = ""
 var loaded_production_timestamp: float = 0.0
 var loaded_production_utc_timestamp: float = 0.0
 var loaded_snapshot: Dictionary = {}
+var loaded_campaign_state: Dictionary = {}
 var load_outcome: LoadOutcome = LoadOutcome.FRESH
 var writes_allowed: bool = true
 var file_operations: Dictionary = {}
@@ -38,6 +40,7 @@ func load_account() -> RefCounted:
 	loaded_production_timestamp = 0.0
 	loaded_production_utc_timestamp = 0.0
 	loaded_snapshot = {}
+	loaded_campaign_state = {}
 	load_outcome = LoadOutcome.FRESH
 	writes_allowed = true
 	_rejected_live = false
@@ -83,6 +86,7 @@ func _apply_loaded_result(result: Dictionary) -> void:
 	loaded_production_timestamp = result.production_timestamp
 	loaded_production_utc_timestamp = result.production_timestamp
 	loaded_snapshot = result.snapshot
+	loaded_campaign_state = result.get("campaign_state", {})
 
 func _reject_without_recovery(result: Dictionary) -> RefCounted:
 	writes_allowed = false
@@ -103,13 +107,17 @@ func save_envelope(envelope: Dictionary) -> bool:
 	if not writes_allowed:
 		return _fail_save("Save blocked: the loaded save is %s and must be recovered or reset first." % get_load_result()["outcome"])
 	var account: RefCounted = envelope.get("account")
+	var account_payload: Dictionary = envelope.get("account_payload", {})
 	var production_utc_timestamp: float = float(envelope.get("production_utc_timestamp", 0.0))
 	var snapshot: Dictionary = envelope.get("snapshot", {})
-	if account == null:
+	var campaign_state: Dictionary = envelope.get("campaign_state", {})
+	if account == null and account_payload.is_empty():
 		return _fail_save("Save failed: account state is missing.")
+	if account_payload.is_empty():
+		account_payload = account.to_save_payload().duplicate(true)
 	var payload: Dictionary = {
 		"version": CURRENT_VERSION,
-		"account": account.to_save_payload(),
+		"account": account_payload,
 		"production_utc_timestamp": production_utc_timestamp if is_finite(production_utc_timestamp) else 0.0,
 	}
 	if not snapshot.is_empty():
@@ -117,6 +125,11 @@ func save_envelope(envelope: Dictionary) -> bool:
 		if not snapshot_result["valid"]:
 			return _fail_save("Save failed: %s" % snapshot_result["error"])
 		payload["snapshot"] = snapshot_result["payload"]
+	if not campaign_state.is_empty():
+		var campaign_validation := CampaignStateScript.validate_save_payload(campaign_state)
+		if not campaign_validation["valid"]:
+			return _fail_save("Save failed: %s" % campaign_validation["error"])
+		payload["campaign_state"] = campaign_state.duplicate(true)
 	var validation := _validate_payload(payload)
 	if not validation.valid:
 		return _fail_save("Save failed: %s" % validation.error)
@@ -163,6 +176,12 @@ func _read_account(path: String) -> Dictionary:
 	var account: RefCounted = AccountStateScript.new()
 	account.from_save_payload(parsed["account"])
 	var snapshot: Dictionary = {}
+	var campaign_state: Dictionary = parsed.get("campaign_state", {})
+	if not campaign_state is Dictionary:
+		return {"valid": false, "status": "corrupt", "error": "campaign state must be an object"}
+	var campaign_validation := CampaignStateScript.validate_save_payload(campaign_state)
+	if not campaign_validation["valid"]:
+		return {"valid": false, "status": "corrupt", "error": campaign_validation["error"]}
 	var snapshot_error: String = ""
 	if parsed.has("snapshot"):
 		var snapshot_result: Dictionary = SnapshotScript.decode(parsed["snapshot"])
@@ -173,7 +192,7 @@ func _read_account(path: String) -> Dictionary:
 	if not account.legacy_identity_error.is_empty() and not snapshot.is_empty():
 		snapshot = {}
 		snapshot_error = "Save recovery: active encounter snapshot was rejected because legacy completion identity could not be mapped safely; banked progress was preserved."
-	return {"valid": true, "status": "valid", "account": account, "production_timestamp": float(parsed.get("production_utc_timestamp", parsed.get("production_timestamp", 0.0))), "snapshot": snapshot, "snapshot_error": snapshot_error}
+	return {"valid": true, "status": "valid", "account": account, "production_timestamp": float(parsed.get("production_utc_timestamp", parsed.get("production_timestamp", 0.0))), "snapshot": snapshot, "campaign_state": campaign_state, "snapshot_error": snapshot_error}
 
 func _preserve_rejected_live() -> void:
 	if _file_exists(recovery_path):

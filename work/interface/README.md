@@ -1,5 +1,7 @@
 # Interface revamp — Luna assignments 35–45
 
+> **Next work:** [Approved side-view implementation 49–57](../2d/README.md). Integrate the existing interface into the accepted side-view presentation. Card 48's unresolved visual/input checks carry into 56–57 and do not block starting 49.
+
 > **Current repair queue:** [48 — live visual acceptance](../assignments/48-ui-visual-acceptance.md). See [the measured gap report](../reviews/ui-implementation-gap.md). Original DONE rows are historical implementation status; visual acceptance remains open.
 
 | Repair | Depends on | Status |

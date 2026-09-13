@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 562.5" role="img" aria-label="Deterministic Act 1 nine-node route overlay sketch">
+  <title>Act 1 nine-node route overlay sketch</title>
+  <rect width="1000" height="562.5" fill="#d6d1c2"/>
+  <path d="M140 445 C245 394 330 350 470 309 S700 210 890 79" fill="none" stroke="#30383b" stroke-width="7" stroke-dasharray="16 12"/>
+  <path d="M40 40 H960 V522 H40 Z" fill="none" stroke="#6e756f" stroke-width="3"/>
+  <path d="M60 470 L350 320 L520 400 L720 240 L940 80" fill="none" stroke="#8b7650" stroke-width="54" opacity="0.22"/>
+  <path d="M430 420 C460 360 540 300 610 270" fill="none" stroke="#568e92" stroke-width="70" opacity="0.30"/>
+  <path d="M690 205 L790 100 L955 65 L900 245 Z" fill="#5f5145" opacity="0.38"/>
+  <g font-family="sans-serif" font-size="20" font-weight="700" text-anchor="middle" dominant-baseline="central">
+    <g fill="#d36e3d" stroke="#1e292d" stroke-width="4">
+      <circle cx="140" cy="444" r="22"/><circle cx="360" cy="349" r="22"/><circle cx="470" cy="309" r="22"/><circle cx="740" cy="174" r="22"/><circle cx="660" cy="219" r="22"/>
+    </g>
+    <g fill="#55b8bd" stroke="#1e292d" stroke-width="4">
+      <circle cx="250" cy="394" r="22"/><circle cx="560" cy="259" r="22"/><circle cx="820" cy="124" r="22"/>
+    </g>
+    <circle cx="890" cy="79" r="30" fill="#8d4b43" stroke="#1e292d" stroke-width="5"/>
+    <g fill="#f4eee0" stroke="none">
+      <text x="140" y="444">1</text><text x="250" y="394">2</text><text x="360" y="349">3</text><text x="470" y="309">4</text><text x="560" y="259">5</text><text x="660" y="219">6</text><text x="740" y="174">7</text><text x="820" y="124">8</text><text x="890" y="79">9</text>
+    </g>
+  </g>
+  <g font-family="sans-serif" font-size="16" fill="#30383b">
+    <text x="75" y="505">ASH CONVEYOR SHELF</text><text x="445" y="475">FLOODED PUMP BASIN</text><text x="755" y="285">FOUNDRY CROWN</text>
+    <text x="842" y="45" font-weight="700">CROWN FURNACE GATE</text>
+    <text x="58" y="75">M01 REVIEW OVERLAY / NOT GENERATED SCENERY</text>
+  </g>
+</svg>

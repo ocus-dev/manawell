@@ -1,0 +1,13 @@
+# M01 — Define map composition and the act contract
+
+Read this queue index, relevant visual-bible/Concept regional sections, existing environment workflows and current catalog/account/controller source. Locate actual files rather than assuming historical paths. Summarize which campaign capabilities exist and which are new; the current well-selection UI is not automatically a campaign system.
+
+Create `art/world-map/brief.md` and a small machine-readable draft act manifest. Define the Act 1 theme using current art, a boss landmark and nine distinct locations in the index's proposed order. Record stable act/node IDs, type, prerequisite IDs, placeholder encounter key, display name, normalized map position, and optional well ID. Exactly three unique well IDs; never represent all nine nodes as wells. Names/themes are provisional for review. Do not write these draft records into the live catalog.
+
+Specify a 16:9 master (target 2048×1152, or a documented installed-model-compatible equivalent), full-image contain display, safe margins, paths and normalized marker coordinates in [0,1]. Paths are separately authored vector/control-point data. Keep the boss visible at the route end, distinguish three wells from five combat sites, and avoid marker collisions. Include landmark scale cues and at least three visually distinct districts without promising literal travel distances.
+
+Write reusable prompt blocks for style, regional palette/materials, geography, composition and exclusions. Exclude text, UI, map pins, route lines, symbols, characters and baked status from generated scenery. Include a simple deterministic nine-node overlay sketch to evaluate composition before generation.
+
+Acceptance: manifest validator proves counts, unique IDs, terminal boss, valid positions and connected acyclic route; brief has explicit art/runtime separation and source references; sketch shows all nine locations and readable destination. Stop before generation or live game changes.
+
+Completion note: DONE. Created `art/world-map/brief.md`, `act_01.draft.json`, `prompt-blocks.json` and `layout-sketch.png`; implementation lives in `tools/world_map/maps.py`. Audited actual catalog/account/controller source: two runtime wells and well-based encounters exist; campaign state and non-well objectives are new work. Draft validates nine unique sequential nodes, three unique well IDs, five combat sites, terminal boss/all-eight gate, normalized positions, route endpoints and marker spacing. `tools/world_map/test_maps.py` passed eight checks including malformed topology and reference-wiring cases. Brief preserves OVA/Foundry language and distinguishes geographic overview from side-view gameplay. No runtime edits. Names, layouts and art remain provisional.

@@ -7,13 +7,18 @@ const ProductionScript = preload("res://scripts/model/production.gd")
 const RunStateScript = preload("res://scripts/model/run_state.gd")
 const LoadoutScript = preload("res://scripts/model/loadout.gd")
 const ContentCatalogScript = preload("res://scripts/model/content_catalog.gd")
+const CampaignCatalogScript = preload("res://scripts/model/campaign_catalog.gd")
+const CampaignStateScript = preload("res://scripts/model/campaign_state.gd")
+const ResearchResolverScript = preload("res://scripts/model/research_resolver.gd")
+const ResearchCatalogScript = preload("res://scripts/model/research_catalog.gd")
+const HeroStatResolverScript = preload("res://scripts/model/hero_stat_resolver.gd")
 
-static func build(account: RefCounted, run_state: RefCounted, selected_well_id: String = "well_1", notices: Dictionary = {}, ability_state: Dictionary = {}) -> Dictionary:
+static func build(account: RefCounted, run_state: RefCounted, selected_well_id: String = "well_1", notices: Dictionary = {}, ability_state: Dictionary = {}, campaign_state: RefCounted = null) -> Dictionary:
 	var catalog: RefCounted = account.content_catalog if account != null and account.get("content_catalog") != null else ContentCatalogScript.new()
 	var destination_id: String = selected_well_id if catalog.has_well(selected_well_id) else "well_1"
 	var active_run: bool = run_state != null and (run_state.phase == RunStateScript.Phase.EXTRACTING or run_state.phase == RunStateScript.Phase.SEALING)
 	var active_well_id: String = run_state.selected_well_id if active_run else ""
-	var rates: Dictionary = ProductionScript.calculate_rates(account.commissioned_wells, account.hero_assignments, account.owned_upgrades, active_well_id)
+	var rates: Dictionary = ProductionScript.calculate_rates(account.commissioned_wells, account.hero_assignments, account.owned_upgrades, active_well_id, account.research_ranks)
 	var wells: Array[Dictionary] = []
 	for well_id in catalog.well_ids():
 		wells.append(_well_view(account, catalog, well_id, rates, destination_id, active_well_id))
@@ -34,10 +39,13 @@ static func build(account: RefCounted, run_state: RefCounted, selected_well_id: 
 			"wells": wells,
 			"heroes": heroes,
 			"expedition": expedition,
-			"research": _research_view(account, catalog, run_state),
+			"research": _research_view(account, catalog, run_state, destination_id),
+			"inventory": _inventory_view(account),
 		},
 		"combat": _combat_view(run_state, catalog, active_run, ability_state),
+		"campaign": _campaign_view(account, campaign_state),
 		"results": {
+			"item_drops": account.item_reward_ids.duplicate() if account.item_reward_run_id == str(terminal_result.get("run_id", "")) and run_state != null and run_state.phase == RunStateScript.Phase.SUCCESS else [],
 			"phase": int(run_state.phase) if run_state != null else RunStateScript.Phase.READY,
 			"run_id": str(terminal_result.get("run_id", "")),
 			"actual_run_reward": run_reward,
@@ -59,7 +67,60 @@ static func build(account: RefCounted, run_state: RefCounted, selected_well_id: 
 		},
 	}
 
-static func _research_view(account: RefCounted, catalog: RefCounted, run_state: RefCounted) -> Dictionary:
+static func _campaign_view(account: RefCounted, campaign_state: RefCounted) -> Dictionary:
+	var state: RefCounted = campaign_state if campaign_state != null else CampaignStateScript.new()
+	var definitions: RefCounted = CampaignCatalogScript.new()
+	var act_id: String = state.active_act_id if not state.active_act_id.is_empty() else definitions.first_act_id()
+	var act: Dictionary = definitions.get_act(act_id)
+	var nodes: Array = act.get("nodes", [])
+	var statuses: Dictionary = {}
+	var wells: Dictionary = {}
+	var paths: Array[Dictionary] = []
+	for node in nodes:
+		var node_id: String = str(node.get("id", ""))
+		statuses[node_id] = state.node_status(act_id, node_id, definitions)
+		if node.get("type", "") == "well":
+			var well_id: String = str(node.get("well_id", ""))
+			var well_status: Dictionary = state.well_status(well_id, account)
+			var rate: float = float(ProductionScript.calculate_rates(account.commissioned_wells, account.hero_assignments, account.owned_upgrades).get(well_id, 0.0)) * 60.0
+			well_status["rate_per_minute"] = rate
+			well_status["guard_label"] = account.get_guard_for_well(well_id) if well_status.get("guarded", false) else "Unstaffed"
+			well_status["indicator"] = "active" if well_status.get("active", false) else "producing" if well_status.get("producing", false) else "idle"
+			wells[well_id] = well_status
+	for index in range(1, nodes.size()):
+		var previous_node: Dictionary = nodes[index - 1]
+		var node: Dictionary = nodes[index]
+		paths.append({"from": str(previous_node.get("id", "")), "to": str(node.get("id", "")), "points": [previous_node.get("position", [0.0, 0.0]), node.get("position", [0.0, 0.0])]})
+	return {"act_id": act_id, "act_name": str(act.get("display_name", act_id)), "nodes": nodes, "statuses": statuses, "wells": wells, "paths": paths, "active_act_id": state.active_act_id}
+
+static func _inventory_view(account: RefCounted) -> Dictionary:
+	var items: Array[Dictionary] = []
+	var catalog = preload("res://scripts/model/item_catalog.gd")
+	for id in catalog.ITEMS:
+		var item: Dictionary = catalog.ITEMS[id].duplicate()
+		var instances: Array[Dictionary] = []
+		for instance in account.item_instances.values():
+			if instance.get("base_id", "") == id:
+				instances.append(instance.duplicate(true))
+		instances.sort_custom(func(left: Dictionary, right: Dictionary): return str(left.get("instance_id", "")) < str(right.get("instance_id", "")))
+		var equipped_by: Dictionary = {}
+		for hero_id in account.hero_kits:
+			for slot in account.hero_kits[hero_id]:
+				if str(account.hero_kits[hero_id][slot]) in instances.map(func(instance): return str(instance.get("instance_id", ""))):
+					equipped_by[str(account.hero_kits[hero_id][slot])] = "%s · %s" % [str(hero_id), str(slot)]
+		item.merge({"id": id, "owned": account.owned_items.has(id), "is_new": account.new_items.has(id), "source": catalog.source_for(id), "instance_count": instances.size(), "instance_ids": instances.map(func(instance): return str(instance.get("instance_id", ""))), "instances": instances, "equipped_by": equipped_by})
+		items.append(item)
+	var heroes: Array[Dictionary] = []
+	for hero_id in account.content_catalog.hero_ids():
+		if account.has_hero(hero_id):
+			heroes.append({"id": hero_id, "label": _hero_label(account.content_catalog, hero_id), "kit": account.hero_kits.get(hero_id, {"weapon": "", "hero": "", "harvester": ""}).duplicate(true)})
+	var selected_hero_id := str(heroes[0].get("id", "")) if not heroes.is_empty() else ""
+	return {"items": items, "owned_count": account.owned_items.size(), "new_count": account.new_items.size(), "capacity": AccountStateScript.INVENTORY_CAPACITY, "stored_count": account.item_instances.size(), "heroes": heroes, "selected_hero_id": selected_hero_id, "instances": account.item_instances.duplicate(true), "ranks": account.research_ranks.duplicate(true), "hero_resolver": {"ranks": account.research_ranks.duplicate(true), "instances": account.item_instances.duplicate(true)}}
+
+static func _research_view(account: RefCounted, catalog: RefCounted, run_state: RefCounted, well_id: String = "well_1") -> Dictionary:
+	var loadout_id: String = account.get_loadout_for_well(well_id)
+	var modifiers: Dictionary = LoadoutScript.modifiers(loadout_id)
+	var output_factor: float = float(modifiers.get("extraction_multiplier", 1.0))
 	var active_run: bool = run_state != null and (run_state.phase == RunStateScript.Phase.EXTRACTING or run_state.phase == RunStateScript.Phase.SEALING)
 	var upgrades: Array[Dictionary] = []
 	for upgrade_id in catalog.upgrade_ids():
@@ -79,10 +140,65 @@ static func _research_view(account: RefCounted, catalog: RefCounted, run_state: 
 			"amount_needed": amount_needed,
 			"availability_reason": reason,
 		})
+	var tracks: Array[Dictionary] = []
+	for research_id in ResearchCatalogScript.TRACKS:
+		var definition: Dictionary = ResearchCatalogScript.TRACKS[research_id]
+		var current_rank := int(account.research_ranks.get(research_id, 0))
+		var nodes: Array[Dictionary] = []
+		for rank_index in range(definition.ranks.size()):
+			var rank_data: Dictionary = definition.ranks[rank_index]
+			var prerequisite: Dictionary = definition.get("prerequisite", {})
+			var prerequisite_met: bool = prerequisite.is_empty() or int(account.research_ranks.get(prerequisite.get("track", ""), 0)) >= int(prerequisite.get("rank", 0))
+			var available: bool = not active_run and rank_index == current_rank and prerequisite_met and account.bank >= int(rank_data.cost)
+			nodes.append({"rank": rank_index + 1, "cost": int(rank_data.cost), "effect": str(rank_data.effect), "owned": rank_index < current_rank, "selected": rank_index == current_rank, "available": available, "availability_reason": "Unavailable during extraction." if active_run else "Requires %s %s." % [str(prerequisite.get("track", "")), str(prerequisite.get("rank", ""))] if not prerequisite_met else "Need %d more mana." % maxi(0, int(rank_data.cost) - int(account.bank)) if rank_index == current_rank and account.bank < int(rank_data.cost) else "Maxed." if rank_index < current_rank else "Ready to purchase."})
+		tracks.append({"id": research_id, "label": str(definition.label), "group": str(definition.group), "rank": current_rank, "max_rank": int(definition.max_rank), "nodes": nodes})
+	var unlocks: Array[Dictionary] = []
+	for unlock_id in ResearchCatalogScript.UNLOCKS:
+		var unlock: Dictionary = ResearchCatalogScript.UNLOCKS[unlock_id]
+		var requirements: Array = unlock.get("prerequisites", [unlock.get("prerequisite", {})])
+		var requirements_met := true
+		for prerequisite in requirements:
+			requirements_met = requirements_met and int(account.research_ranks.get(prerequisite.get("track", ""), 0)) >= int(prerequisite.get("rank", 0))
+		unlocks.append({"id": unlock_id, "label": str(unlock.label), "cost": int(unlock.cost), "effect": str(unlock.effect), "unlocked": requirements_met, "equipped": account.equipped_harvester_id == unlock_id or account.equipped_weapon_mode_id == unlock_id})
+	var harvest_preview: Dictionary = ResearchResolverScript.resolve_harvest(float(catalog.get_well(well_id).get("base_output", 0.0)), account.research_ranks, output_factor, account.equipped_harvester_id)
+	var weapon_preview: Dictionary = ResearchResolverScript.resolve_weapon(account.research_ranks, account.equipped_weapon_mode_id)
+	for track in tracks:
+		var next_ranks: Dictionary = account.research_ranks.duplicate()
+		next_ranks[track.id] = mini(int(track.rank) + 1, int(track.max_rank))
+		if track.group == "harvester":
+			var after: Dictionary = ResearchResolverScript.resolve_harvest(float(catalog.get_well(well_id).get("base_output", 0.0)), next_ranks, output_factor, account.equipped_harvester_id)
+			track["comparison"] = "%s · %s loadout\nCurrent → next rank\nMana / cycle   %.2f → %.2f\nCycles / sec   %.2f → %.2f\nMana / sec   %.2f → %.2f\nSeal duration ×%.2f · Pressure ×%.2f" % [str(catalog.get_well(well_id).get("label", well_id)), LoadoutScript.label(loadout_id), harvest_preview.cycle_amount, after.cycle_amount, 1.0 / harvest_preview.cycle_interval, 1.0 / after.cycle_interval, harvest_preview.mean_output_per_second, after.mean_output_per_second, after.sealing_multiplier, after.pressure_multiplier]
+		else:
+			var after: Dictionary = ResearchResolverScript.resolve_weapon(next_ranks, account.equipped_weapon_mode_id)
+			track["comparison"] = "Equipped weapon · Current → next rank\nDamage / projectile   %.2f → %.2f\nProjectiles / attack   %d → %d\nAttacks / sec   %.2f → %.2f\nProjectile speed   %.2f → %.2f" % [weapon_preview.damage, after.damage, weapon_preview.projectile_count, after.projectile_count, weapon_preview.attacks_per_second, after.attacks_per_second, weapon_preview.projectile_speed, after.projectile_speed]
+			if track.id == "weapon.shots":
+				track["comparison"] += "\nEquip Fan after researching to use additional projectiles."
+	var choices: Array[Dictionary] = []
+	for id in ["harvest.standard", "harvest.rapid_seal", "harvest.deep_draw", "weapon.standard", "weapon.fan", "weapon.lance"]:
+		var requirements: Array = []
+		var effect := "No specialization modifiers"
+		if ResearchCatalogScript.UNLOCKS.has(id):
+			var definition: Dictionary = ResearchCatalogScript.UNLOCKS[id]
+			requirements = definition.get("prerequisites", [definition.get("prerequisite", {})])
+			effect = str(definition.effect)
+		elif id == "weapon.fan":
+			requirements = [{"track": "weapon.shots", "rank": 1}]
+			effect = "Spread projectiles; reduced damage per projectile"
+		var missing: Array[String] = []
+		for requirement in requirements:
+			if int(account.research_ranks.get(requirement.track, 0)) < int(requirement.rank):
+				missing.append("%s rank %d" % [ResearchCatalogScript.TRACKS[requirement.track].label, requirement.rank])
+		var equipped: bool = id == account.equipped_harvester_id or id == account.equipped_weapon_mode_id
+		choices.append({"id": id, "label": id.get_slice(".", 1).replace("_", " ").capitalize(), "equipped": equipped, "available": missing.is_empty() and not active_run, "reason": "Equipped" if equipped else "Finish the current run" if active_run else "Requires " + ", ".join(missing) if not missing.is_empty() else "Ready to equip", "effect": effect})
 	return {
+		"equipment_choices": choices,
 		"banked_mana": float(account.bank),
-		"passive_rate_per_minute": _total_rate_per_minute(ProductionScript.calculate_rates(account.commissioned_wells, account.hero_assignments, account.owned_upgrades)),
+		"passive_rate_per_minute": _total_rate_per_minute(ProductionScript.calculate_rates(account.commissioned_wells, account.hero_assignments, account.owned_upgrades, "", account.research_ranks)),
 		"upgrades": upgrades,
+		"tracks": tracks,
+		"unlocks": unlocks,
+		"harvest_preview": harvest_preview,
+		"weapon_preview": weapon_preview,
 	}
 
 static func _expedition_view(account: RefCounted, catalog: RefCounted, destination_id: String, run_state: RefCounted) -> Dictionary:

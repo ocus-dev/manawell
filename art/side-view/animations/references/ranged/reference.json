@@ -1,0 +1,24 @@
+{
+  "source": "C:\\Users\\TTOCS\\Documents\\ChatGPT\\Telos Game\\prototype\\assets\\side-view\\ranged.png",
+  "source_sha256": "3c06e034a03c808427dffe6a46baafa44b690fe40dea6f1093cd114852a6305e",
+  "canvas": [
+    576,
+    576
+  ],
+  "source_crop": [
+    5,
+    4,
+    796,
+    913
+  ],
+  "uniform_scale": 0.4562376237623762,
+  "paste": [
+    108,
+    80
+  ],
+  "ground_anchor": [
+    288,
+    495
+  ],
+  "note": "Default anchor uses visible bottom-center; review actual planted feet. Last-frame references must share this transform."
+}

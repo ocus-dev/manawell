@@ -1,6 +1,7 @@
 class_name SideViewEnvironmentVisual
 extends Node2D
 
+const ArenaLayoutScript = preload("res://data/arena_layout.gd")
 const LOGICAL_SIZE := Vector2(1280.0, 720.0)
 const GROUND_Y := 540.0
 const BACKDROP_PATH := "res://assets/side-view/environment/backdrop.png"
@@ -23,12 +24,25 @@ func is_prepared() -> bool:
 func layer_count() -> int:
 	return 2 if is_prepared() else 1
 
+func get_platform_rects() -> Array[Dictionary]:
+	return ArenaLayoutScript.platform_supports()
+
 func _draw() -> void:
 	if is_prepared():
 		draw_texture_rect(backdrop_texture, Rect2(Vector2.ZERO, LOGICAL_SIZE), false)
 		draw_texture_rect(lane_texture, Rect2(0.0, GROUND_Y, LOGICAL_SIZE.x, LOGICAL_SIZE.y - GROUND_Y), false)
-		return
-	_draw_debug_fallback()
+	else:
+		_draw_debug_fallback()
+	_draw_platforms()
+
+func _draw_platforms() -> void:
+	for support in ArenaLayoutScript.platform_supports():
+		var rect: Rect2 = support["rect"]
+		draw_rect(Rect2(rect.position + Vector2(0.0, 5.0), Vector2(rect.size.x, 22.0)), Color("17282d"), true)
+		draw_rect(Rect2(rect.position, Vector2(rect.size.x, 6.0)), Color("c38a43"), true)
+		draw_line(rect.position + Vector2(0.0, 7.0), rect.position + Vector2(rect.size.x, 7.0), Color("5f7778"), 2.0)
+		for bracket_x in range(int(rect.position.x + 24.0), int(rect.end.x), 48):
+			draw_line(Vector2(bracket_x, rect.position.y + 6.0), Vector2(bracket_x - 8.0, rect.position.y + 25.0), Color("536b6c"), 3.0)
 
 func _draw_debug_fallback() -> void:
 	draw_rect(Rect2(Vector2.ZERO, LOGICAL_SIZE), Color("091116"), true)

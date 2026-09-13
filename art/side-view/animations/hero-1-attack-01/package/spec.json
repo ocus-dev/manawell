@@ -1,0 +1,173 @@
+{
+  "source": "C:\\Users\\TTOCS\\Documents\\ChatGPT\\Telos Game\\art\\side-view\\animations\\hero-1-attack-01\\masters",
+  "source_hash": [
+    {
+      "name": "frame_0000.png",
+      "sha256": "6ee506e92fbc1ec37747cb37a73eecfd45a8107f60114e6fc9db56e5e09c45e9"
+    },
+    {
+      "name": "frame_0001.png",
+      "sha256": "d5b7cb8d5795c7fe9a2d42fb12b770f44296e16c6e7fed70769d21847b96bd3e"
+    },
+    {
+      "name": "frame_0002.png",
+      "sha256": "c0a262723dd1a565276350647d3b6397a1b1260996a36de69a1fb614dbe0c0e2"
+    },
+    {
+      "name": "frame_0003.png",
+      "sha256": "e66b3effc06e90d404223fc5a4ba2483d72240645d6f7a799ecccf53e68c7418"
+    },
+    {
+      "name": "frame_0004.png",
+      "sha256": "15edf7f9d93c9329b4419e6eb76878e9983adfddc714189e6240394c5327d010"
+    },
+    {
+      "name": "frame_0005.png",
+      "sha256": "ab2461ffa39f68e500bd2c567931669fb2c488865a00613917260bc0995ae9bf"
+    },
+    {
+      "name": "frame_0006.png",
+      "sha256": "31691f930bd598f19990cad4c257234f2d0ad50fcb700d478cadb15a1a27cc85"
+    },
+    {
+      "name": "frame_0007.png",
+      "sha256": "c28358ca1969479811c729563fda96b6abdbb3c8d75beb7bc88eebd9ce2c3c98"
+    },
+    {
+      "name": "frame_0008.png",
+      "sha256": "15c13ddd24786d0b09130b076452ce31b624e737136aa726290d917713b6a286"
+    },
+    {
+      "name": "frame_0009.png",
+      "sha256": "e1849d281c4d379e2e6780965d2d53970e060eb2212a062a7f9edfa8c4a97f6f"
+    },
+    {
+      "name": "frame_0010.png",
+      "sha256": "7a4212a52e4297b4bbf89ec662c5f24a253fc1781173df151c7f53d4cd59fad9"
+    },
+    {
+      "name": "frame_0011.png",
+      "sha256": "bad2c3ddcb1741df07b7302fda4ee7c14b1f65aa1e1d01a393b55f8a4c36698c"
+    },
+    {
+      "name": "frame_0012.png",
+      "sha256": "12a0d0fdf0bb3910959c9aae26914ece8c65d6b22370112e40111f3c0ffa9e4f"
+    },
+    {
+      "name": "frame_0013.png",
+      "sha256": "8caf01caed13888cb5ba371f228afbf80bfb02776bcb4594b9d4a1664b17cda9"
+    },
+    {
+      "name": "frame_0014.png",
+      "sha256": "c8eae15e26f9e9a43907d75ebba1bea0c94a3d09d9e2ccbfe56963fbdb41256e"
+    },
+    {
+      "name": "frame_0015.png",
+      "sha256": "f73abe32f984c16ba0e9a3fc20708c1dd82baa7f57727dfbcce2304ed2affd3a"
+    },
+    {
+      "name": "frame_0016.png",
+      "sha256": "cc95ff0c0ca154c8e2a6ca5e448af38abeb4cdbd7e40b0c9e5ccc39121fa55d5"
+    },
+    {
+      "name": "frame_0017.png",
+      "sha256": "f344260f30bb5600576dc6cdbe079f63529eb303a8fc244e8cba21f6c1b086cd"
+    },
+    {
+      "name": "frame_0018.png",
+      "sha256": "ee0ddc853ce6b018c36c3930213349abcece7c504a21bf1db037cdaf23294eaa"
+    },
+    {
+      "name": "frame_0019.png",
+      "sha256": "0d19e3ad1e88bbafaf64169ea91e7604dbfee191e5dcd5e583a55ee1f16dfcd3"
+    },
+    {
+      "name": "frame_0020.png",
+      "sha256": "68ddb5907a3ae9ab6207ecebf14243c4ea30df1fc52af12345883991579cf2fb"
+    },
+    {
+      "name": "frame_0021.png",
+      "sha256": "c1d031bf3cdc987b736ba6d485acbd2ccd09adf0021c09f9c91b2949cc6b8bd1"
+    },
+    {
+      "name": "frame_0022.png",
+      "sha256": "0d57f7ce4bb141e2f7ce1b3da7634bf7032955cb27b98784f9d1d93b5e47741a"
+    },
+    {
+      "name": "frame_0023.png",
+      "sha256": "5bf9a74eb686db6c04d618b81a68baeeb77d74dcbbd7c1747fa0f30c4d6e015d"
+    },
+    {
+      "name": "frame_0024.png",
+      "sha256": "a48a79b3a88d0fef2ed72eca7073b12f90b63717732793241a25882d70b2bbe7"
+    },
+    {
+      "name": "frame_0025.png",
+      "sha256": "b6aad4eaa22397453a8f64d7295e9e6278e638c50fd48a34c5b73de7b1686065"
+    },
+    {
+      "name": "frame_0026.png",
+      "sha256": "7c5215f64af1ed7d707bdbeffaca1780ba4a2c04ec81933139750f950ec56c77"
+    },
+    {
+      "name": "frame_0027.png",
+      "sha256": "e92c9748ad7fbb9089f662fc6a4490e5f50a92d1e24d811645106e56d7903308"
+    },
+    {
+      "name": "frame_0028.png",
+      "sha256": "33bea065b9422dcaa3d7cfff0a3363f8f90fa48d9fe1e3a609a4e044b2ecfd91"
+    },
+    {
+      "name": "frame_0029.png",
+      "sha256": "73ef8061578649c344eaad2da3a712711a0b89bea86c4952f2711fa99bce5110"
+    },
+    {
+      "name": "frame_0030.png",
+      "sha256": "0dfff2c64be4c5b90d7039c083dcbc636bc24e9357af34fcc9aa6b5860c3bc68"
+    },
+    {
+      "name": "frame_0031.png",
+      "sha256": "a933d4bb69f1528598d55727373b228d4a628efd37eb1a133726a69a526da2ce"
+    },
+    {
+      "name": "frame_0032.png",
+      "sha256": "72153d6657e29ecadca1561337ca2f39079f918347f6ee0a22cde23f0107f21c"
+    },
+    {
+      "name": "frame_0033.png",
+      "sha256": "051a034ca10dce8da925e57adb1237f59178abdea61ac9986c46f1186ca6bd2f"
+    },
+    {
+      "name": "frame_0034.png",
+      "sha256": "282500379f95113049536199412744a2bf7810fa9339dec7900b0060233cf671"
+    },
+    {
+      "name": "frame_0035.png",
+      "sha256": "f0ae96c8e4ad48c7c2d8c78fd4d1cc397b30680d7ce09827e23f4afe78c7512c"
+    },
+    {
+      "name": "frame_0036.png",
+      "sha256": "31430c4467c2ec172f6c446d947fc78e6734628ee27f13792def5ca33f7d925c"
+    },
+    {
+      "name": "frame_0037.png",
+      "sha256": "a4fec041d4d2a9831be2730603558be965a0c31e28f593e34566d95286bf6dbb"
+    },
+    {
+      "name": "frame_0038.png",
+      "sha256": "5cfbb76c501c2e15a4cb69a45a4437af055d21061282cd23c7330e0de48e2f12"
+    }
+  ],
+  "source_fps": 24.0,
+  "fps": 12.0,
+  "start": 0,
+  "end": null,
+  "anchor": [
+    288,
+    495
+  ],
+  "height": 80.0,
+  "motion": "attack",
+  "loop": false,
+  "shifts": null
+}

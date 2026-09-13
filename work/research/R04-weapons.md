@@ -1,0 +1,9 @@
+# R04 — Visible weapon builds and bounded projectile behavior
+
+Depends on R02, serialized after R03 when shared files are idle. Replace fixed interval/damage/speed and legacy spread checks with the resolver's captured run stats. At zero ranks spawn exactly one visible projectile per attack. Fan must spawn three/five separate projectile entities with distinct directions and the documented damage factors, never multiple coincident traces or an invisible area damage multiplier. Keep the fan oriented around the target aim and mirrored correctly left/right, including raised targets.
+
+Autoloader affects firing cadence; Accelerator affects travel speed only. Preserve existing targeting range and define distance-limited projectile lifetime from baseline travel range. Swept collision must work at maximum speed. Bound maximum live friendly projectile load from authored caps and preserve deterministic cadence under variable render rate; do not silently drop shots to disguise performance problems.
+
+Lance hits up to two distinct enemies along its path in distance order, never the same enemy again. Track hit IDs/remaining pierces across ticks and save/resume. Keep friendly/hostile behavior separate. Research must not change enemy projectiles. Record all relevant resolved weapon/projectile fields in validated snapshots; no mid-run read of mutable equipment.
+
+Acceptance tests: exact 1/3/5 spawn counts, distinct directions and per-shot damage; attack count over fixed simulated time; travel time improves but range does not; high-speed thin-target collision; piercing order/deduplication and resume; max-rank projectile count/performance; standard/fan/lance isolation and left/right/airborne aim. Verify visibly in the current game, not only tests. Completion note: resolver-backed cadence/speed, distinct Fan shots, and Lance deduplication implemented; focused resolver and existing weapon checks run.

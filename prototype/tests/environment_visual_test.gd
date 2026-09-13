@@ -8,7 +8,7 @@ func _run() -> void:
 	controller.persistence_enabled = false
 	get_root().add_child(controller)
 	assert(controller.GROUND_Y == 540.0)
-	assert(controller.MACHINE_X == 640.0)
+	assert(controller.MACHINE_X == 240.0)
 	assert(controller.environment_visual != null)
 	assert(controller.environment_visual.is_prepared())
 	assert(controller.environment_visual.backdrop_texture.get_width() == 1280)

@@ -1,0 +1,10 @@
+{
+  "source": "art/world-map/candidates/A_valley/map-improved.png",
+  "source_sha256": "3a865a4423646e2849d1a328b49e9aec1ab57e68f2afb501947abafcd31a3f5e",
+  "artwork_updated": "2026-09-12",
+  "artwork_approval": "User requested replacing Act 1 artwork with map-improved.png; copied without image modification.",
+  "layout_source": "art/world-map/candidates/A_valley/layout.json",
+  "layout_revision": "A_valley-landmarks-02",
+  "approval": "work/world-map/design-review.md",
+  "overlay_imported": false
+}

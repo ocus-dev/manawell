@@ -5,6 +5,21 @@ const RunStateScript = preload("res://scripts/model/run_state.gd")
 const BalanceData = preload("res://data/balance.gd")
 const LoadoutScript = preload("res://scripts/model/loadout.gd")
 const ContentCatalogScript = preload("res://scripts/model/content_catalog.gd")
+const ResearchCatalogScript = preload("res://scripts/model/research_catalog.gd")
+const ItemCatalogScript = preload("res://scripts/model/item_catalog.gd")
+const ItemDefinitionsScript = preload("res://scripts/model/item_definitions.gd")
+const INVENTORY_CAPACITY := 100
+const INVENTORY_MIGRATION_VERSION := 1
+
+var owned_items: Dictionary = {}
+var new_items: Dictionary = {}
+var item_reward_run_id := ""
+var item_reward_ids: Array[String] = []
+var item_instances: Dictionary = {}
+var hero_kits: Dictionary = {}
+var inventory_migration_version: int = 0
+var last_loot_result: Dictionary = {"run_id": "", "item_ids": []}
+var inventory_command_error := ""
 
 var bank: float = 0.0
 var credited_run_ids: Dictionary = {}
@@ -12,11 +27,14 @@ var run_sequence: int = 1
 var committed_run_id: String = ""
 var legacy_identity_error: String = ""
 var owned_upgrades: Dictionary = {}
+var research_ranks: Dictionary = {}
+var equipped_harvester_id: String = "harvest.standard"
+var equipped_weapon_mode_id: String = "weapon.standard"
 var unlocked_wells: Dictionary = {"well_1": true}
 var commissioned_wells: Dictionary = {}
 var roster_heroes: Dictionary = {"hero_1": true}
 var hero_assignments: Dictionary = {"hero_1": {"role": "active", "well_id": ""}}
-var well_loadouts: Dictionary = {"well_1": LoadoutScript.STANDARD, "well_2": LoadoutScript.STANDARD}
+var well_loadouts: Dictionary = {"well_1": LoadoutScript.STANDARD, "well_2": LoadoutScript.STANDARD, "well_3": LoadoutScript.STANDARD}
 
 var content_catalog: RefCounted = ContentCatalogScript.new()
 
@@ -30,12 +48,28 @@ func to_save_payload() -> Dictionary:
 	for upgrade_id in owned_upgrades.keys():
 		upgrades.append(str(upgrade_id))
 	upgrades.sort()
+	var ranks: Dictionary = research_ranks.duplicate()
+	var instances: Array[Dictionary] = []
+	for instance_id in item_instances.keys():
+		instances.append(item_instances[instance_id].duplicate(true))
+	instances.sort_custom(func(left: Dictionary, right: Dictionary): return str(left.get("instance_id", "")) < str(right.get("instance_id", "")))
 	return {
 		"bank": bank,
+		"owned_items": _known_ids(owned_items),
+		"new_items": _known_ids(new_items),
+		"item_reward_run_id": item_reward_run_id,
+		"item_reward_ids": item_reward_ids.duplicate(),
+		"item_instances": instances,
+		"hero_kits": hero_kits.duplicate(true),
+		"inventory_migration_version": inventory_migration_version,
+		"last_loot_result": last_loot_result.duplicate(true),
 		"credited_run_ids": credited_ids,
 		"run_sequence": run_sequence,
 		"committed_run_id": committed_run_id,
 		"owned_upgrades": upgrades,
+		"research_ranks": ranks,
+		"equipped_harvester_id": equipped_harvester_id,
+		"equipped_weapon_mode_id": equipped_weapon_mode_id,
 		"unlocked_wells": _known_ids(unlocked_wells),
 		"commissioned_wells": _known_ids(commissioned_wells),
 		"roster_heroes": _known_ids(roster_heroes),
@@ -52,6 +86,42 @@ func _known_ids(values: Dictionary) -> Array[String]:
 
 static func validate_save_payload(payload: Dictionary, definitions: RefCounted = null) -> Dictionary:
 	var catalog: RefCounted = ContentCatalogScript.new() if definitions == null else definitions
+	var item_instance_values: Variant = payload.get("item_instances", [])
+	if not item_instance_values is Array or item_instance_values.size() > INVENTORY_CAPACITY:
+		return {"valid": false, "error": "item instances must be an array of at most 100 items"}
+	var item_definitions: RefCounted = ItemDefinitionsScript.new()
+	var production_catalog: Dictionary = ItemDefinitionsScript.PRODUCTION_BASES
+	var production_affixes: Dictionary = ItemDefinitionsScript.PRODUCTION_AFFIXES
+	if not item_instance_values.is_empty():
+		var instance_validation: Dictionary = item_definitions.validate_instances(item_instance_values, production_catalog, production_affixes)
+		if not instance_validation.valid:
+			return instance_validation
+	var loot_result: Variant = payload.get("last_loot_result", {"run_id": "", "item_ids": []})
+	if not loot_result is Dictionary or not loot_result.get("run_id", "") is String or not loot_result.get("item_ids", []) is Array:
+		return {"valid": false, "error": "last loot result is invalid"}
+	for item_id in loot_result.get("item_ids", []):
+		if not item_id is String or not item_instance_values.any(func(instance): return str(instance.get("instance_id", "")) == item_id):
+			return {"valid": false, "error": "last loot result references an unknown item"}
+	var kit_validation := _validate_hero_kits(payload.get("hero_kits", {}), item_instance_values, catalog)
+	if not kit_validation.valid:
+		return kit_validation
+	if payload.has("inventory_migration_version") and (not _valid_integer(payload.inventory_migration_version) or int(payload.inventory_migration_version) < 0 or int(payload.inventory_migration_version) > INVENTORY_MIGRATION_VERSION):
+		return {"valid": false, "error": "inventory migration version is invalid"}
+	for field in ["owned_items", "new_items", "item_reward_ids"]:
+		var values: Variant = payload.get(field, [])
+		if not values is Array:
+			return {"valid": false, "error": field + " must be an array"}
+		var seen := {}
+		for id in values:
+			if not id is String or not ItemCatalogScript.ITEMS.has(id) or seen.has(id):
+				return {"valid": false, "error": "Invalid or duplicate inventory item"}
+			seen[id] = true
+			if field != "owned_items" and not id in payload.get("owned_items", []):
+				return {"valid": false, "error": "Item metadata references an unowned item"}
+	if not payload.get("item_reward_run_id", "") is String:
+		return {"valid": false, "error": "Invalid item reward run identity"}
+	if not payload.get("item_reward_ids", []).is_empty() and str(payload.get("item_reward_run_id", "")).is_empty():
+		return {"valid": false, "error": "Item reward has no run identity"}
 	if not payload.has("bank") or not (payload["bank"] is int or payload["bank"] is float):
 		return {"valid": false, "error": "bank must be a finite nonnegative number"}
 	var bank_value: float = float(payload["bank"])
@@ -71,6 +141,19 @@ static func validate_save_payload(payload: Dictionary, definitions: RefCounted =
 	for upgrade_id in payload["owned_upgrades"]:
 		if not upgrade_id is String or not catalog.has_upgrade(upgrade_id):
 			return {"valid": false, "error": "owned upgrades must use known IDs"}
+	if payload.has("research_ranks") and not payload["research_ranks"] is Dictionary:
+		return {"valid": false, "error": "research_ranks must be an object"}
+	for research_id in payload.get("research_ranks", {}).keys():
+		if not research_id is String or not catalog.has_research(research_id) or not (payload["research_ranks"][research_id] is int) or int(payload["research_ranks"][research_id]) < 0:
+			return {"valid": false, "error": "research ranks are invalid"}
+		var definition: Dictionary = catalog.get_research(research_id)
+		if definition.has("max_rank") and int(payload["research_ranks"][research_id]) > int(definition["max_rank"]):
+			return {"valid": false, "error": "research rank exceeds cap"}
+	for equipment_field in ["equipped_harvester_id", "equipped_weapon_mode_id"]:
+		if payload.has(equipment_field) and not payload[equipment_field] is String:
+			return {"valid": false, "error": "%s must be a string" % equipment_field}
+	if payload.get("equipped_harvester_id", "harvest.standard") not in ["harvest.standard", "harvest.rapid_seal", "harvest.deep_draw"] or payload.get("equipped_weapon_mode_id", "weapon.standard") not in ["weapon.standard", "weapon.fan", "weapon.lance"]:
+		return {"valid": false, "error": "equipment ID is invalid"}
 	for field in ["unlocked_wells", "commissioned_wells", "roster_heroes"]:
 		if payload.has(field) and not payload[field] is Array:
 			return {"valid": false, "error": "%s must be an array" % field}
@@ -116,6 +199,25 @@ static func validate_save_payload(payload: Dictionary, definitions: RefCounted =
 	return {"valid": true}
 
 func from_save_payload(payload: Dictionary) -> void:
+	owned_items.clear()
+	new_items.clear()
+	for id in payload.get("owned_items", []):
+		owned_items[id] = true
+	for id in payload.get("new_items", []):
+		new_items[id] = true
+	item_reward_run_id = str(payload.get("item_reward_run_id", ""))
+	item_reward_ids.assign(payload.get("item_reward_ids", []))
+	item_instances.clear()
+	for instance in payload.get("item_instances", []):
+		item_instances[str(instance.instance_id)] = instance.duplicate(true)
+	hero_kits = payload.get("hero_kits", {}).duplicate(true)
+	inventory_migration_version = int(payload.get("inventory_migration_version", 0))
+	last_loot_result = payload.get("last_loot_result", {"run_id": "", "item_ids": []}).duplicate(true)
+	if inventory_migration_version < INVENTORY_MIGRATION_VERSION:
+		_migrate_legacy_items(payload)
+	if not payload.has("owned_items") and payload.has("item_instances"):
+		owned_items.clear()
+		new_items.clear()
 	bank = float(payload["bank"])
 	credited_run_ids.clear()
 	legacy_identity_error = ""
@@ -137,6 +239,20 @@ func from_save_payload(payload: Dictionary) -> void:
 	owned_upgrades.clear()
 	for upgrade_id in payload["owned_upgrades"]:
 		owned_upgrades[upgrade_id] = true
+	research_ranks.clear()
+	for research_id in payload.get("research_ranks", {}).keys():
+		research_ranks[research_id] = int(payload["research_ranks"][research_id])
+	if research_ranks.is_empty():
+		if owned_upgrades.has("damage_1"):
+			research_ranks["weapon.damage"] = 1
+		if owned_upgrades.has("pump_1"):
+			research_ranks["harvest.amount"] = 1
+		if owned_upgrades.has("spread_1"):
+			research_ranks["weapon.shots"] = 1
+	equipped_harvester_id = str(payload.get("equipped_harvester_id", "harvest.standard"))
+	equipped_weapon_mode_id = str(payload.get("equipped_weapon_mode_id", "weapon.standard"))
+	if owned_upgrades.has("spread_1") and not payload.has("equipped_weapon_mode_id"):
+		equipped_weapon_mode_id = "weapon.fan"
 	unlocked_wells = {"well_1": true}
 	for well_id in payload.get("unlocked_wells", []):
 		unlocked_wells[well_id] = true
@@ -154,7 +270,7 @@ func from_save_payload(payload: Dictionary) -> void:
 		if roster_heroes.has(hero_id):
 			hero_assignments[hero_id] = payload["hero_assignments"][hero_id].duplicate(true)
 	_normalize_assignments()
-	well_loadouts = {"well_1": LoadoutScript.STANDARD, "well_2": LoadoutScript.STANDARD}
+	well_loadouts = {"well_1": LoadoutScript.STANDARD, "well_2": LoadoutScript.STANDARD, "well_3": LoadoutScript.STANDARD}
 	for well_id in payload.get("well_loadouts", {}).keys():
 		if is_well_commissioned(well_id) and LoadoutScript.is_available(payload["well_loadouts"][well_id], is_well_commissioned("well_2")):
 			well_loadouts[well_id] = payload["well_loadouts"][well_id]
@@ -251,10 +367,13 @@ func complete_run(result: Dictionary, expected_run_id: String, well_id: String, 
 		return false
 	committed_run_id = result_run_id
 	bank += payout
-	if completed_surges >= 1 and well_id in ["well_1", "well_2"] and not commissioned_wells.has(well_id):
+	if completed_surges >= 1 and content_catalog.has_well(well_id) and not well_id.is_empty() and not commissioned_wells.has(well_id):
 		commissioned_wells[well_id] = true
+		var well_ids: Array[String] = content_catalog.well_ids()
+		var well_index: int = well_ids.find(well_id)
+		if well_index >= 0 and well_index + 1 < well_ids.size():
+			unlocked_wells[well_ids[well_index + 1]] = true
 		if well_id == "well_1":
-			unlocked_wells["well_2"] = true
 			roster_heroes["hero_2"] = true
 			hero_assignments["hero_2"] = {"role": "reserve", "well_id": ""}
 	return true
@@ -272,10 +391,257 @@ func purchase_upgrade(upgrade_id: String) -> bool:
 		return false
 	bank -= cost
 	owned_upgrades[upgrade_id] = true
+	if upgrade_id == "damage_1":
+		research_ranks["weapon.damage"] = maxi(1, int(research_ranks.get("weapon.damage", 0)))
+	elif upgrade_id == "pump_1":
+		research_ranks["harvest.amount"] = maxi(1, int(research_ranks.get("harvest.amount", 0)))
+	elif upgrade_id == "spread_1":
+		research_ranks["weapon.shots"] = maxi(1, int(research_ranks.get("weapon.shots", 0)))
+		equipped_weapon_mode_id = "weapon.fan"
 	return true
+
+func purchase_research(research_id: String, expected_rank: int = 0, expected_cost: int = -1, active_run: bool = false) -> bool:
+	if active_run or not content_catalog.has_research(research_id):
+		return false
+	var definition: Dictionary = content_catalog.get_research(research_id)
+	if not definition.has("ranks") or expected_rank != int(research_ranks.get(research_id, 0)):
+		return false
+	var ranks: Array = definition.get("ranks", [])
+	if expected_rank < 0 or expected_rank >= ranks.size():
+		return false
+	var node: Dictionary = ranks[expected_rank]
+	var cost := int(node.get("cost", -1))
+	if expected_cost >= 0 and expected_cost != cost or bank < cost:
+		return false
+	var prerequisite: Dictionary = definition.get("prerequisite", {})
+	if not prerequisite.is_empty() and int(research_ranks.get(prerequisite.get("track", ""), 0)) < int(prerequisite.get("rank", 0)):
+		return false
+	research_ranks[research_id] = expected_rank + 1
+	bank -= cost
+	return true
+
+func equip_research_choice(choice_id: String, active_run: bool = false) -> bool:
+	if active_run:
+		return false
+	if choice_id == "harvest.standard":
+		equipped_harvester_id = choice_id
+		return true
+	if choice_id == "weapon.standard":
+		equipped_weapon_mode_id = choice_id
+		return true
+	if choice_id == "harvest.rapid_seal" and int(research_ranks.get("harvest.cadence", 0)) >= 2:
+		equipped_harvester_id = choice_id
+		return true
+	if choice_id == "harvest.deep_draw" and int(research_ranks.get("harvest.amount", 0)) >= 2:
+		equipped_harvester_id = choice_id
+		return true
+	if choice_id == "weapon.fan" and int(research_ranks.get("weapon.shots", 0)) >= 1:
+		equipped_weapon_mode_id = choice_id
+		return true
+	if choice_id == "weapon.lance" and int(research_ranks.get("weapon.damage", 0)) >= 2 and int(research_ranks.get("weapon.velocity", 0)) >= 2:
+		equipped_weapon_mode_id = choice_id
+		return true
+	return false
 
 func has_upgrade(upgrade_id: String) -> bool:
 	return owned_upgrades.has(upgrade_id)
 
+func grant_item(id: String) -> bool:
+	if not ItemCatalogScript.ITEMS.has(id):
+		return false
+	return add_transitional_item(id, "", "")
+
+func add_transitional_item(base_id: String, run_id: String, node_id: String) -> bool:
+	if not ItemCatalogScript.ITEMS.has(base_id):
+		return false
+	if item_instances.has("legacy:" + base_id):
+		var was_owned := owned_items.has(base_id)
+		if was_owned:
+			return false
+		owned_items[base_id] = true
+		new_items[base_id] = true
+		return true
+	if item_instances.size() >= INVENTORY_CAPACITY:
+		inventory_command_error = "Inventory is full (100 items)."
+		return false
+	var base: Dictionary = ItemDefinitionsScript.PRODUCTION_BASES.get(base_id, {})
+	if base.is_empty():
+		return false
+	var instance := _legacy_instance(base_id, base, run_id, node_id)
+	item_instances[instance.instance_id] = instance
+	owned_items[base_id] = true
+	new_items[base_id] = true
+	inventory_migration_version = INVENTORY_MIGRATION_VERSION
+	return true
+
+func inspect_item(id: String) -> bool:
+	if item_instances.has(id):
+		item_instances[id].inspected = true
+		return true
+	if not owned_items.has(id) or not new_items.has(id):
+		return false
+	new_items.erase(id)
+	return true
+
+func reconcile_item_rewards(completed: Dictionary) -> bool:
+	var changed := false
+	for i in range(ItemCatalogScript.REWARDS.size()):
+		if completed.has("act_01/act_01_node_%02d" % (i + 1)):
+			changed = add_transitional_item(ItemCatalogScript.REWARDS[i], "", "act_01_node_%02d" % (i + 1)) or changed
+	return changed
+
+func equip_instance(hero_id: String, slot: String, instance_id: String, active_run: bool = false) -> bool:
+	inventory_command_error = ""
+	if active_run or not has_hero(hero_id) or not ItemDefinitionsScript.SLOTS.has(slot) or not item_instances.has(instance_id):
+		inventory_command_error = "Equipment change is unavailable."
+		return false
+	var instance: Dictionary = item_instances[instance_id]
+	var base: Dictionary = ItemDefinitionsScript.PRODUCTION_BASES.get(instance.base_id, {})
+	if base.get("slot", "") != slot:
+		inventory_command_error = "Item slot does not match the requested kit slot."
+		return false
+	for other_hero in hero_kits.keys():
+		if other_hero != hero_id and hero_kits[other_hero].get(slot, "") == instance_id:
+			inventory_command_error = "Item is already equipped by another hero."
+			return false
+	if not hero_kits.has(hero_id):
+		hero_kits[hero_id] = {"weapon": "", "hero": "", "harvester": ""}
+	hero_kits[hero_id][slot] = instance_id
+	return true
+
+func unequip_instance(hero_id: String, slot: String, active_run: bool = false) -> bool:
+	if active_run or not hero_kits.has(hero_id) or not ItemDefinitionsScript.SLOTS.has(slot):
+		return false
+	hero_kits[hero_id][slot] = ""
+	return true
+
+func set_instance_locked(instance_id: String, locked: bool, active_run: bool = false) -> bool:
+	if active_run or not item_instances.has(instance_id):
+		return false
+	item_instances[instance_id].locked = locked
+	return true
+
+func discard_instance(instance_id: String, confirmed_name: String = "", active_run: bool = false) -> bool:
+	inventory_command_error = ""
+	if active_run or not item_instances.has(instance_id):
+		inventory_command_error = "Unknown item."
+		return false
+	var instance: Dictionary = item_instances[instance_id]
+	if instance.locked or _is_equipped(instance_id):
+		inventory_command_error = "Equipped or locked items cannot be discarded."
+		return false
+	var label: String = str(ItemDefinitionsScript.PRODUCTION_BASES.get(instance.base_id, {}).get("label", instance.base_id))
+	if confirmed_name != label:
+		inventory_command_error = "Item name confirmation is required."
+		return false
+	item_instances.erase(instance_id)
+	owned_items.erase(instance.base_id)
+	new_items.erase(instance.base_id)
+	last_loot_result.item_ids.erase(instance_id)
+	return true
+
 func credit_terminal_result(result: Dictionary) -> bool:
 	return complete_run(result, result.get("run_id", ""), "", 0)
+
+func add_monster_instance(instance: Dictionary) -> bool:
+	inventory_command_error = ""
+	var validation: Dictionary = ItemDefinitionsScript.new().validate_instance(instance, ItemDefinitionsScript.PRODUCTION_BASES, ItemDefinitionsScript.PRODUCTION_AFFIXES)
+	if not validation.valid or instance.get("generation_version", "") != ItemDefinitionsScript.GENERATION_VERSION or instance.get("provenance", {}).get("kind", "") != "monster":
+		inventory_command_error = "Invalid monster item."
+		return false
+	var instance_id := str(instance.get("instance_id", ""))
+	if instance_id.is_empty() or item_instances.has(instance_id):
+		inventory_command_error = "Monster item was already secured."
+		return false
+	if item_instances.size() >= INVENTORY_CAPACITY:
+		inventory_command_error = "Inventory is full (100 items)."
+		return false
+	item_instances[instance_id] = instance.duplicate(true)
+	var base_id := str(instance.get("base_id", ""))
+	owned_items[base_id] = true
+	new_items[base_id] = true
+	inventory_migration_version = INVENTORY_MIGRATION_VERSION
+	return true
+
+func record_loot_result(run_id: String, item_ids: Array[String]) -> void:
+	var retained: Array[String] = []
+	for item_id in item_ids:
+		if item_instances.has(item_id):
+			retained.append(item_id)
+	retained.sort()
+	last_loot_result = {"run_id": run_id, "item_ids": retained}
+	item_reward_run_id = run_id
+	item_reward_ids.clear()
+	for item_id in retained:
+		var base_id := str(item_instances[item_id].get("base_id", ""))
+		if not item_reward_ids.has(base_id):
+			item_reward_ids.append(base_id)
+
+func _legacy_instance(base_id: String, base: Dictionary, run_id: String, node_id: String) -> Dictionary:
+	return {
+		"schema_version": 1,
+		"instance_id": "legacy:" + base_id,
+		"base_id": base_id,
+		"rarity": "common",
+		"item_level": 1,
+		"implicit_modifiers": base.get("implicits", []).duplicate(true),
+		"explicit_modifiers": [],
+		"generation_version": ItemDefinitionsScript.GENERATION_VERSION,
+		"provenance": {"kind": "campaign" if not node_id.is_empty() else "legacy", "run_id": run_id, "enemy_id": 0, "node_id": node_id},
+		"inspected": not new_items.has(base_id),
+		"locked": false,
+	}
+
+func _migrate_legacy_items(payload: Dictionary) -> void:
+	if not item_instances.is_empty():
+		inventory_migration_version = INVENTORY_MIGRATION_VERSION
+		return
+	for base_id in payload.get("owned_items", []):
+		if ItemCatalogScript.ITEMS.has(base_id) and not item_instances.has("legacy:" + base_id):
+			var base: Dictionary = ItemDefinitionsScript.PRODUCTION_BASES.get(base_id, {})
+			if not base.is_empty():
+				var instance := _legacy_instance(base_id, base, "", "")
+				item_instances[instance.instance_id] = instance
+				owned_items[base_id] = true
+				if payload.get("new_items", []).has(base_id):
+					instance.inspected = false
+	inventory_migration_version = INVENTORY_MIGRATION_VERSION
+
+func _is_equipped(instance_id: String) -> bool:
+	for kit in hero_kits.values():
+		for slot in ItemDefinitionsScript.SLOTS:
+			if kit.get(slot, "") == instance_id:
+				return true
+	return false
+
+static func _validate_hero_kits(kits: Variant, instances: Array, definitions: RefCounted = null) -> Dictionary:
+	if not kits is Dictionary:
+		return {"valid": false, "error": "hero kits must be an object"}
+	var owned := {}
+	for instance in instances:
+		owned[instance.get("instance_id", "")] = instance
+	var used := {}
+	for hero_id in kits.keys():
+		if not hero_id is String or (definitions != null and not definitions.has_hero(hero_id)):
+			return {"valid": false, "error": "hero kit references an unknown hero"}
+		var kit: Variant = kits[hero_id]
+		if not kit is Dictionary:
+			return {"valid": false, "error": "hero kit must be an object"}
+		for slot in ItemDefinitionsScript.SLOTS:
+			var instance_id: Variant = kit.get(slot, "")
+			if not instance_id is String:
+				return {"valid": false, "error": "hero kit slot must be a string"}
+			if instance_id.is_empty():
+				continue
+			if not owned.has(instance_id):
+				return {"valid": false, "error": "hero kit references an unowned instance"}
+			if used.has(instance_id):
+				return {"valid": false, "error": "an instance cannot be equipped twice"}
+			var base: Dictionary = ItemDefinitionsScript.PRODUCTION_BASES.get(owned[instance_id].get("base_id", ""), {})
+			if base.get("slot", "") != slot:
+				return {"valid": false, "error": "hero kit slot does not match item slot"}
+			used[instance_id] = true
+	return {"valid": true}
+
+static func _valid_integer(value: Variant) -> bool:
+	return (value is int or value is float) and not value is bool and is_finite(float(value)) and float(value) == floor(float(value))

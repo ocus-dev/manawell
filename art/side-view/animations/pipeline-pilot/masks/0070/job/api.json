@@ -1,0 +1,50 @@
+{
+  "1": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "telos_animation_26e4fad83e68427992c3a79f31716dfb.png"
+    }
+  },
+  "2": {
+    "class_type": "Trellis2RemoveBackground",
+    "inputs": {
+      "image": [
+        "1",
+        0
+      ],
+      "low_vram": true
+    }
+  },
+  "3": {
+    "class_type": "InvertMask",
+    "inputs": {
+      "mask": [
+        "2",
+        1
+      ]
+    }
+  },
+  "4": {
+    "class_type": "JoinImageWithAlpha",
+    "inputs": {
+      "image": [
+        "1",
+        0
+      ],
+      "alpha": [
+        "3",
+        0
+      ]
+    }
+  },
+  "5": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "4",
+        0
+      ],
+      "filename_prefix": "Telos/Animation/masks/pipeline-pilot/0070"
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "token": "ea43a39bb2624f2aaff5cff77b30775a",
+  "spec": {
+    "candidate": "B_coast",
+    "seed": 9073102,
+    "reference_sha256": null,
+    "denoise": 1.0,
+    "prompt_sha256": "d01c9ade82927f0ecbb9be5fa473cbdba07a9580564cb4aab1f297ec5d860592"
+  },
+  "status": "complete",
+  "prompt_id": "03890a9e-6479-41cd-b7a6-df0a19ed7c42",
+  "source_sha256": "6440e0a30d845359b9b02580d00b302f063469e1ced071e1b84264b3ff93175e",
+  "models": {
+    "10": {
+      "unet_name": "krea2_turbo_fp8_scaled.safetensors",
+      "weight_dtype": "default"
+    },
+    "11": {
+      "clip_name": "qwen3vl_4b_fp8_scaled.safetensors",
+      "type": "krea2",
+      "device": "default"
+    },
+    "12": {
+      "vae_name": "qwen_image_vae.safetensors"
+    }
+  }
+}

@@ -1,10 +1,11 @@
 class_name RunSnapshot
 extends RefCounted
 
-const SNAPSHOT_VERSION: int = 3
+const SNAPSHOT_VERSION: int = 5
 const LEGACY_SNAPSHOT_VERSION: int = 1
-const CONFIG_VERSION: String = "prototype-2d-config-1"
+const CONFIG_VERSION: String = "prototype-loot-v1"
 const RunStateScript = preload("res://scripts/model/run_state.gd")
+const ArenaLayoutScript = preload("res://data/arena_layout.gd")
 
 static func encode(snapshot: Dictionary) -> Dictionary:
 	var normalized: Dictionary = _with_defaults(snapshot)
@@ -22,6 +23,16 @@ static func encode(snapshot: Dictionary) -> Dictionary:
 			"player_abilities": normalized["player_abilities"],
 			"weapon_state": normalized["weapon_state"],
 			"spawner": normalized["spawner"],
+			"arena_config_id": normalized["arena_config_id"],
+			"campaign": normalized["campaign"],
+			"director": normalized["director"],
+			"resolved_stats": normalized["resolved_stats"],
+			"equipped_instance_ids": normalized["equipped_instance_ids"],
+			"selected_weapon_mode": normalized["selected_weapon_mode"],
+			"regen_state": normalized["regen_state"],
+			"weapon_runtime": normalized["weapon_runtime"],
+			"harvest_runtime": normalized["harvest_runtime"],
+			"loot_state": normalized["loot_state"],
 		},
 	}
 
@@ -29,7 +40,7 @@ static func decode(payload: Variant) -> Dictionary:
 	if not payload is Dictionary:
 		return {"valid": false, "error": "snapshot root must be an object"}
 	var snapshot_version: Variant = payload.get("snapshot_version", -1)
-	if not _valid_integer(snapshot_version) or (int(snapshot_version) != SNAPSHOT_VERSION and int(snapshot_version) != LEGACY_SNAPSHOT_VERSION):
+	if not _valid_integer(snapshot_version) or int(snapshot_version) != SNAPSHOT_VERSION:
 		return {"valid": false, "error": "unsupported snapshot version"}
 	if not payload.get("config_version", "") is String or payload.get("config_version", "") != CONFIG_VERSION:
 		return {"valid": false, "error": "incompatible snapshot config version"}
@@ -54,16 +65,49 @@ static func _with_defaults(snapshot: Dictionary) -> Dictionary:
 		if not spawner.has("next_id"):
 			spawner["next_id"] = 1
 		normalized["spawner"] = spawner
+	if not normalized.has("campaign"):
+		normalized["campaign"] = {}
+	if not normalized.has("director"):
+		normalized["director"] = {}
+	if not normalized.has("resolved_stats"):
+		normalized["resolved_stats"] = {"damage": 10.0, "attacks_per_second": 1.6666666667, "projectile_speed": 18.0, "max_health": 100.0, "move_speed": 192.0, "armor": 0.0, "health_regen": 0.0, "mining_bonus": 0.0, "drop_bonus": 0.0}
+	if not normalized.has("equipped_instance_ids"):
+		normalized["equipped_instance_ids"] = {"weapon": "", "hero": "", "harvester": ""}
+	if not normalized.has("selected_weapon_mode"):
+		normalized["selected_weapon_mode"] = "weapon.standard"
+	if not normalized.has("regen_state"):
+		normalized["regen_state"] = {"remaining_delay": 0.0}
+	if not normalized.has("weapon_runtime"):
+		normalized["weapon_runtime"] = {"interval": 0.6, "count": 1, "pierce": 0, "speed": 18.0}
+	if not normalized.has("harvest_runtime"):
+		normalized["harvest_runtime"] = {"cadence": 1.0, "accumulator": 0.0, "specialization": "harvest.standard"}
+	if not normalized.has("loot_state"):
+		normalized["loot_state"] = {"enabled": false, "generation_version": "loot-v1", "item_level": 1, "rng_state": 1, "retired_ranges": [], "acquired_item_ids": []}
 	return normalized
 
 static func validate(snapshot: Dictionary) -> Dictionary:
-	for field in ["run_state", "actors", "projectiles", "player_abilities", "spawner", "weapon_state"]:
+	for field in ["run_state", "actors", "projectiles", "player_abilities", "spawner", "weapon_state", "arena_config_id"]:
 		if not snapshot.has(field):
 			return {"valid": false, "error": "snapshot missing %s" % field}
+	if not _valid_string(snapshot["arena_config_id"]) or snapshot["arena_config_id"] != ArenaLayoutScript.CONFIG_ID:
+		return {"valid": false, "error": "snapshot arena config is incompatible"}
 	if not snapshot["run_state"] is Dictionary or not snapshot["player_abilities"] is Dictionary or not snapshot["spawner"] is Dictionary or not snapshot["weapon_state"] is Dictionary:
 		return {"valid": false, "error": "snapshot state sections must be objects"}
 	if not snapshot["actors"] is Array or not snapshot["projectiles"] is Array:
 		return {"valid": false, "error": "actors and projectiles must be arrays"}
+	for field in ["campaign", "director", "resolved_stats", "equipped_instance_ids", "selected_weapon_mode", "regen_state", "weapon_runtime", "harvest_runtime", "loot_state"]:
+		if not snapshot.has(field):
+			return {"valid": false, "error": "snapshot missing %s" % field}
+	if not snapshot["campaign"] is Dictionary or not snapshot["director"] is Dictionary or not snapshot["resolved_stats"] is Dictionary or not snapshot["equipped_instance_ids"] is Dictionary or not snapshot["regen_state"] is Dictionary or not snapshot["weapon_runtime"] is Dictionary or not snapshot["harvest_runtime"] is Dictionary or not snapshot["loot_state"] is Dictionary:
+		return {"valid": false, "error": "snapshot v5 sections must be objects"}
+	if not snapshot["selected_weapon_mode"] is String:
+		return {"valid": false, "error": "snapshot weapon mode is invalid"}
+	var loot_state: Dictionary = snapshot["loot_state"]
+	if not loot_state.get("enabled", false) is bool or loot_state.get("generation_version", "") != "loot-v1" or not _valid_integer(loot_state.get("item_level", 0)) or int(loot_state.get("item_level", 0)) < 1 or not _valid_integer(loot_state.get("rng_state", 0)) or int(loot_state.get("rng_state", 0)) < 1:
+		return {"valid": false, "error": "snapshot loot state is invalid"}
+	var loot_validation := _validate_loot_state(loot_state, snapshot["spawner"], snapshot["actors"])
+	if not loot_validation.valid:
+		return loot_validation
 	var run_validation: Dictionary = _validate_run_state(snapshot["run_state"])
 	if not run_validation["valid"]:
 		return run_validation
@@ -106,6 +150,38 @@ static func validate(snapshot: Dictionary) -> Dictionary:
 		projectile_ids[projectile_id] = true
 	return {"valid": true}
 
+static func _validate_loot_state(loot_state: Dictionary, spawner: Dictionary, actors: Array) -> Dictionary:
+	if not loot_state.get("retired_ranges", []) is Array or not loot_state.get("acquired_item_ids", []) is Array:
+		return {"valid": false, "error": "snapshot loot ledgers must be arrays"}
+	var previous_end := 0
+	var first_range := true
+	var live_ids := {}
+	for actor in actors:
+		if actor is Dictionary and str(actor.get("id", "")).begins_with("enemy-"):
+			live_ids[int(str(actor["id"]).trim_prefix("enemy-"))] = true
+	for interval in loot_state["retired_ranges"]:
+		if not interval is Array or interval.size() != 2 or not _valid_integer(interval[0]) or not _valid_integer(interval[1]):
+			return {"valid": false, "error": "snapshot retired range is invalid"}
+		var range_start := int(interval[0])
+		var range_end := int(interval[1])
+		var contains_live_id := false
+		for live_id in live_ids.keys():
+			if int(live_id) >= range_start and int(live_id) <= range_end:
+				contains_live_id = true
+				break
+		if range_start < 1 or range_end < range_start or (not first_range and range_start <= previous_end) or contains_live_id:
+			return {"valid": false, "error": "snapshot retired ranges overlap live or prior IDs"}
+		if range_end >= int(spawner.get("next_id", 0)):
+			return {"valid": false, "error": "snapshot retired range exceeds next enemy ID"}
+		previous_end = range_end
+		first_range = false
+	var seen_items := {}
+	for item_id in loot_state["acquired_item_ids"]:
+		if not item_id is String or item_id.is_empty() or seen_items.has(item_id):
+			return {"valid": false, "error": "snapshot acquired item IDs are invalid"}
+		seen_items[item_id] = true
+	return {"valid": true}
+
 static func _validate_run_state(state: Dictionary) -> Dictionary:
 	for field in ["run_id", "well_id", "hero_id", "module_id", "phase", "paused", "simulation_elapsed", "tank_base", "extraction_rate", "pressure_time_scale", "completed_surges", "multiplier", "locked_payout", "sealing_remaining", "sealing_duration", "hero_health", "machine_integrity", "machine_max_integrity", "terminal_reason"]:
 		if not state.has(field):
@@ -145,7 +221,37 @@ static func _validate_actor(actor: Variant, actor_ids: Dictionary) -> Dictionary
 		return {"valid": false, "error": "actor identity or dead flag is invalid"}
 	if not actor["component_state"] is Dictionary:
 		return {"valid": false, "error": "actor component state is invalid"}
+	var component_validation: Dictionary = _validate_component_state(str(actor["kind"]), actor["component_state"], actor["position"])
+	if not component_validation["valid"]:
+		return component_validation
 	actor_ids[actor_id] = true
+	return {"valid": true}
+
+static func _validate_component_state(kind: String, state: Dictionary, position: Array) -> Dictionary:
+	if kind != "hero":
+		if kind == "ranged":
+			if not state.has("locked_target_point") or not _valid_vector(state["locked_target_point"]):
+				return {"valid": false, "error": "ranged locked aim is invalid"}
+		return {"valid": true}
+	for field in ["last_facing", "vertical_velocity", "grounded", "support_id", "ignored_support_id", "drop_through_remaining", "jump_buffer_remaining", "coyote_remaining"]:
+		if not state.has(field):
+			return {"valid": false, "error": "hero component state missing %s" % field}
+	if not _valid_integer(state["last_facing"]) or absi(int(state["last_facing"])) != 1:
+		return {"valid": false, "error": "hero facing state is invalid"}
+	if not _finite(state["vertical_velocity"]) or not _finite_nonnegative(state["drop_through_remaining"]) or not _finite_nonnegative(state["jump_buffer_remaining"]) or not _finite_nonnegative(state["coyote_remaining"]):
+		return {"valid": false, "error": "hero motion state is invalid"}
+	if not state["grounded"] is bool or not _valid_string(state["support_id"]) or not _valid_string(state["ignored_support_id"]):
+		return {"valid": false, "error": "hero support state is invalid"}
+	if state["grounded"] and state["support_id"].is_empty():
+		return {"valid": false, "error": "grounded hero support ID is missing"}
+	if state["grounded"] and not is_zero_approx(float(state.get("vertical_velocity", 0.0))):
+		return {"valid": false, "error": "grounded hero velocity is invalid"}
+	if state["grounded"] and not is_equal_approx(float(position[1]), ArenaLayoutScript.hero_support_y(state["support_id"])):
+		return {"valid": false, "error": "hero support geometry is invalid"}
+	if not state["support_id"].is_empty() and state["support_id"] != ArenaLayoutScript.FLOOR_ID and ArenaLayoutScript.support_by_id(state["support_id"]).is_empty():
+		return {"valid": false, "error": "hero support ID is invalid"}
+	if not state["ignored_support_id"].is_empty() and state["ignored_support_id"] != ArenaLayoutScript.FLOOR_ID and ArenaLayoutScript.support_by_id(state["ignored_support_id"]).is_empty():
+		return {"valid": false, "error": "hero ignored support ID is invalid"}
 	return {"valid": true}
 
 static func _validate_projectile(projectile: Variant, known_target_ids: Dictionary) -> Dictionary:
@@ -198,6 +304,9 @@ static func _valid_vector(value: Variant) -> bool:
 
 static func _finite_nonnegative(value: Variant) -> bool:
 	return (value is int or value is float) and is_finite(float(value)) and float(value) >= 0.0
+
+static func _finite(value: Variant) -> bool:
+	return (value is int or value is float) and is_finite(float(value))
 
 static func _valid_integer(value: Variant) -> bool:
 	return (value is int or value is float) and is_finite(float(value)) and is_equal_approx(float(value), floorf(float(value)))

@@ -8,6 +8,7 @@ const HeroPickerScript = preload("res://scripts/ui/hero_picker.gd")
 const ExpeditionPanelScript = preload("res://scripts/ui/expedition_panel.gd")
 const ResourceStripScript = preload("res://scripts/ui/resource_strip.gd")
 const UpgradeCardScript = preload("res://scripts/ui/upgrade_card.gd")
+const CampaignMapScript = preload("res://scripts/ui/campaign_map.gd")
 
 @export var fixture_id: String = "one_well_commissioned"
 var include_notice_placeholder: bool = true
@@ -21,11 +22,18 @@ var hero_picker
 var expedition_panel
 var resource_strip
 var research_panel
+var inventory_panel
+signal inventory_item_inspected(id: String)
+signal inventory_equip_requested(hero_id: String, slot: String, instance_id: String)
+signal inventory_unequip_requested(hero_id: String, slot: String)
+signal inventory_lock_toggled(instance_id: String, locked: bool)
+signal inventory_discard_requested(instance_id: String, confirmed_name: String)
 var viewport_settings_button: Button
 var navigation_bar: HBoxContainer
 var navigation_buttons: Dictionary = {}
 var crew_panel: PanelContainer
 var active_page := "operations"
+var campaign_map
 
 func _get_minimum_size() -> Vector2:
 	return Vector2.ZERO
@@ -37,7 +45,11 @@ signal guard_recall_requested(well_id: String)
 signal loadout_requested(loadout_id: String)
 signal start_requested
 signal purchase_requested(upgrade_id: String)
+signal research_purchase_requested(research_id: String, expected_rank: int, expected_cost: int)
+signal research_equipment_requested(choice_id: String)
 signal settings_requested(opener: Control)
+signal campaign_node_selected(act_id: String, node_id: String)
+signal campaign_node_activate(act_id: String, node_id: String)
 
 func _ready() -> void:
 	theme = IndustrialThemeScript.create()
@@ -83,12 +95,15 @@ func _build() -> void:
 	navigation_bar.add_theme_constant_override("separation", 4)
 	content.add_child(navigation_bar)
 	_add_navigation_button("operations", "OPERATIONS")
+	_add_navigation_button("map", "MAP")
 	_add_navigation_button("research", "RESEARCH")
+	_add_navigation_button("inventory", "INVENTORY")
 	_add_navigation_button("crew", "CREW")
 	resource_strip = ResourceStripScript.new()
 	resource_strip.name = "ResourceStrip"
 	resource_strip.settings_requested.connect(func(opener: Control): settings_requested.emit(opener))
-	resource_strip.configure(view_state.operations.research)
+	var operations_state: Dictionary = view_state.get("operations", {})
+	resource_strip.configure(operations_state.get("research", {}))
 	content.add_child(resource_strip)
 	viewport_settings_button = resource_strip.get_node("ResourceStripContent/SettingsButton") as Button
 	body = BoxContainer.new()
@@ -97,6 +112,13 @@ func _build() -> void:
 	body.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	body.add_theme_constant_override("separation", 16)
 	content.add_child(body)
+	campaign_map = CampaignMapScript.new()
+	campaign_map.name = "CampaignMap"
+	campaign_map.custom_minimum_size = Vector2(0, 620)
+	campaign_map.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	campaign_map.node_selected.connect(func(act_id: String, node_id: String): campaign_node_selected.emit(act_id, node_id))
+	campaign_map.node_activate.connect(func(act_id: String, node_id: String): campaign_node_activate.emit(act_id, node_id))
+	content.add_child(campaign_map)
 	left_column = VBoxContainer.new()
 	left_column.name = "WellsResearchRegion"
 	left_column.custom_minimum_size.x = 0.0
@@ -113,13 +135,22 @@ func _build() -> void:
 	research_panel = _research_region()
 	research_panel.visible = false
 	content.add_child(research_panel)
+	inventory_panel = preload("res://scripts/ui/inventory_panel.gd").new()
+	inventory_panel.name = "InventoryRegion"
+	inventory_panel.visible = false
+	inventory_panel.item_inspected.connect(func(id: String): inventory_item_inspected.emit(id))
+	inventory_panel.equip_requested.connect(func(hero_id: String, slot: String, instance_id: String): inventory_equip_requested.emit(hero_id, slot, instance_id))
+	inventory_panel.unequip_requested.connect(func(hero_id: String, slot: String): inventory_unequip_requested.emit(hero_id, slot))
+	inventory_panel.lock_toggled.connect(func(instance_id: String, locked: bool): inventory_lock_toggled.emit(instance_id, locked))
+	inventory_panel.discard_requested.connect(func(instance_id: String, confirmed_name: String): inventory_discard_requested.emit(instance_id, confirmed_name))
+	content.add_child(inventory_panel)
 	expedition_panel = ExpeditionPanelScript.new()
 	expedition_panel.name = "ExpeditionRegion"
 	expedition_panel.loadout_requested.connect(func(loadout_id: String): loadout_requested.emit(loadout_id))
 	expedition_panel.change_hero_requested.connect(_on_change_hero_requested)
 	expedition_panel.start_requested.connect(func(): start_requested.emit())
 	right_column.add_child(expedition_panel)
-	expedition_panel.configure(view_state.operations.expedition)
+	expedition_panel.configure(operations_state.get("expedition", {}))
 	if include_notice_placeholder:
 		content.add_child(_placeholder_panel("NoticeRegion", "NOTICES", "Save and recovery notices remain separate from the primary instruction."))
 	crew_panel = _crew_region()
@@ -138,23 +169,11 @@ func _build() -> void:
 	_show_page("operations")
 
 func _research_region() -> Control:
-	var panel := _panel("ResearchRegion")
-	var content := VBoxContainer.new()
-	content.name = "ResearchContent"
-	content.add_child(_label("RESEARCH", 14))
-	var cards := BoxContainer.new()
-	cards.name = "UpgradeCards"
-	cards.vertical = false
-	cards.add_theme_constant_override("separation", 12)
-	for upgrade_data in view_state.operations.research.upgrades:
-		var card = UpgradeCardScript.new()
-		card.name = "UpgradeCard_%s" % str(upgrade_data.get("id", ""))
-		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		card.purchase_requested.connect(func(upgrade_id: String): purchase_requested.emit(upgrade_id))
-		cards.add_child(card)
-		card.configure(upgrade_data)
-	content.add_child(cards)
-	panel.add_child(content)
+	var panel = preload("res://scripts/ui/research_panel.gd").new()
+	panel.name = "ResearchRegion"
+	panel.purchase_requested.connect(func(id: String, rank: int, cost: int): research_purchase_requested.emit(id, rank, cost))
+	panel.equipment_requested.connect(func(id: String): research_equipment_requested.emit(id))
+	panel.refresh(view_state.get("operations", {}).get("research", {}))
 	return panel
 
 func _wells_region() -> Control:
@@ -168,7 +187,8 @@ func _wells_region() -> Control:
 	grid.add_theme_constant_override("h_separation", 12)
 	grid.add_theme_constant_override("v_separation", 12)
 	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	for well_data in view_state.operations.wells:
+	var operations_state: Dictionary = view_state.get("operations", {})
+	for well_data in operations_state.get("wells", []):
 		var card: PanelContainer = WellCardScript.new()
 		card.name = "WellCard_%s" % str(well_data.get("id", ""))
 		card.custom_minimum_size = Vector2(0, 0)
@@ -207,7 +227,9 @@ func _add_navigation_button(page_id: String, label: String) -> void:
 func _show_page(page_id: String) -> void:
 	active_page = page_id
 	body.visible = page_id == "operations"
+	campaign_map.visible = page_id == "map"
 	research_panel.visible = page_id == "research"
+	inventory_panel.visible = page_id == "inventory"
 	crew_panel.visible = page_id == "crew"
 	for button_id in navigation_buttons:
 		navigation_buttons[button_id].button_pressed = button_id == page_id
@@ -224,7 +246,8 @@ func _crew_region() -> PanelContainer:
 	var roster := VBoxContainer.new()
 	roster.name = "CrewRoster"
 	roster.add_theme_constant_override("separation", 8)
-	for hero_data in view_state.operations.heroes:
+	var operations_state: Dictionary = view_state.get("operations", {})
+	for hero_data in operations_state.get("heroes", []):
 		var row := PanelContainer.new()
 		row.name = "Crew_%s" % str(hero_data.get("id", ""))
 		var row_content := HBoxContainer.new()
@@ -248,12 +271,14 @@ func refresh(next_view_state: Dictionary) -> void:
 	var operations_state: Dictionary = view_state.get("operations", {})
 	var research_state: Dictionary = operations_state.get("research", {})
 	resource_strip.configure(research_state)
-	for card in research_panel.get_node("ResearchContent/UpgradeCards").get_children():
-		for upgrade_data in research_state.get("upgrades", []):
-			if str(upgrade_data.get("id", "")) == str(card.upgrade_id):
-				card.configure(upgrade_data)
-				break
+	research_panel.refresh(research_state)
+	var inventory_state: Dictionary = operations_state.get("inventory", {})
+	inventory_panel.refresh(inventory_state)
+	var new_count := int(inventory_state.get("new_count", 0))
+	navigation_buttons["inventory"].text = "INVENTORY (%d)" % new_count if new_count > 0 else "INVENTORY"
 	expedition_panel.configure(operations_state.get("expedition", {}))
+	if campaign_map != null:
+		campaign_map.refresh(view_state)
 	_refresh_crew(operations_state.get("heroes", []))
 	var grid: GridContainer = get_node("OperationsScroll/OuterMargin/OperationsContent/OperationsWorkspace/WellsResearchRegion/WellsRegion/WellsContent/WellCardsPlaceholder")
 	for card in grid.get_children():
@@ -309,6 +334,6 @@ func _update_responsive_layout() -> void:
 	var grid := get_node_or_null("OperationsScroll/OuterMargin/OperationsContent/OperationsWorkspace/WellsResearchRegion/WellsRegion/WellsContent/WellCardsPlaceholder")
 	if grid != null:
 		grid.columns = 1 if compact_layout else 2
-	var cards := get_node_or_null("OperationsScroll/OuterMargin/OperationsContent/OperationsWorkspace/WellsResearchRegion/ResearchRegion/ResearchContent/UpgradeCards")
-	if cards != null:
-		cards.vertical = compact_layout
+	var research_workspace := get_node_or_null("OperationsScroll/OuterMargin/OperationsContent/ResearchRegion/ResearchContent/ResearchWorkspace")
+	if research_workspace != null:
+		research_workspace.vertical = compact_layout

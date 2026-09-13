@@ -1,0 +1,475 @@
+{
+  "union_crop": [
+    151,
+    76,
+    427,
+    500
+  ],
+  "ground_anchor": [
+    137,
+    419
+  ],
+  "recommended_scale": 0.19230769230769232,
+  "cell_size": [
+    276,
+    424
+  ],
+  "loop_premultiplied_rgb_difference": 0.006413028109818697,
+  "frame_metrics": [
+    {
+      "frame": 0,
+      "bbox": [
+        4,
+        4,
+        270,
+        420
+      ],
+      "alpha_area": 50704.19140625,
+      "alpha_change_from_previous": 0.0
+    },
+    {
+      "frame": 1,
+      "bbox": [
+        4,
+        4,
+        270,
+        420
+      ],
+      "alpha_area": 50682.79296875,
+      "alpha_change_from_previous": 0.0011957326205447316
+    },
+    {
+      "frame": 2,
+      "bbox": [
+        4,
+        4,
+        270,
+        420
+      ],
+      "alpha_area": 50701.38671875,
+      "alpha_change_from_previous": 0.000554302241653204
+    },
+    {
+      "frame": 3,
+      "bbox": [
+        4,
+        4,
+        270,
+        420
+      ],
+      "alpha_area": 50689.48828125,
+      "alpha_change_from_previous": 0.0009055960108526051
+    },
+    {
+      "frame": 4,
+      "bbox": [
+        4,
+        4,
+        270,
+        420
+      ],
+      "alpha_area": 50702.17578125,
+      "alpha_change_from_previous": 0.0005958891124464571
+    },
+    {
+      "frame": 5,
+      "bbox": [
+        4,
+        4,
+        270,
+        420
+      ],
+      "alpha_area": 50838.171875,
+      "alpha_change_from_previous": 0.007398918271064758
+    },
+    {
+      "frame": 6,
+      "bbox": [
+        4,
+        4,
+        270,
+        420
+      ],
+      "alpha_area": 51027.70703125,
+      "alpha_change_from_previous": 0.006458504591137171
+    },
+    {
+      "frame": 7,
+      "bbox": [
+        4,
+        4,
+        270,
+        420
+      ],
+      "alpha_area": 51043.86328125,
+      "alpha_change_from_previous": 0.010778182186186314
+    },
+    {
+      "frame": 8,
+      "bbox": [
+        4,
+        4,
+        270,
+        420
+      ],
+      "alpha_area": 51216.94921875,
+      "alpha_change_from_previous": 0.010910380631685257
+    },
+    {
+      "frame": 9,
+      "bbox": [
+        4,
+        4,
+        270,
+        420
+      ],
+      "alpha_area": 51297.546875,
+      "alpha_change_from_previous": 0.008544081822037697
+    },
+    {
+      "frame": 10,
+      "bbox": [
+        4,
+        4,
+        270,
+        420
+      ],
+      "alpha_area": 51399.2578125,
+      "alpha_change_from_previous": 0.007341446820646524
+    },
+    {
+      "frame": 11,
+      "bbox": [
+        4,
+        4,
+        270,
+        420
+      ],
+      "alpha_area": 51434.35546875,
+      "alpha_change_from_previous": 0.007312426343560219
+    },
+    {
+      "frame": 12,
+      "bbox": [
+        4,
+        4,
+        269,
+        420
+      ],
+      "alpha_area": 51499.22265625,
+      "alpha_change_from_previous": 0.005030541215091944
+    },
+    {
+      "frame": 13,
+      "bbox": [
+        4,
+        4,
+        269,
+        420
+      ],
+      "alpha_area": 51477.55078125,
+      "alpha_change_from_previous": 0.005708868615329266
+    },
+    {
+      "frame": 14,
+      "bbox": [
+        4,
+        4,
+        269,
+        420
+      ],
+      "alpha_area": 51535.6171875,
+      "alpha_change_from_previous": 0.003544806968420744
+    },
+    {
+      "frame": 15,
+      "bbox": [
+        4,
+        4,
+        269,
+        420
+      ],
+      "alpha_area": 51543.31640625,
+      "alpha_change_from_previous": 0.0010340095032006502
+    },
+    {
+      "frame": 16,
+      "bbox": [
+        4,
+        4,
+        269,
+        420
+      ],
+      "alpha_area": 51541.44921875,
+      "alpha_change_from_previous": 0.0006591909914277494
+    },
+    {
+      "frame": 17,
+      "bbox": [
+        4,
+        4,
+        269,
+        420
+      ],
+      "alpha_area": 51545.19140625,
+      "alpha_change_from_previous": 0.0011658744188025594
+    },
+    {
+      "frame": 18,
+      "bbox": [
+        4,
+        4,
+        269,
+        420
+      ],
+      "alpha_area": 51523.01171875,
+      "alpha_change_from_previous": 0.0013902627397328615
+    },
+    {
+      "frame": 19,
+      "bbox": [
+        4,
+        4,
+        269,
+        420
+      ],
+      "alpha_area": 51550.33984375,
+      "alpha_change_from_previous": 0.0007259779958985746
+    },
+    {
+      "frame": 20,
+      "bbox": [
+        4,
+        4,
+        269,
+        420
+      ],
+      "alpha_area": 51508.08984375,
+      "alpha_change_from_previous": 0.0022745125461369753
+    },
+    {
+      "frame": 21,
+      "bbox": [
+        4,
+        4,
+        269,
+        420
+      ],
+      "alpha_area": 51489.328125,
+      "alpha_change_from_previous": 0.0069471923634409904
+    },
+    {
+      "frame": 22,
+      "bbox": [
+        4,
+        4,
+        270,
+        420
+      ],
+      "alpha_area": 51417.30859375,
+      "alpha_change_from_previous": 0.007133312523365021
+    },
+    {
+      "frame": 23,
+      "bbox": [
+        4,
+        4,
+        270,
+        420
+      ],
+      "alpha_area": 51427.71875,
+      "alpha_change_from_previous": 0.005637187976390123
+    },
+    {
+      "frame": 24,
+      "bbox": [
+        4,
+        4,
+        271,
+        420
+      ],
+      "alpha_area": 51289.72265625,
+      "alpha_change_from_previous": 0.010586700402200222
+    },
+    {
+      "frame": 25,
+      "bbox": [
+        4,
+        4,
+        272,
+        420
+      ],
+      "alpha_area": 51179.1328125,
+      "alpha_change_from_previous": 0.01140027679502964
+    },
+    {
+      "frame": 26,
+      "bbox": [
+        4,
+        4,
+        271,
+        420
+      ],
+      "alpha_area": 50998.28515625,
+      "alpha_change_from_previous": 0.010557546280324459
+    },
+    {
+      "frame": 27,
+      "bbox": [
+        4,
+        4,
+        271,
+        420
+      ],
+      "alpha_area": 50916.83984375,
+      "alpha_change_from_previous": 0.007679738570004702
+    },
+    {
+      "frame": 28,
+      "bbox": [
+        4,
+        4,
+        270,
+        419
+      ],
+      "alpha_area": 50718.34765625,
+      "alpha_change_from_previous": 0.010752378031611443
+    },
+    {
+      "frame": 29,
+      "bbox": [
+        4,
+        4,
+        270,
+        419
+      ],
+      "alpha_area": 50716.75390625,
+      "alpha_change_from_previous": 0.0005974306259304285
+    },
+    {
+      "frame": 30,
+      "bbox": [
+        4,
+        4,
+        270,
+        420
+      ],
+      "alpha_area": 50704.83984375,
+      "alpha_change_from_previous": 0.000845611619297415
+    },
+    {
+      "frame": 31,
+      "bbox": [
+        4,
+        4,
+        270,
+        420
+      ],
+      "alpha_area": 50712.765625,
+      "alpha_change_from_previous": 0.0005630485247820616
+    },
+    {
+      "frame": 32,
+      "bbox": [
+        4,
+        4,
+        270,
+        420
+      ],
+      "alpha_area": 50722.98046875,
+      "alpha_change_from_previous": 0.0008129050838761032
+    },
+    {
+      "frame": 33,
+      "bbox": [
+        4,
+        4,
+        270,
+        420
+      ],
+      "alpha_area": 50726.01171875,
+      "alpha_change_from_previous": 0.0005836241762153804
+    },
+    {
+      "frame": 34,
+      "bbox": [
+        4,
+        4,
+        270,
+        420
+      ],
+      "alpha_area": 50699.92578125,
+      "alpha_change_from_previous": 0.0011284429347142577
+    },
+    {
+      "frame": 35,
+      "bbox": [
+        4,
+        4,
+        270,
+        420
+      ],
+      "alpha_area": 50688.25,
+      "alpha_change_from_previous": 0.0012985437642782927
+    },
+    {
+      "frame": 36,
+      "bbox": [
+        4,
+        4,
+        270,
+        420
+      ],
+      "alpha_area": 50706.42578125,
+      "alpha_change_from_previous": 0.0005541681894101202
+    }
+  ],
+  "review_required": true,
+  "note": "Metrics flag candidates for review, not proof of good motion. No automatic temporal mask smoothing or loop crossfade.",
+  "source_indices": [
+    0,
+    2,
+    4,
+    6,
+    8,
+    10,
+    12,
+    14,
+    16,
+    18,
+    20,
+    22,
+    24,
+    26,
+    28,
+    30,
+    32,
+    34,
+    36,
+    38,
+    40,
+    42,
+    44,
+    46,
+    48,
+    50,
+    52,
+    54,
+    56,
+    58,
+    60,
+    62,
+    64,
+    66,
+    68,
+    70,
+    72
+  ],
+  "source_fps": 24.0,
+  "playback_fps": 12.0,
+  "motion": "idle",
+  "loop_requested": true,
+  "damage_event": null,
+  "last_frame_duration_multiplier": 0.4999999999999982,
+  "warnings": []
+}

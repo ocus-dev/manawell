@@ -1,0 +1,24 @@
+{
+  "source": "C:\\Users\\TTOCS\\Documents\\ChatGPT\\Telos Game\\prototype\\assets\\side-view\\pursuer.png",
+  "source_sha256": "a19ab99742a05d98765a1239038280cbdd682ed12bd54c39e217f2b4d234ad2a",
+  "canvas": [
+    576,
+    576
+  ],
+  "source_crop": [
+    4,
+    4,
+    968,
+    542
+  ],
+  "uniform_scale": 0.4182572614107884,
+  "paste": [
+    87,
+    270
+  ],
+  "ground_anchor": [
+    288,
+    495
+  ],
+  "note": "Default anchor uses visible bottom-center; review actual planted feet. Last-frame references must share this transform."
+}

@@ -10,8 +10,8 @@ const MAX_OFFLINE_SECONDS: float = 86400.0
 
 var settlement_cursor: float = -1.0
 
-func settle(timestamp: float, commissioned_wells: Dictionary, hero_assignments: Dictionary, owned_upgrades: Dictionary, active_well_id: String = "") -> Dictionary:
-	var rates: Dictionary = calculate_rates(commissioned_wells, hero_assignments, owned_upgrades, active_well_id)
+func settle(timestamp: float, commissioned_wells: Dictionary, hero_assignments: Dictionary, owned_upgrades: Dictionary, active_well_id: String = "", research_ranks: Dictionary = {}) -> Dictionary:
+	var rates: Dictionary = calculate_rates(commissioned_wells, hero_assignments, owned_upgrades, active_well_id, research_ranks)
 	if not is_finite(timestamp):
 		return {"elapsed": 0.0, "total": 0.0, "rates": rates}
 	if settlement_cursor < 0.0:
@@ -25,10 +25,10 @@ func reset_cursor(timestamp: float) -> void:
 	if is_finite(timestamp):
 		settlement_cursor = timestamp
 
-static func calculate_rates(commissioned_wells: Dictionary, hero_assignments: Dictionary, owned_upgrades: Dictionary, active_well_id: String = "") -> Dictionary:
+static func calculate_rates(commissioned_wells: Dictionary, hero_assignments: Dictionary, owned_upgrades: Dictionary, active_well_id: String = "", research_ranks: Dictionary = {}) -> Dictionary:
 	var rates: Dictionary = {}
 	var catalog: RefCounted = ContentCatalogScript.new()
-	var pump_factor: float = BalanceData.PUMP_OUTPUT_MULTIPLIER if owned_upgrades.has("pump_1") else 1.0
+	var pump_factor: float = 1.0 + 0.25 * int(research_ranks.get("harvest.amount", 1 if owned_upgrades.has("pump_1") else 0))
 	for well_id in catalog.well_ids():
 		if not commissioned_wells.has(well_id) or well_id == active_well_id:
 			continue

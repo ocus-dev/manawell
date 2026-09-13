@@ -1,0 +1,271 @@
+{
+  "union_crop": [
+    151,
+    50,
+    551,
+    500
+  ],
+  "ground_anchor": [
+    137,
+    445
+  ],
+  "recommended_scale": 0.18099547511312217,
+  "cell_size": [
+    400,
+    450
+  ],
+  "loop_premultiplied_rgb_difference": 0.005136730149388313,
+  "frame_metrics": [
+    {
+      "frame": 0,
+      "bbox": [
+        4,
+        30,
+        269,
+        445
+      ],
+      "alpha_area": 50716.51171875,
+      "alpha_change_from_previous": 0.0
+    },
+    {
+      "frame": 1,
+      "bbox": [
+        4,
+        30,
+        269,
+        446
+      ],
+      "alpha_area": 50691.6796875,
+      "alpha_change_from_previous": 0.0008665576460771263
+    },
+    {
+      "frame": 2,
+      "bbox": [
+        4,
+        30,
+        269,
+        446
+      ],
+      "alpha_area": 50706.6875,
+      "alpha_change_from_previous": 0.0004142483521718532
+    },
+    {
+      "frame": 3,
+      "bbox": [
+        4,
+        30,
+        269,
+        446
+      ],
+      "alpha_area": 50652.26171875,
+      "alpha_change_from_previous": 0.0014903050614520907
+    },
+    {
+      "frame": 4,
+      "bbox": [
+        14,
+        32,
+        297,
+        446
+      ],
+      "alpha_area": 52578.49609375,
+      "alpha_change_from_previous": 0.061412788927555084
+    },
+    {
+      "frame": 5,
+      "bbox": [
+        19,
+        39,
+        310,
+        446
+      ],
+      "alpha_area": 51638.19140625,
+      "alpha_change_from_previous": 0.09002268314361572
+    },
+    {
+      "frame": 6,
+      "bbox": [
+        18,
+        38,
+        310,
+        446
+      ],
+      "alpha_area": 51669.5703125,
+      "alpha_change_from_previous": 0.0014571460196748376
+    },
+    {
+      "frame": 7,
+      "bbox": [
+        11,
+        4,
+        292,
+        446
+      ],
+      "alpha_area": 54993.40234375,
+      "alpha_change_from_previous": 0.09827257692813873
+    },
+    {
+      "frame": 8,
+      "bbox": [
+        9,
+        10,
+        296,
+        446
+      ],
+      "alpha_area": 57005.5,
+      "alpha_change_from_previous": 0.03632616624236107
+    },
+    {
+      "frame": 9,
+      "bbox": [
+        9,
+        69,
+        396,
+        446
+      ],
+      "alpha_area": 57223.7734375,
+      "alpha_change_from_previous": 0.0918651893734932
+    },
+    {
+      "frame": 10,
+      "bbox": [
+        8,
+        68,
+        389,
+        446
+      ],
+      "alpha_area": 57213.29296875,
+      "alpha_change_from_previous": 0.03369895741343498
+    },
+    {
+      "frame": 11,
+      "bbox": [
+        10,
+        46,
+        324,
+        446
+      ],
+      "alpha_area": 54495.93359375,
+      "alpha_change_from_previous": 0.07542818784713745
+    },
+    {
+      "frame": 12,
+      "bbox": [
+        18,
+        39,
+        304,
+        446
+      ],
+      "alpha_area": 52820.05078125,
+      "alpha_change_from_previous": 0.05134657025337219
+    },
+    {
+      "frame": 13,
+      "bbox": [
+        4,
+        30,
+        269,
+        446
+      ],
+      "alpha_area": 50678.87890625,
+      "alpha_change_from_previous": 0.0801125019788742
+    },
+    {
+      "frame": 14,
+      "bbox": [
+        4,
+        30,
+        269,
+        446
+      ],
+      "alpha_area": 50715.515625,
+      "alpha_change_from_previous": 0.0005198692088015378
+    },
+    {
+      "frame": 15,
+      "bbox": [
+        4,
+        30,
+        269,
+        446
+      ],
+      "alpha_area": 50697.40625,
+      "alpha_change_from_previous": 0.0007335947593674064
+    },
+    {
+      "frame": 16,
+      "bbox": [
+        4,
+        30,
+        269,
+        446
+      ],
+      "alpha_area": 50709.4765625,
+      "alpha_change_from_previous": 0.000398235279135406
+    },
+    {
+      "frame": 17,
+      "bbox": [
+        4,
+        30,
+        269,
+        446
+      ],
+      "alpha_area": 50691.625,
+      "alpha_change_from_previous": 0.0006959694437682629
+    },
+    {
+      "frame": 18,
+      "bbox": [
+        4,
+        30,
+        269,
+        446
+      ],
+      "alpha_area": 50679.01171875,
+      "alpha_change_from_previous": 0.0008470805478282273
+    },
+    {
+      "frame": 19,
+      "bbox": [
+        4,
+        30,
+        269,
+        446
+      ],
+      "alpha_area": 50698.765625,
+      "alpha_change_from_previous": 0.0004067973350174725
+    }
+  ],
+  "review_required": true,
+  "note": "Metrics flag candidates for review, not proof of good motion. No automatic temporal mask smoothing or loop crossfade.",
+  "source_indices": [
+    0,
+    2,
+    4,
+    6,
+    8,
+    10,
+    12,
+    14,
+    16,
+    18,
+    20,
+    22,
+    24,
+    26,
+    28,
+    30,
+    32,
+    34,
+    36,
+    38
+  ],
+  "source_fps": 24.0,
+  "playback_fps": 12.0,
+  "motion": "attack",
+  "loop_requested": false,
+  "damage_event": null,
+  "last_frame_duration_multiplier": 0.5000000000000009,
+  "warnings": []
+}

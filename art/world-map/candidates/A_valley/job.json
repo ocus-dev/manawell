@@ -1,0 +1,27 @@
+{
+  "token": "fb7b8a071ddf400fafa3e4c4dc7ae2ca",
+  "spec": {
+    "candidate": "A_valley",
+    "seed": 9073101,
+    "reference_sha256": null,
+    "denoise": 1.0,
+    "prompt_sha256": "d01c9ade82927f0ecbb9be5fa473cbdba07a9580564cb4aab1f297ec5d860592"
+  },
+  "status": "complete",
+  "prompt_id": "24283d58-5479-4662-bcdf-53e890d6b12d",
+  "source_sha256": "c5cd7e0f5be8c50182187e0a6ec7910b6cf99bf333ee1eb2913d6275b643ac2c",
+  "models": {
+    "10": {
+      "unet_name": "krea2_turbo_fp8_scaled.safetensors",
+      "weight_dtype": "default"
+    },
+    "11": {
+      "clip_name": "qwen3vl_4b_fp8_scaled.safetensors",
+      "type": "krea2",
+      "device": "default"
+    },
+    "12": {
+      "vae_name": "qwen_image_vae.safetensors"
+    }
+  }
+}

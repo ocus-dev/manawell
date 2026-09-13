@@ -1,0 +1,27 @@
+{
+  "token": "1b13ee4a03664099adfd90b57b832bf9",
+  "spec": {
+    "candidate": "C_terraces",
+    "seed": 9073103,
+    "reference_sha256": null,
+    "denoise": 1.0,
+    "prompt_sha256": "d01c9ade82927f0ecbb9be5fa473cbdba07a9580564cb4aab1f297ec5d860592"
+  },
+  "status": "complete",
+  "prompt_id": "fc05f185-1159-4b8c-bcd7-28be1c50189a",
+  "source_sha256": "ede2ec13b4bd803c2560bbd74defd2b9148c9febfc2e35338cacc67f0ce05a87",
+  "models": {
+    "10": {
+      "unet_name": "krea2_turbo_fp8_scaled.safetensors",
+      "weight_dtype": "default"
+    },
+    "11": {
+      "clip_name": "qwen3vl_4b_fp8_scaled.safetensors",
+      "type": "krea2",
+      "device": "default"
+    },
+    "12": {
+      "vae_name": "qwen_image_vae.safetensors"
+    }
+  }
+}

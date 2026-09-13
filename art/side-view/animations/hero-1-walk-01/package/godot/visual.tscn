@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3]
+[ext_resource type="SpriteFrames" path="animation.tres" id="1"]
+[node name="AnimationVisual" type="Node2D"]
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+texture_filter = 2
+position = Vector2(-9.209302325581396, -39.81395348837209)
+scale = Vector2(0.18604651162790697, 0.18604651162790697)
+sprite_frames = ExtResource("1")
+animation = &"walk"
+autoplay = "walk"

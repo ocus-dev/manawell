@@ -8,6 +8,7 @@ var amount_label: Label
 var cause_label: Label
 var surge_label: Label
 var retry_button: Button
+var drops_label: Label
 
 func _ready() -> void:
 	if outcome_label == null:
@@ -21,6 +22,11 @@ func configure(view_data: Dictionary) -> void:
 	cause_label.text = "Cause: %s" % _cause_text(str(view_data.get("terminal_reason", "")))
 	surge_label.text = "Completed surges: %d" % int(view_data.get("completed_surges", 0))
 	retry_button.disabled = not bool(view_data.get("can_retry", false))
+	var names: Array[String] = []
+	for id in view_data.get("item_drops", []):
+		names.append(str(preload("res://scripts/model/item_catalog.gd").ITEMS.get(id, {}).get("label", id)))
+	drops_label.text = "Recovered: %s\nOpen Inventory in operations to inspect." % ", ".join(names) if not names.is_empty() else ""
+	drops_label.visible = not names.is_empty()
 
 func _cause_text(reason: String) -> String:
 	match reason:
@@ -55,6 +61,11 @@ func _build() -> void:
 	surge_label = Label.new()
 	surge_label.name = "CompletedSurges"
 	content.add_child(surge_label)
+	drops_label = Label.new()
+	drops_label.name = "ItemDrops"
+	drops_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	drops_label.modulate = Color("8ed9df")
+	content.add_child(drops_label)
 	var return_button := Button.new()
 	return_button.name = "ReturnToOperations"
 	return_button.text = "Return to operations"

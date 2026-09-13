@@ -35,6 +35,12 @@ var hero_health: float = 0.0
 var machine_integrity: float = 0.0
 var machine_max_integrity: float = 0.0
 var terminal_reason: String = ""
+var harvest_specialization_id: String = "harvest.standard"
+var harvest_cycle_progress: float = 0.0
+var harvest_cycle_amount: float = 0.0
+var harvest_cycle_interval: float = 1.0
+var weapon_mode_id: String = "weapon.standard"
+var weapon_projectile_speed: float = BalanceData.WEAPON_PROJECTILE_SPEED
 
 func start(
 	new_run_id: String,
@@ -45,7 +51,12 @@ func start(
 	new_sealing_duration: float = BalanceData.SEALING_DURATION,
 	new_hero_health: float = BalanceData.HERO_HEALTH,
 	new_machine_integrity: float = BalanceData.MACHINE_INTEGRITY,
-	new_pressure_time_scale: float = 1.0
+	new_pressure_time_scale: float = 1.0,
+	new_harvest_specialization_id: String = "harvest.standard",
+	new_cycle_amount: float = 0.0,
+	new_cycle_interval: float = 1.0,
+	new_weapon_mode_id: String = "weapon.standard",
+	new_weapon_speed: float = BalanceData.WEAPON_PROJECTILE_SPEED
 ) -> bool:
 	if phase != Phase.READY:
 		return false
@@ -80,6 +91,56 @@ func start(
 	machine_integrity = new_machine_integrity
 	machine_max_integrity = new_machine_integrity
 	terminal_reason = ""
+	harvest_specialization_id = new_harvest_specialization_id
+	harvest_cycle_progress = 0.0
+	harvest_cycle_amount = new_cycle_amount
+	harvest_cycle_interval = new_cycle_interval
+	weapon_mode_id = new_weapon_mode_id
+	weapon_projectile_speed = new_weapon_speed
+	return true
+
+func start_combat(
+	new_run_id: String,
+	hero_id: String = "hero_1",
+	module_id: String = "standard",
+	new_reward: int = 0,
+	new_hero_health: float = BalanceData.HERO_HEALTH
+) -> bool:
+	if phase != Phase.READY or new_run_id.is_empty() or hero_id.is_empty() or module_id.is_empty() or new_reward < 0:
+		return false
+	run_id = new_run_id
+	selected_well_id = ""
+	selected_hero_id = hero_id
+	selected_module_id = module_id
+	phase = Phase.EXTRACTING
+	paused = false
+	simulation_elapsed = 0.0
+	tank_base = 0.0
+	extraction_rate = 0.0
+	pressure_time_scale = 1.0
+	completed_surges = 0
+	multiplier = 1.0
+	locked_payout = new_reward
+	sealing_remaining = 0.0
+	sealing_duration = 0.0
+	hero_health = new_hero_health
+	machine_integrity = 1.0
+	machine_max_integrity = 1.0
+	terminal_reason = ""
+	harvest_specialization_id = "harvest.standard"
+	harvest_cycle_progress = 0.0
+	harvest_cycle_amount = 0.0
+	harvest_cycle_interval = 1.0
+	weapon_mode_id = "weapon.standard"
+	weapon_projectile_speed = BalanceData.WEAPON_PROJECTILE_SPEED
+	return true
+
+func complete_combat() -> bool:
+	if phase != Phase.EXTRACTING:
+		return false
+	phase = Phase.SUCCESS
+	paused = false
+	terminal_reason = "objective_cleared"
 	return true
 
 func set_paused(should_pause: bool) -> void:
@@ -91,7 +152,13 @@ func advance(delta: float) -> bool:
 		return false
 	if phase == Phase.EXTRACTING:
 		simulation_elapsed += delta * pressure_time_scale
-		tank_base += extraction_rate * delta
+		if harvest_cycle_amount > 0.0 and harvest_cycle_interval > 0.0:
+			harvest_cycle_progress += delta
+			while harvest_cycle_progress >= harvest_cycle_interval:
+				harvest_cycle_progress -= harvest_cycle_interval
+				tank_base += harvest_cycle_amount
+		else:
+			tank_base += extraction_rate * delta
 		_update_surges()
 		return true
 	if phase == Phase.SEALING:
@@ -152,6 +219,12 @@ func reset() -> void:
 	machine_integrity = 0.0
 	machine_max_integrity = 0.0
 	terminal_reason = ""
+	harvest_specialization_id = "harvest.standard"
+	harvest_cycle_progress = 0.0
+	harvest_cycle_amount = 0.0
+	harvest_cycle_interval = 1.0
+	weapon_mode_id = "weapon.standard"
+	weapon_projectile_speed = BalanceData.WEAPON_PROJECTILE_SPEED
 
 func get_terminal_result() -> Dictionary:
 	if phase != Phase.SUCCESS and phase != Phase.FAILED:
@@ -160,6 +233,7 @@ func get_terminal_result() -> Dictionary:
 		"run_id": run_id,
 		"phase": phase,
 		"payout": locked_payout if phase == Phase.SUCCESS else 0,
+		"completed_surges": completed_surges,
 		"terminal_reason": terminal_reason,
 	}
 

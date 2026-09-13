@@ -1,0 +1,7 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/generated/coolant-pump-20260906-213123-fe60fe/model.glb" id="1"]
+
+[node name="GeneratedAsset" type="Node3D"]
+
+[node name="Model" parent="." instance=ExtResource("1")]

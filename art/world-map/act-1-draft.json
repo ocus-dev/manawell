@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "status": "design-draft",
+  "act_id": "act_01_broken_foundry",
+  "display_name": "Act 1: Broken Foundry Frontier",
+  "theme": "Abandoned heavy industrial extraction valley reclaimed by unstable raw mana.",
+  "master": {
+    "width": 2048,
+    "height": 1152,
+    "aspect_ratio": "16:9",
+    "display_mode": "contain",
+    "safe_margin": 0.08,
+    "route_clearance": 0.06
+  },
+  "districts": [
+    {"id": "ash_conveyor_shelf", "display_name": "Ash Conveyor Shelf"},
+    {"id": "flooded_pump_basin", "display_name": "Flooded Pump Basin"},
+    {"id": "foundry_crown", "display_name": "Foundry Crown"}
+  ],
+  "route": {
+    "kind": "authored_vector_control_points",
+    "control_points": [
+      {"x": 0.14, "y": 0.79},
+      {"x": 0.25, "y": 0.70},
+      {"x": 0.36, "y": 0.62},
+      {"x": 0.47, "y": 0.55},
+      {"x": 0.56, "y": 0.46},
+      {"x": 0.66, "y": 0.39},
+      {"x": 0.74, "y": 0.31},
+      {"x": 0.82, "y": 0.22},
+      {"x": 0.89, "y": 0.14}
+    ],
+    "style": "runtime overlay only; never baked into generated scenery"
+  },
+  "nodes": [
+    {"id": "act1_node_01", "type": "monster", "prerequisite_ids": [], "encounter_key": "act1_monster_01", "display_name": "Ash Gate Breach", "position": {"x": 0.14, "y": 0.79}},
+    {"id": "act1_node_02", "type": "well", "prerequisite_ids": ["act1_node_01"], "encounter_key": "act1_well_01", "display_name": "Sumpglass Well", "position": {"x": 0.25, "y": 0.70}, "well_id": "act1_well_01"},
+    {"id": "act1_node_03", "type": "monster", "prerequisite_ids": ["act1_node_02"], "encounter_key": "act1_monster_02", "display_name": "Conveyor Grave", "position": {"x": 0.36, "y": 0.62}},
+    {"id": "act1_node_04", "type": "monster", "prerequisite_ids": ["act1_node_03"], "encounter_key": "act1_monster_03", "display_name": "Slagfall Switchyard", "position": {"x": 0.47, "y": 0.55}},
+    {"id": "act1_node_05", "type": "well", "prerequisite_ids": ["act1_node_04"], "encounter_key": "act1_well_02", "display_name": "Blue Sluice Well", "position": {"x": 0.56, "y": 0.46}, "well_id": "act1_well_02"},
+    {"id": "act1_node_06", "type": "monster", "prerequisite_ids": ["act1_node_05"], "encounter_key": "act1_monster_04", "display_name": "Pressure House", "position": {"x": 0.66, "y": 0.39}},
+    {"id": "act1_node_07", "type": "monster", "prerequisite_ids": ["act1_node_06"], "encounter_key": "act1_monster_05", "display_name": "Cinder Lift", "position": {"x": 0.74, "y": 0.31}},
+    {"id": "act1_node_08", "type": "well", "prerequisite_ids": ["act1_node_07"], "encounter_key": "act1_well_03", "display_name": "Crownroot Well", "position": {"x": 0.82, "y": 0.22}, "well_id": "act1_well_03"},
+    {"id": "act1_node_09", "type": "boss", "prerequisite_ids": ["act1_node_01", "act1_node_02", "act1_node_03", "act1_node_04", "act1_node_05", "act1_node_06", "act1_node_07", "act1_node_08"], "encounter_key": "act1_boss_crown_furnace", "display_name": "Crown Furnace Gate", "position": {"x": 0.89, "y": 0.14}}
+  ]
+}

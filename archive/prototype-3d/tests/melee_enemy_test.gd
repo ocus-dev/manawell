@@ -1,0 +1,76 @@
+extends SceneTree
+
+const ControllerScript = preload("res://scripts/game/encounter_controller.gd")
+const EnemyScript = preload("res://scripts/game/melee_enemy.gd")
+const RunStateScript = preload("res://scripts/model/run_state.gd")
+
+func _init() -> void:
+	_test_target_preferences_and_cooldowns()
+	_test_damage_death_api()
+	_test_retry_cleanup()
+	quit(0)
+
+func _test_target_preferences_and_cooldowns() -> void:
+	var state: RefCounted = RunStateScript.new()
+	assert(state.start("enemy-test"))
+	var hero := Node3D.new()
+	hero.position = Vector3.ZERO
+	get_root().add_child(hero)
+	var machine := Node3D.new()
+	machine.position = Vector3(10.0, 0.0, 0.0)
+	get_root().add_child(machine)
+	var pursuer = EnemyScript.new()
+	pursuer.setup(EnemyScript.EnemyKind.PURSUER, state, hero)
+	pursuer.position = Vector3(1.0, 0.0, 0.0)
+	get_root().add_child(pursuer)
+	var breaker = EnemyScript.new()
+	breaker.setup(EnemyScript.EnemyKind.BREAKER, state, machine)
+	breaker.position = Vector3(8.5, 0.0, 0.0)
+	get_root().add_child(breaker)
+	assert(pursuer.target == hero)
+	assert(pursuer.damage_target == RunStateScript.DamageTarget.HERO)
+	assert(breaker.target == machine)
+	assert(breaker.damage_target == RunStateScript.DamageTarget.MACHINE)
+	pursuer.simulate_tick(0.1)
+	assert(is_equal_approx(state.hero_health, 92.0))
+	pursuer.simulate_tick(0.5)
+	assert(is_equal_approx(state.hero_health, 92.0))
+	pursuer.simulate_tick(0.5)
+	assert(is_equal_approx(state.hero_health, 84.0))
+	breaker.simulate_tick(0.1)
+	assert(is_equal_approx(state.machine_integrity, 138.0))
+	state.set_paused(true)
+	pursuer.simulate_tick(2.0)
+	breaker.simulate_tick(2.0)
+	assert(is_equal_approx(state.hero_health, 84.0))
+	assert(is_equal_approx(state.machine_integrity, 138.0))
+	pursuer.free()
+	breaker.free()
+	hero.free()
+	machine.free()
+
+func _test_damage_death_api() -> void:
+	var enemy = EnemyScript.new()
+	enemy.setup(EnemyScript.EnemyKind.PURSUER, null, null)
+	get_root().add_child(enemy)
+	assert(enemy.take_damage(19.0))
+	assert(is_equal_approx(enemy.health, 1.0))
+	assert(enemy.take_damage(1.0))
+	assert(enemy.dead)
+	assert(not enemy.take_damage(1.0))
+	assert(not enemy.take_damage(INF))
+	enemy.free()
+
+func _test_retry_cleanup() -> void:
+	var controller: Node = load("res://scenes/main.tscn").instantiate()
+	controller.persistence_enabled = false
+	get_root().add_child(controller)
+	for attempt in range(10):
+		if controller.run_state.phase == RunStateScript.Phase.READY:
+			controller.request_start_or_harvest()
+		controller.tick(3.0)
+		assert(controller.get_node("Enemies").get_child_count() == 1)
+		controller.run_state.apply_damage(RunStateScript.DamageTarget.HERO, 100.0)
+		controller.retry()
+		assert(controller.get_node_or_null("Enemies") == null)
+	controller.free()

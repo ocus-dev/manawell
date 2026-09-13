@@ -1,0 +1,249 @@
+{
+  "prompt": [
+    513,
+    "24283d58-5479-4662-bcdf-53e890d6b12d",
+    {
+      "1": {
+        "class_type": "PrimitiveStringMultiline",
+        "inputs": {
+          "value": "A physically grounded retro-industrial future. Heavy manufactured steel, ceramic armor, rubber seals, smoked glass and canvas. Broad geometric primary masses, functional joints and hydraulics, quiet armor plates with detail clustered at mechanisms. Visible maintenance, chipped paint and purposeful wear. Electromechanical technology, physical switches and phosphor instruments. Roughly 70 percent primary forms, 20 percent secondary structure, 10 percent surface detail. Structural neutrals dominate with small functional saturated accents."
+        }
+      },
+      "2": {
+        "class_type": "PrimitiveStringMultiline",
+        "inputs": {
+          "value": "A hand-painted late-1980s to early-1990s Japanese science-fiction OVA animation frame. Painted gouache backgrounds, selective precise ink lines, hard cel shadow shapes in three value groups, graphic painted metal highlights, restrained gradients and subtle analog grain. Tactile illustrated material weight and clear silhouettes. One coherent finished scene, no collage, no captions or watermark. Avoid glossy CGI, photographic rendering, holograms and indiscriminate tiny panel detail."
+        }
+      },
+      "3": {
+        "class_type": "PrimitiveStringMultiline",
+        "inputs": {
+          "value": "An immense inland industrial valley seen from very high above, the entire region fills the composition. A broad winding dry river basin leads from lower-left scrap fields through central pumping terraces to an enormous distant circular furnace citadel in the upper right. Broken railway viaducts bridge ravines. Small scattered service buildings establish enormous landscape scale. Three districts: dusty salvage foothills at left, ochre pumping works in the middle, dark clinker mountains and the crown furnace at upper right. Vast quiet terrain between industrial clusters. No close foreground building."
+        }
+      },
+      "4": {
+        "class_type": "PrimitiveStringMultiline",
+        "inputs": {
+          "value": "High aerial oblique regional atlas painting, wide 16:9 landscape. NOT a single arena, NOT a street-level scene, NOT a floating miniature diorama. Geographic landforms span the full frame. Tiny structures occupy only a fraction of the terrain. Traversable districts wind from lower left through center to a dominant boss furnace landmark around 87 percent across and 21 percent down. Keep landmarks within a 6 percent safe margin. Distant ridges continue beyond the regional boundary; no decorative frame."
+        }
+      },
+      "5": {
+        "class_type": "PrimitiveStringMultiline",
+        "inputs": {
+          "value": "Broken Foundry, first act of a retro-industrial science fiction campaign. Muted ochre steel, rust-red earth, charcoal concrete, blue-grey atmospheric distance, restrained cyan raw-mana seams. Overcast daylight, deliberate quiet surfaces, coherent painted geography. Clean scenery only. No words, lettering, labels, numbers, map pins, route lines, dotted trails, node circles, icons, UI, compass rose, legends, characters, giant foreground machines, watermarks or baked progression states. Physical railways and pipes are allowed as landscape infrastructure, not highlighted game paths."
+        }
+      },
+      "6": {
+        "class_type": "StringConcatenate",
+        "inputs": {
+          "string_a": [
+            "1",
+            0
+          ],
+          "string_b": [
+            "2",
+            0
+          ],
+          "delimiter": "\n\n"
+        }
+      },
+      "7": {
+        "class_type": "StringConcatenate",
+        "inputs": {
+          "string_a": [
+            "6",
+            0
+          ],
+          "string_b": [
+            "3",
+            0
+          ],
+          "delimiter": "\n\n"
+        }
+      },
+      "8": {
+        "class_type": "StringConcatenate",
+        "inputs": {
+          "string_a": [
+            "7",
+            0
+          ],
+          "string_b": [
+            "4",
+            0
+          ],
+          "delimiter": "\n\n"
+        }
+      },
+      "9": {
+        "class_type": "StringConcatenate",
+        "inputs": {
+          "string_a": [
+            "8",
+            0
+          ],
+          "string_b": [
+            "5",
+            0
+          ],
+          "delimiter": "\n\n"
+        }
+      },
+      "10": {
+        "class_type": "UNETLoader",
+        "inputs": {
+          "unet_name": "krea2_turbo_fp8_scaled.safetensors",
+          "weight_dtype": "default"
+        }
+      },
+      "11": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "qwen3vl_4b_fp8_scaled.safetensors",
+          "type": "krea2",
+          "device": "default"
+        }
+      },
+      "12": {
+        "class_type": "VAELoader",
+        "inputs": {
+          "vae_name": "qwen_image_vae.safetensors"
+        }
+      },
+      "13": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "11",
+            0
+          ],
+          "text": [
+            "9",
+            0
+          ]
+        }
+      },
+      "14": {
+        "class_type": "ConditioningZeroOut",
+        "inputs": {
+          "conditioning": [
+            "13",
+            0
+          ]
+        }
+      },
+      "15": {
+        "class_type": "EmptyLatentImage",
+        "inputs": {
+          "width": 1536,
+          "height": 864,
+          "batch_size": 1
+        }
+      },
+      "16": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "10",
+            0
+          ],
+          "positive": [
+            "13",
+            0
+          ],
+          "negative": [
+            "14",
+            0
+          ],
+          "latent_image": [
+            "15",
+            0
+          ],
+          "seed": 9073101,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "euler",
+          "scheduler": "simple",
+          "denoise": 1.0
+        }
+      },
+      "17": {
+        "class_type": "VAEDecode",
+        "inputs": {
+          "samples": [
+            "16",
+            0
+          ],
+          "vae": [
+            "12",
+            0
+          ]
+        }
+      },
+      "18": {
+        "class_type": "SaveImage",
+        "inputs": {
+          "images": [
+            "17",
+            0
+          ],
+          "filename_prefix": "Telos/WorldMap/A_valley"
+        }
+      }
+    },
+    {
+      "telos_job": "fb7b8a071ddf400fafa3e4c4dc7ae2ca",
+      "create_time": 1788838899460
+    },
+    [
+      "18"
+    ]
+  ],
+  "outputs": {
+    "18": {
+      "images": [
+        {
+          "filename": "A_valley_00001_.png",
+          "subfolder": "Telos\\WorldMap",
+          "type": "output"
+        }
+      ]
+    }
+  },
+  "status": {
+    "status_str": "success",
+    "completed": true,
+    "messages": [
+      [
+        "execution_start",
+        {
+          "prompt_id": "24283d58-5479-4662-bcdf-53e890d6b12d",
+          "timestamp": 1788838899461
+        }
+      ],
+      [
+        "execution_cached",
+        {
+          "nodes": [],
+          "prompt_id": "24283d58-5479-4662-bcdf-53e890d6b12d",
+          "timestamp": 1788838899463
+        }
+      ],
+      [
+        "execution_success",
+        {
+          "prompt_id": "24283d58-5479-4662-bcdf-53e890d6b12d",
+          "timestamp": 1788838936885
+        }
+      ]
+    ]
+  },
+  "meta": {
+    "18": {
+      "node_id": "18",
+      "display_node": "18",
+      "parent_node": null,
+      "real_node_id": "18"
+    }
+  }
+}

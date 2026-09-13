@@ -1,0 +1,16 @@
+{
+  "source": "C:\\Users\\TTOCS\\Documents\\ChatGPT\\Telos Game\\art\\side-view\\environment\\drill\\MiniMax_H3_00063_steamy.mp4",
+  "source_hash": "e7992d8daf0c34a2be4ee6f91faa4fd5a4c49cd44883b510e94b0dd6458e0777",
+  "source_fps": 24,
+  "fps": 12.0,
+  "start": 0,
+  "end": null,
+  "anchor": [
+    288.0,
+    495.0
+  ],
+  "height": 190.0,
+  "motion": "idle",
+  "loop": true,
+  "shifts": null
+}

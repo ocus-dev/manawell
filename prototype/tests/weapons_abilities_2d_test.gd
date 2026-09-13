@@ -59,7 +59,7 @@ func _test_hostile_current_position_and_facing() -> void:
 	controller.hero.position.x = 650.0
 	controller.hero.last_facing = -1
 	controller.spawn_hostile_projectile(650.0, 650.0, BalanceData.RANGED_DAMAGE)
-	assert(controller.projectiles[2].direction_x < 0.0)
+	assert(controller.projectiles[2].velocity.y < 0.0)
 	controller.queue_free()
 
 func _test_dash_and_pulse() -> void:
