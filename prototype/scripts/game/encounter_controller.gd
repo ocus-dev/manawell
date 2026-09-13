@@ -119,6 +119,7 @@ func _ready() -> void:
 	environment_visual = EnvironmentScript.new()
 	environment_visual.name = "EnvironmentVisual"
 	environment_visual.use_prepared_layers = use_prepared_environment
+	environment_visual.set_well_id(selected_well_id)
 	add_child(environment_visual)
 	harvester_visual = VisualScript.new()
 	harvester_visual.name = "HarvesterVisual"
@@ -426,6 +427,8 @@ func select_well_by_id(well_id: String) -> bool:
 		return false
 	selected_well_id = well_id
 	selected_loadout_id = account_state.get_loadout_for_well(well_id)
+	if environment_visual != null:
+		environment_visual.set_well_id(selected_well_id)
 	_update_hud()
 	return true
 
@@ -723,8 +726,13 @@ func execute_loot_command(value: String) -> String:
 	if not OS.is_debug_build():
 		return "Loot commands are available in development builds only."
 	var words := value.strip_edges().to_lower().split(" ", false)
+	if words.size() == 1 and words[0] == "enable_all_levels":
+		campaign_state.all_levels_enabled = true
+		for well_id in ["well_1", "well_2", "well_3"]:
+			account_state.unlocked_wells[well_id] = true
+		return "All authored levels enabled for this session."
 	if words.size() != 2 or words[0] != "drop_rate":
-		return "Use: drop_rate <0–100> or drop_rate reset"
+		return "Use: enable_all_levels, drop_rate <0–100> or drop_rate reset"
 	if words[1] == "reset":
 		development_drop_percent = -1.0
 		return "Normal drop rates restored (including equipment bonuses)."

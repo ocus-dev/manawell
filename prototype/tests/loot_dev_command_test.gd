@@ -7,6 +7,13 @@ func _run() -> void:
     var controller = load("res://scenes/main.tscn").instantiate()
     controller.persistence_enabled = false
     root.add_child(controller)
+    var level_result: String = controller.execute_loot_command("enable_all_levels")
+    assert(level_result == "All authored levels enabled for this session.")
+    assert(controller.campaign_state.all_levels_enabled)
+    assert(controller.account_state.is_well_unlocked("well_1"))
+    assert(controller.account_state.is_well_unlocked("well_2"))
+    assert(controller.account_state.is_well_unlocked("well_3"))
+    assert(controller.campaign_state.node_status("act_01", "act_01_node_09")["status"] == "available")
     controller.execute_loot_command("drop_rate 100")
     assert(controller.development_drop_percent == 100)
     controller.execute_loot_command("drop_rate 101")

@@ -13,6 +13,7 @@ var unlocked_acts: Dictionary = {}
 var active_act_id: String = ""
 var active_node_id: String = ""
 var committed_terminal_ids: Dictionary = {}
+var all_levels_enabled := false
 
 func _init() -> void:
 	var catalog: RefCounted = CampaignCatalogScript.new()
@@ -96,6 +97,8 @@ func node_status(act_id: String, node_id: String, catalog: RefCounted = null) ->
 	var node: Dictionary = definitions.get_node(act_id, node_id)
 	if node.is_empty() or not unlocked_acts.has(act_id):
 		return {"status": STATUS_LOCKED, "reason": "Act or level is not authored."}
+	if all_levels_enabled:
+		return {"status": STATUS_AVAILABLE, "reason": "Development level access enabled."}
 	var key := _node_key(act_id, node_id)
 	if completed_nodes.has(key):
 		return {"status": STATUS_COMPLETED, "reason": "Completed levels remain revisitable."}

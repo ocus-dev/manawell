@@ -4,19 +4,34 @@ extends Node2D
 const ArenaLayoutScript = preload("res://data/arena_layout.gd")
 const LOGICAL_SIZE := Vector2(1280.0, 720.0)
 const GROUND_Y := 540.0
-const BACKDROP_PATH := "res://assets/side-view/environment/backdrop.png"
+const DEFAULT_WELL_ID := "well_1"
+const BACKDROP_PATHS := {
+	"well_1": "res://assets/side-view/environment/backdrop_level_1.png",
+	"well_2": "res://assets/side-view/environment/backdrop_level_2.png",
+	"well_3": "res://assets/side-view/environment/backdrop.png",
+}
 const LANE_PATH := "res://assets/side-view/environment/lane.png"
 
 @export var use_prepared_layers := true
 
 var backdrop_texture: Texture2D
 var lane_texture: Texture2D
+var selected_well_id := DEFAULT_WELL_ID
 
 func _ready() -> void:
 	z_index = 0
-	backdrop_texture = load(BACKDROP_PATH)
-	lane_texture = load(LANE_PATH)
+	_load_layers()
 	queue_redraw()
+
+func set_well_id(well_id: String) -> void:
+	selected_well_id = well_id if BACKDROP_PATHS.has(well_id) else DEFAULT_WELL_ID
+	if is_node_ready():
+		_load_layers()
+		queue_redraw()
+
+func _load_layers() -> void:
+	backdrop_texture = load(BACKDROP_PATHS[selected_well_id])
+	lane_texture = load(LANE_PATH)
 
 func is_prepared() -> bool:
 	return use_prepared_layers and backdrop_texture != null and lane_texture != null

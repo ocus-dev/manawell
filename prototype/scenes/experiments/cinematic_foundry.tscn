@@ -1,0 +1,11 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/experiments/cinematic_foundry.gd" id="1_foundry"]
+[ext_resource type="Script" path="res://scripts/game/player.gd" id="2_hero"]
+
+[node name="CinematicFoundry" type="Node2D"]
+script = ExtResource("1_foundry")
+
+[node name="Hero" type="Node2D" parent="."]
+position = Vector2(320, 500)
+script = ExtResource("2_hero")

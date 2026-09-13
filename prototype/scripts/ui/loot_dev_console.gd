@@ -15,7 +15,7 @@ func _ready() -> void:
     var box := VBoxContainer.new()
     panel.add_child(box)
     var help := Label.new()
-    help.text = "LOOT DEVELOPMENT · F8 / Escape to close\ndrop_rate 100 · drop_rate 10 · drop_rate reset"
+    help.text = "DEVELOPMENT CONSOLE · F8 / Escape to close\nenable_all_levels\ndrop_rate 100 · drop_rate 10 · drop_rate reset"
     box.add_child(help)
     command = LineEdit.new()
     command.placeholder_text = "drop_rate 100"
