@@ -34,6 +34,9 @@ var navigation_buttons: Dictionary = {}
 var crew_panel: PanelContainer
 var active_page := "operations"
 var campaign_map
+var well_popup
+var destination_picker: OptionButton
+var fitted_pages: Dictionary = {}
 
 func _get_minimum_size() -> Vector2:
 	return Vector2.ZERO
@@ -116,9 +119,15 @@ func _build() -> void:
 	campaign_map.name = "CampaignMap"
 	campaign_map.custom_minimum_size = Vector2(0, 620)
 	campaign_map.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	campaign_map.node_selected.connect(func(act_id: String, node_id: String): campaign_node_selected.emit(act_id, node_id))
+	campaign_map.node_selected.connect(func(act_id: String, node_id: String):
+		campaign_node_selected.emit(act_id, node_id)
+		for node in view_state.get("campaign", {}).get("nodes", []):
+			if node.id == node_id and node.type == "well":
+				_manage_map_well(str(node.well_id)))
 	campaign_map.node_activate.connect(func(act_id: String, node_id: String): campaign_node_activate.emit(act_id, node_id))
 	content.add_child(campaign_map)
+	content.move_child(body, content.get_child_count() - 1)
+	campaign_map.manage_well_requested.connect(_manage_map_well)
 	left_column = VBoxContainer.new()
 	left_column.name = "WellsResearchRegion"
 	left_column.custom_minimum_size.x = 0.0
@@ -131,12 +140,16 @@ func _build() -> void:
 	right_column.size_flags_stretch_ratio = 2.0
 	body.add_child(left_column)
 	body.add_child(right_column)
-	left_column.add_child(_wells_region())
+	left_column.hide()
+	destination_picker = OptionButton.new()
+	destination_picker.item_selected.connect(func(index: int): destination_requested.emit(str(destination_picker.get_item_metadata(index))))
+	right_column.add_child(destination_picker)
 	research_panel = _research_region()
 	research_panel.visible = false
 	content.add_child(research_panel)
 	inventory_panel = preload("res://scripts/ui/inventory_panel.gd").new()
 	inventory_panel.name = "InventoryRegion"
+	inventory_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	inventory_panel.visible = false
 	inventory_panel.item_inspected.connect(func(id: String): inventory_item_inspected.emit(id))
 	inventory_panel.equip_requested.connect(func(hero_id: String, slot: String, instance_id: String): inventory_equip_requested.emit(hero_id, slot, instance_id))
@@ -144,6 +157,13 @@ func _build() -> void:
 	inventory_panel.lock_toggled.connect(func(instance_id: String, locked: bool): inventory_lock_toggled.emit(instance_id, locked))
 	inventory_panel.discard_requested.connect(func(instance_id: String, confirmed_name: String): inventory_discard_requested.emit(instance_id, confirmed_name))
 	content.add_child(inventory_panel)
+	var inventory_page := preload("res://scripts/ui/fitted_page.gd").new()
+	inventory_page.name = "InventoryPageFit"
+	inventory_page.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	content.add_child(inventory_page)
+	inventory_page.configure(inventory_panel)
+	inventory_panel.visible = true
+	fitted_pages["inventory"] = inventory_page
 	expedition_panel = ExpeditionPanelScript.new()
 	expedition_panel.name = "ExpeditionRegion"
 	expedition_panel.loadout_requested.connect(func(loadout_id: String): loadout_requested.emit(loadout_id))
@@ -151,6 +171,7 @@ func _build() -> void:
 	expedition_panel.start_requested.connect(func(): start_requested.emit())
 	right_column.add_child(expedition_panel)
 	expedition_panel.configure(operations_state.get("expedition", {}))
+	_refresh_destinations(operations_state)
 	if include_notice_placeholder:
 		content.add_child(_placeholder_panel("NoticeRegion", "NOTICES", "Save and recovery notices remain separate from the primary instruction."))
 	crew_panel = _crew_region()
@@ -166,6 +187,17 @@ func _build() -> void:
 	hero_picker.hero_selected.connect(func(hero_id: String, mode: String, well_id: String): hero_selected.emit(hero_id, mode, well_id))
 	hero_picker.guard_recall_requested.connect(func(well_id: String): guard_recall_requested.emit(well_id))
 	add_child(hero_picker)
+	well_popup = preload("res://scripts/ui/well_popup.gd").new()
+	well_popup.hero_selected.connect(func(id: String, well_id: String): hero_selected.emit(id, "guard", well_id))
+	well_popup.guard_recall_requested.connect(func(id: String): guard_recall_requested.emit(id))
+	add_child(well_popup)
+	for entry in [["operations", body], ["map", campaign_map], ["research", research_panel]]:
+		var fit = preload("res://scripts/ui/fitted_page.gd").new()
+		fit.name = str(entry[0]).capitalize() + "PageFit"
+		fit.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		content.add_child(fit)
+		fit.configure(entry[1])
+		fitted_pages[entry[0]] = fit
 	_show_page("operations")
 
 func _research_region() -> Control:
@@ -176,37 +208,18 @@ func _research_region() -> Control:
 	panel.refresh(view_state.get("operations", {}).get("research", {}))
 	return panel
 
-func _wells_region() -> Control:
-	var panel := _panel("WellsRegion")
-	var content := VBoxContainer.new()
-	content.name = "WellsContent"
-	content.add_child(_label("WELLS", 14))
-	var grid := GridContainer.new()
-	grid.name = "WellCardsPlaceholder"
-	grid.columns = 2
-	grid.add_theme_constant_override("h_separation", 12)
-	grid.add_theme_constant_override("v_separation", 12)
-	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var operations_state: Dictionary = view_state.get("operations", {})
-	for well_data in operations_state.get("wells", []):
-		var card: PanelContainer = WellCardScript.new()
-		card.name = "WellCard_%s" % str(well_data.get("id", ""))
-		card.custom_minimum_size = Vector2(0, 0)
-		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		card.destination_requested.connect(func(well_id: String): destination_requested.emit(well_id))
-		card.start_requested.connect(func(): start_requested.emit())
-		card.guard_picker_requested.connect(_on_guard_picker_requested)
-		grid.add_child(card)
-		card.configure(well_data)
-	content.add_child(grid)
-	panel.add_child(content)
-	return panel
-
 func _on_guard_picker_requested(well_id: String) -> void:
 	guard_picker_requested.emit(well_id)
 	for well_data in view_state.get("operations", {}).get("wells", []):
 		if str(well_data.get("id", "")) == well_id:
 			hero_picker.open_guard(well_data, view_state.get("operations", {}).get("heroes", []), get_viewport().gui_get_focus_owner())
+			return
+
+func _manage_map_well(well_id: String) -> void:
+	for well in view_state.get("operations", {}).get("wells", []):
+		if str(well.get("id", "")) == well_id:
+			well_popup.configure(well, view_state.operations.get("heroes", []))
+			well_popup.popup_centered(Vector2i(360, 190))
 			return
 
 func _on_change_hero_requested() -> void:
@@ -226,10 +239,18 @@ func _add_navigation_button(page_id: String, label: String) -> void:
 
 func _show_page(page_id: String) -> void:
 	active_page = page_id
+	var fitted := page_id == "inventory" or fitted_pages.has(page_id)
+	operations_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED if fitted else ScrollContainer.SCROLL_MODE_AUTO
+	operations_scroll.scroll_vertical = 0
+	var outer := operations_scroll.get_node("OuterMargin") as Control
+	outer.size_flags_vertical = Control.SIZE_EXPAND_FILL if fitted else Control.SIZE_FILL
+	for key in fitted_pages:
+		fitted_pages[key].visible = key == page_id
 	body.visible = page_id == "operations"
+	if well_popup != null:
+		well_popup.hide()
 	campaign_map.visible = page_id == "map"
 	research_panel.visible = page_id == "research"
-	inventory_panel.visible = page_id == "inventory"
 	crew_panel.visible = page_id == "crew"
 	for button_id in navigation_buttons:
 		navigation_buttons[button_id].button_pressed = button_id == page_id
@@ -240,7 +261,7 @@ func _crew_region() -> PanelContainer:
 	var content := VBoxContainer.new()
 	content.name = "CrewContent"
 	content.add_child(_label("CREW", 16))
-	var summary := _label("Assign expedition heroes and guards from the Operations page. This roster keeps role and availability visible as the crew system grows.", 14)
+	var summary := _label("Choose your expedition hero in Operations. Change well guards on the Map.", 14)
 	summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	content.add_child(summary)
 	var roster := VBoxContainer.new()
@@ -277,21 +298,31 @@ func refresh(next_view_state: Dictionary) -> void:
 	var new_count := int(inventory_state.get("new_count", 0))
 	navigation_buttons["inventory"].text = "INVENTORY (%d)" % new_count if new_count > 0 else "INVENTORY"
 	expedition_panel.configure(operations_state.get("expedition", {}))
+	_refresh_destinations(operations_state)
 	if campaign_map != null:
 		campaign_map.refresh(view_state)
 	_refresh_crew(operations_state.get("heroes", []))
-	var grid: GridContainer = get_node("OperationsScroll/OuterMargin/OperationsContent/OperationsWorkspace/WellsResearchRegion/WellsRegion/WellsContent/WellCardsPlaceholder")
-	for card in grid.get_children():
-		if card.has_method("refresh"):
-			for well_data in operations_state.get("wells", []):
-				if str(well_data.get("id", "")) == str(card.get("well_id")):
-					card.refresh(well_data)
-					break
+	if well_popup.visible:
+		for well in operations_state.get("wells", []):
+			if str(well.get("id", "")) == well_popup.well_id:
+				well_popup.configure(well, operations_state.get("heroes", []))
 	if hero_picker.visible and hero_picker.mode == "guard":
 		for well_data in operations_state.get("wells", []):
 			if str(well_data.get("id", "")) == hero_picker.well_id:
 				hero_picker.refresh_guard_state(well_data, operations_state.get("heroes", []), str(view_state.get("notices", {}).get("assignment", "")), bool(view_state.get("notices", {}).get("pending_save", false)))
 				break
+
+func _refresh_destinations(state: Dictionary) -> void:
+	var wells: Array = state.get("wells", [])
+	if destination_picker.item_count != wells.size():
+		destination_picker.clear()
+		for well in wells:
+			destination_picker.add_item(str(well.get("label", well.id)))
+			destination_picker.set_item_metadata(destination_picker.item_count - 1, str(well.id))
+	for index in wells.size():
+		destination_picker.set_item_disabled(index, not bool(wells[index].get("prepare_available", false)))
+		if wells[index].get("selected", false):
+			destination_picker.select(index)
 
 func _refresh_crew(heroes: Array) -> void:
 	if crew_panel == null:
@@ -331,6 +362,8 @@ func _update_responsive_layout() -> void:
 	# Breakpoints use logical viewport units, not physical window pixels.
 	var compact_layout := size.x < 1000.0
 	body.vertical = compact_layout
+	if campaign_map != null:
+		campaign_map.custom_minimum_size.y = 720.0 if compact_layout else 620.0
 	var grid := get_node_or_null("OperationsScroll/OuterMargin/OperationsContent/OperationsWorkspace/WellsResearchRegion/WellsRegion/WellsContent/WellCardsPlaceholder")
 	if grid != null:
 		grid.columns = 1 if compact_layout else 2
