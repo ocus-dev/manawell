@@ -97,8 +97,8 @@ static func _campaign_view(account: RefCounted, campaign_state: RefCounted) -> D
 static func _inventory_view(account: RefCounted) -> Dictionary:
 	var items: Array[Dictionary] = []
 	var catalog = preload("res://scripts/model/item_catalog.gd")
-	for id in catalog.ITEMS:
-		var item: Dictionary = catalog.ITEMS[id].duplicate()
+	for id in catalog.item_ids():
+		var item: Dictionary = catalog.definition_for(id)
 		var instances: Array[Dictionary] = []
 		for instance in account.item_instances.values():
 			if instance.get("base_id", "") == id:

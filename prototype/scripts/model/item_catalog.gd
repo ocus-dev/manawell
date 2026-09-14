@@ -13,6 +13,20 @@ const ITEMS := {
     "chassis.jump_servos": {"label": "Jump Servos", "category": "hero", "glyph": "JS", "description": "A matched pair of high-load servos recovered from the act guardian."},
 }
 const REWARDS := ["core.heavy_breech", "module.high_volume", "chassis.bulwark", "core.cycler", "module.fast_cycle", "chassis.runner", "core.accelerator", "module.bracing", "chassis.jump_servos"]
+static var PUBLISHED_ITEMS: Dictionary = {}
+
+static func register_published_weapon(weapon_id: String, definition: Dictionary) -> void:
+    PUBLISHED_ITEMS[weapon_id] = definition.duplicate(true)
+
+static func item_ids() -> Array[String]:
+    var ids: Array[String] = []
+    for id in ITEMS:
+        ids.append(str(id))
+    for id in PUBLISHED_ITEMS:
+        if not ids.has(str(id)):
+            ids.append(str(id))
+    ids.sort()
+    return ids
 
 static func reward_for(act_id: String, node_id: String) -> String:
     if act_id != "act_01":
@@ -23,18 +37,24 @@ static func reward_for(act_id: String, node_id: String) -> String:
     return ""
 
 static func source_for(id: String) -> String:
+    if PUBLISHED_ITEMS.has(id):
+        return "Designer publication"
     return "Act 1 · Level %d first clear" % (REWARDS.find(id) + 1)
 
 static func has_item(id: String) -> bool:
-    return ITEMS.has(id)
+    return ITEMS.has(id) or PUBLISHED_ITEMS.has(id)
 
 static func definition_for(id: String) -> Dictionary:
+    if PUBLISHED_ITEMS.has(id):
+        return PUBLISHED_ITEMS[id].duplicate(true)
     return ITEMS.get(id, {}).duplicate(true)
 
 static func description_for(id: String) -> String:
-    return str(ITEMS.get(id, {}).get("description", ""))
+    return str(definition_for(id).get("description", ""))
 
 static func icon_path_for(id: String) -> String:
+    if PUBLISHED_ITEMS.has(id):
+        return str(PUBLISHED_ITEMS[id].get("icon", ""))
     if not ITEMS.has(id):
         return ""
     return "res://assets/ui-icons/items/%s.png" % id

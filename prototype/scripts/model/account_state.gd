@@ -8,6 +8,7 @@ const ContentCatalogScript = preload("res://scripts/model/content_catalog.gd")
 const ResearchCatalogScript = preload("res://scripts/model/research_catalog.gd")
 const ItemCatalogScript = preload("res://scripts/model/item_catalog.gd")
 const ItemDefinitionsScript = preload("res://scripts/model/item_definitions.gd")
+const WeaponCatalogScript = preload("res://scripts/model/weapon_catalog.gd")
 const CampaignCatalogScript = preload("res://scripts/model/campaign_catalog.gd")
 const LootGeneratorScript = preload("res://scripts/model/loot_generator.gd")
 const INVENTORY_CAPACITY := 100
@@ -26,6 +27,7 @@ var reward_entitlements: Dictionary = {}
 var pending_rewards: Array[Dictionary] = []
 var discarded_reward_ids: Dictionary = {}
 var inventory_command_error := ""
+var published_weapons: Dictionary = {}
 
 var bank: float = 0.0
 var credited_run_ids: Dictionary = {}
@@ -43,6 +45,53 @@ var hero_assignments: Dictionary = {"hero_1": {"role": "active", "well_id": ""}}
 var well_loadouts: Dictionary = {"well_1": LoadoutScript.STANDARD, "well_2": LoadoutScript.STANDARD, "well_3": LoadoutScript.STANDARD}
 
 var content_catalog: RefCounted = ContentCatalogScript.new()
+
+func _init() -> void:
+	_register_published_weapons()
+
+func _register_published_weapons() -> void:
+	var path := ProjectSettings.globalize_path("res://data/weapons/index.json")
+	if not FileAccess.file_exists(path):
+		return
+	var index_file := FileAccess.open(path, FileAccess.READ)
+	if index_file == null:
+		return
+	var index_value = JSON.parse_string(index_file.get_as_text())
+	index_file.close()
+	if not index_value is Dictionary:
+		return
+	for weapon_id in index_value.get("weapons", {}).keys():
+		var revision: Dictionary = index_value.weapons[weapon_id]
+		var revision_check := WeaponCatalogScript.validate_revision(revision, false)
+		if not revision_check.valid:
+			continue
+		var revision_number := int(revision.get("revision", 0))
+		var recipe_path := ProjectSettings.globalize_path("res://data/weapons/%s/%d/recipe.json" % [weapon_id, revision_number])
+		var recipe := _read_json_file(recipe_path)
+		if recipe.is_empty():
+			continue
+		var base := {
+			"id": str(weapon_id),
+			"label": str(revision.get("label", weapon_id)),
+			"slot": "weapon",
+			"implicits": revision.get("base_modifiers", []).duplicate(true),
+		}
+		ItemDefinitionsScript.register_runtime_base(str(weapon_id), base)
+		ItemCatalogScript.register_published_weapon(str(weapon_id), {
+			"label": base.label,
+			"category": "weapon",
+			"description": str(revision.get("description", "")),
+			"icon": str(revision.get("assets", {}).get("icon", "")),
+		})
+		published_weapons[str(weapon_id)] = {"revision": revision.duplicate(true), "recipe": recipe}
+
+func _read_json_file(path: String) -> Dictionary:
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return {}
+	var value = JSON.parse_string(file.get_as_text())
+	file.close()
+	return value if value is Dictionary else {}
 
 func to_save_payload() -> Dictionary:
 	var credited_ids: Array[String] = []
@@ -99,7 +148,7 @@ static func validate_save_payload(payload: Dictionary, definitions: RefCounted =
 	if not item_instance_values is Array or item_instance_values.size() > INVENTORY_CAPACITY:
 		return {"valid": false, "error": "item instances must be an array of at most 100 items"}
 	var item_definitions: RefCounted = ItemDefinitionsScript.new()
-	var production_catalog: Dictionary = ItemDefinitionsScript.PRODUCTION_BASES
+	var production_catalog: Dictionary = ItemDefinitionsScript.runtime_bases()
 	var production_affixes: Dictionary = ItemDefinitionsScript.PRODUCTION_AFFIXES
 	if not item_instance_values.is_empty():
 		var instance_validation: Dictionary = item_definitions.validate_instances(item_instance_values, production_catalog, production_affixes)
@@ -504,9 +553,50 @@ func has_upgrade(upgrade_id: String) -> bool:
 	return owned_upgrades.has(upgrade_id)
 
 func grant_item(id: String) -> bool:
+	if published_weapons.has(id):
+		return grant_published_weapon(id)
 	if not ItemCatalogScript.ITEMS.has(id):
 		return false
 	return add_transitional_item(id, "", "")
+
+func grant_published_weapon(weapon_id: String) -> bool:
+	inventory_command_error = ""
+	if not published_weapons.has(weapon_id):
+		inventory_command_error = "Published weapon is unavailable."
+		return false
+	if item_instances.size() >= INVENTORY_CAPACITY:
+		inventory_command_error = "Inventory is full (100 items)."
+		return false
+	var publication: Dictionary = published_weapons[weapon_id]
+	var revision: Dictionary = publication.revision
+	var recipe: Dictionary = publication.recipe
+	var revision_number := int(revision.get("revision", 0))
+	var instance_id := "designer:%s:%d" % [weapon_id, revision_number]
+	if item_instances.has(instance_id):
+		inventory_command_error = "Published weapon is already in the inventory."
+		return false
+	var instance := {
+		"schema_version": 1,
+		"instance_id": instance_id,
+		"base_id": weapon_id,
+		"rarity": str(recipe.get("rarity", "common")),
+		"item_level": int(recipe.get("item_level", 1)),
+		"implicit_modifiers": revision.get("base_modifiers", []).duplicate(true),
+		"explicit_modifiers": recipe.get("explicit_modifiers", []).duplicate(true),
+		"generation_version": ItemDefinitionsScript.GENERATION_VERSION,
+		"provenance": {"kind": "designer", "run_id": str(revision.get("source_hashes", {}).get("job_id", "")), "enemy_id": 0, "node_id": ""},
+		"inspected": false,
+		"locked": false,
+	}
+	var validation := ItemDefinitionsScript.new().validate_instance(instance, ItemDefinitionsScript.runtime_bases(), ItemDefinitionsScript.PRODUCTION_AFFIXES)
+	if not validation.valid:
+		inventory_command_error = str(validation.get("error", "Published weapon instance is invalid."))
+		return false
+	item_instances[instance_id] = instance
+	owned_items[weapon_id] = true
+	new_items[weapon_id] = true
+	inventory_migration_version = INVENTORY_MIGRATION_VERSION
+	return true
 
 func add_transitional_item(base_id: String, run_id: String, node_id: String) -> bool:
 	if not ItemCatalogScript.ITEMS.has(base_id):
@@ -628,7 +718,7 @@ func equip_instance(hero_id: String, slot: String, instance_id: String, active_r
 		inventory_command_error = "Equipment change is unavailable."
 		return false
 	var instance: Dictionary = item_instances[instance_id]
-	var base: Dictionary = ItemDefinitionsScript.PRODUCTION_BASES.get(instance.base_id, {})
+	var base: Dictionary = ItemDefinitionsScript.base_for(str(instance.base_id))
 	if base.get("slot", "") != slot:
 		inventory_command_error = "Item slot does not match the requested kit slot."
 		return false
@@ -662,7 +752,7 @@ func discard_instance(instance_id: String, confirmed_name: String = "", active_r
 	if instance.locked or _is_equipped(instance_id):
 		inventory_command_error = "Equipped or locked items cannot be discarded."
 		return false
-	var label: String = str(ItemDefinitionsScript.PRODUCTION_BASES.get(instance.base_id, {}).get("label", instance.base_id))
+	var label: String = str(ItemDefinitionsScript.base_for(str(instance.base_id)).get("label", instance.base_id))
 	if confirmed_name != label:
 		inventory_command_error = "Item name confirmation is required."
 		return false
@@ -695,7 +785,7 @@ func credit_terminal_result(result: Dictionary) -> bool:
 
 func add_monster_instance(instance: Dictionary) -> bool:
 	inventory_command_error = ""
-	var validation: Dictionary = ItemDefinitionsScript.new().validate_instance(instance, ItemDefinitionsScript.PRODUCTION_BASES, ItemDefinitionsScript.PRODUCTION_AFFIXES)
+	var validation: Dictionary = ItemDefinitionsScript.new().validate_instance(instance, ItemDefinitionsScript.runtime_bases(), ItemDefinitionsScript.PRODUCTION_AFFIXES)
 	if not validation.valid or instance.get("generation_version", "") != ItemDefinitionsScript.GENERATION_VERSION or instance.get("provenance", {}).get("kind", "") != "monster":
 		inventory_command_error = "Invalid monster item."
 		return false
@@ -787,7 +877,7 @@ static func _validate_hero_kits(kits: Variant, instances: Array, definitions: Re
 				return {"valid": false, "error": "hero kit references an unowned instance"}
 			if used.has(instance_id):
 				return {"valid": false, "error": "an instance cannot be equipped twice"}
-			var base: Dictionary = ItemDefinitionsScript.PRODUCTION_BASES.get(owned[instance_id].get("base_id", ""), {})
+			var base: Dictionary = ItemDefinitionsScript.base_for(str(owned[instance_id].get("base_id", "")))
 			if base.get("slot", "") != slot:
 				return {"valid": false, "error": "hero kit slot does not match item slot"}
 			used[instance_id] = true

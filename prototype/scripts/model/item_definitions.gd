@@ -46,6 +46,20 @@ const PRODUCTION_BASES := {
     "module.fast_cycle": {"id": "module.fast_cycle", "label": "Fast-cycle Rotor", "slot": "harvester", "implicits": [{"stat": "health_regen", "operation": "flat", "family": "implicit.module.fast_cycle.health_regen", "value": 0.2}]},
     "module.bracing": {"id": "module.bracing", "label": "Anchor Bracing", "slot": "harvester", "implicits": [{"stat": "armor", "operation": "flat", "family": "implicit.module.bracing.armor", "value": 8}]},
 }
+static var RUNTIME_BASES: Dictionary = {}
+
+static func runtime_bases() -> Dictionary:
+    var result: Dictionary = PRODUCTION_BASES.duplicate(true)
+    result.merge(RUNTIME_BASES, true)
+    return result
+
+static func register_runtime_base(base_id: String, definition: Dictionary) -> void:
+    RUNTIME_BASES[base_id] = definition.duplicate(true)
+
+static func base_for(base_id: String) -> Dictionary:
+    if RUNTIME_BASES.has(base_id):
+        return RUNTIME_BASES[base_id].duplicate(true)
+    return PRODUCTION_BASES.get(base_id, {}).duplicate(true)
 const PRODUCTION_AFFIXES := {
     "affix.payload": {"id": "affix.payload", "stat": "attack_damage", "operation": "flat", "family": "payload", "eligible_slots": ["weapon"], "weight": 100, "tiers": {1: {"min": 1, "max": 2, "step": 1}, 2: {"min": 2, "max": 3, "step": 1}, 3: {"min": 3, "max": 4, "step": 1}}},
     "affix.force": {"id": "affix.force", "stat": "attack_damage", "operation": "increased", "family": "force", "eligible_slots": ["weapon"], "weight": 100, "tiers": {1: {"min": 0.03, "max": 0.05, "step": 0.01}, 2: {"min": 0.06, "max": 0.08, "step": 0.01}, 3: {"min": 0.09, "max": 0.12, "step": 0.01}}},
@@ -230,7 +244,7 @@ static func _validate_typed_modifier(modifier: Variant, families: Dictionary) ->
 static func _validate_provenance(provenance: Variant) -> Dictionary:
     if not provenance is Dictionary:
         return _failure("instance provenance must be an object")
-    if not ["monster", "legacy", "campaign"].has(provenance.get("kind", "")):
+    if not ["monster", "legacy", "campaign", "designer"].has(provenance.get("kind", "")):
         return _failure("instance provenance kind is invalid")
     if not provenance.get("run_id", "") is String or not provenance.get("node_id", "") is String:
         return _failure("instance provenance identity is invalid")

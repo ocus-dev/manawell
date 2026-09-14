@@ -128,7 +128,7 @@ func refresh(state: Dictionary, _records: Array, hero_id: String, selected_recor
 	item_title.text = str(_record.get("label", "Item")) if has_item else "Select an item"
 	var rarity := str(_record.get("rarity", "common"))
 	item_title.add_theme_color_override("font_color", COLORS.get(rarity, COLORS.common))
-	_slot = str(Definitions.PRODUCTION_BASES.get(str(_record.get("base_id", "")), {}).get("slot", _record.get("category", "")))
+	_slot = str(Definitions.base_for(str(_record.get("base_id", ""))).get("slot", _record.get("category", "")))
 	metadata.text = "%s · Level %d · %s" % [rarity.capitalize(), int(_record.get("item_level", 1)), {"weapon": "Weapon", "hero": "Chassis", "harvester": "Utility"}.get(_slot, "Item")] if has_item else ""
 	var lines: Array[String] = []
 	for modifier in _record.get("implicit_modifiers", []):
