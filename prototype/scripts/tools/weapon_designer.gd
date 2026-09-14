@@ -19,12 +19,19 @@ var draft_list: ItemList
 var job_list: ItemList
 var source_path: OptionButton
 var description_edit: TextEdit
+var add_button: Button
+var job_poll_timer: Timer
 
 func _ready() -> void:
 	theme = ThemeScript.create()
 	draft = Store.default_draft("draft.new_weapon")
 	_build()
 	_apply_draft_to_controls()
+	job_poll_timer = Timer.new()
+	job_poll_timer.wait_time = 1.0
+	job_poll_timer.timeout.connect(_poll_job_status)
+	add_child(job_poll_timer)
+	job_poll_timer.start()
 	_refresh()
 
 func _build() -> void:
@@ -88,8 +95,9 @@ func _build() -> void:
 	prepare.text = "Prepare art"
 	prepare.pressed.connect(_start_job)
 	actions.add_child(prepare)
-	var add_button := Button.new()
+	add_button = Button.new()
 	add_button.text = "Add to game"
+	add_button.disabled = true
 	add_button.pressed.connect(_publish)
 	actions.add_child(add_button)
 	validation_label = _label("")
@@ -135,6 +143,55 @@ func _refresh() -> void:
 	job_list.clear()
 	for job_id in Store.list_job_receipts():
 		job_list.add_item(job_id)
+	_update_job_indicator()
+	if add_button != null:
+		add_button.disabled = not _preparation_complete(str(draft.get("art", {}).get("job_id", "")))
+
+func _poll_job_status() -> void:
+	_refresh()
+
+func _update_job_indicator() -> void:
+	var job_id := str(draft.get("art", {}).get("job_id", ""))
+	if job_id.is_empty():
+		job_label.text = "No preparation job selected."
+		return
+	var manifest := _load_preparation_manifest(job_id)
+	if not manifest.is_empty():
+		var status := str(manifest.get("status", "unknown"))
+		var progress := _manifest_progress(manifest)
+		job_label.text = "Job %s: %s, %.0f%%" % [job_id, status, progress * 100.0]
+		return
+	var receipt := Store.load_job_receipt(job_id)
+	job_label.text = "Job %s: %s" % [job_id, receipt.get("status", "unknown")]
+
+func _manifest_progress(manifest: Dictionary) -> float:
+	if str(manifest.get("status", "")) == "complete":
+		return 1.0
+	var stages: Dictionary = manifest.get("stages", {})
+	var progress := 0.0
+	for stage in ["snapshot", "cutout", "prepare", "review"]:
+		if str(stages.get(stage, {}).get("status", "")) == "complete":
+			progress = {"snapshot": 0.15, "cutout": 0.45, "prepare": 0.75, "review": 1.0}[stage]
+	return progress
+
+func _preparation_complete(job_id: String) -> bool:
+	if job_id.is_empty():
+		return false
+	var manifest := _load_preparation_manifest(job_id)
+	return str(manifest.get("status", "")) == "complete"
+
+func _load_preparation_manifest(job_id: String) -> Dictionary:
+	if job_id.is_empty() or job_id.contains("/") or job_id.contains("\\") or job_id.contains(".."):
+		return {}
+	var path := ProjectSettings.globalize_path("res://../art/weapons/runs/%s/manifest.json" % job_id)
+	if not FileAccess.file_exists(path):
+		return {}
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return {}
+	var value = JSON.parse_string(file.get_as_text())
+	file.close()
+	return value if value is Dictionary else {}
 
 func _preview_text() -> String:
 	var instance := {"instance_id": "designer-preview", "base_id": "core.heavy_breech", "rarity": "common", "item_level": int(draft.get("item_level", 1)), "implicit_modifiers": draft.get("base_modifiers", []).duplicate(true), "explicit_modifiers": draft.get("explicit_modifiers", []).duplicate(true)}
@@ -188,8 +245,7 @@ func _start_job() -> void:
 func _publish() -> void:
 	_sync_art()
 	var job_id := str(draft.get("art", {}).get("job_id", ""))
-	var receipt := Store.load_job_receipt(job_id)
-	if job_id.is_empty() or receipt.get("status", "") != "complete":
+	if not _preparation_complete(job_id):
 		validation_label.text = "A completed preparation job is required before publication."
 		return
 	var result := Publisher.publish(draft, ProjectSettings.globalize_path("res://../art/weapons/runs"), job_id)
