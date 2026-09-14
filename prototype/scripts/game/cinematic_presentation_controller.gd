@@ -35,8 +35,6 @@ func _set_presentation_light_masks() -> void:
 		_set_light_mask_recursive(hero, 1)
 	if encounter_hud != null:
 		_set_light_mask_recursive(encounter_hud, 0)
-	if loot_dev_console != null:
-		_set_light_mask_recursive(loot_dev_console, 0)
 
 func _set_light_mask_recursive(node: Node, mask: int) -> void:
 	if node is CanvasItem:

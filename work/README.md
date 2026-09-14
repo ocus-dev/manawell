@@ -1,5 +1,7 @@
 # Prototype work assignments
 
+> **Required for all agents:** Read [the agent working agreement](agents.md) before starting. Every task prompt must explicitly reference it. Its ownership, Git and integration rules apply to every queue below; historical completion notes do not establish a current integrated baseline.
+
 > **Current loot queue:** [Monster loot and hero builds](loot/README.md). Low-probability monster drops, rarity, individual item rolls, per-hero equipment and deeper stats. L01 and primary-assistant D02 review are complete; start Luna at L02 using the updated prompt and approved contracts. This supersedes unimplemented E01–E06 assumptions. Existing fixed collection behavior remains live until migration/cutover. No new tasks dispatched by this handoff.
 
 > **New planned queue:** [Research trees — Luna R01–R07](research/README.md). Two trees cover harvesting amount/cadence and weapon damage/rate/multishot/projectile speed, with selectable Rapid Seal, Deep Draw and Lance specializations. Begin with catalog/balance, then state, mechanics, compact UI and measured campaign acceptance. Coordinate shared files with remaining map/animation work; no tasks dispatched.

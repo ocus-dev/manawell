@@ -69,6 +69,9 @@ func to_save_payload() -> Dictionary:
 		"hero_kits": hero_kits.duplicate(true),
 		"inventory_migration_version": inventory_migration_version,
 		"last_loot_result": last_loot_result.duplicate(true),
+		"reward_entitlements": reward_entitlements.duplicate(true),
+		"pending_rewards": pending_rewards.duplicate(true),
+		"discarded_reward_ids": _known_ids(discarded_reward_ids),
 		"credited_run_ids": credited_ids,
 		"run_sequence": run_sequence,
 		"committed_run_id": committed_run_id,
@@ -108,6 +111,49 @@ static func validate_save_payload(payload: Dictionary, definitions: RefCounted =
 	for item_id in loot_result.get("item_ids", []):
 		if not item_id is String or not item_instance_values.any(func(instance): return str(instance.get("instance_id", "")) == item_id):
 			return {"valid": false, "error": "last loot result references an unknown item"}
+	var entitlements: Variant = payload.get("reward_entitlements", {})
+	if not entitlements is Dictionary:
+		return {"valid": false, "error": "reward entitlements must be an object"}
+	var entitlement_item_ids := {}
+	for reward_id in entitlements.keys():
+		if not reward_id is String or str(reward_id).is_empty() or not entitlements[reward_id] is Dictionary:
+			return {"valid": false, "error": "reward entitlement identity is invalid"}
+		var entitlement: Dictionary = entitlements[reward_id]
+		for field in ["node_id", "completion_run_id"]:
+			if not entitlement.get(field, "") is String:
+				return {"valid": false, "error": "reward entitlement %s is invalid" % field}
+		for field in ["item_ids", "delivered_item_ids"]:
+			if not entitlement.get(field, []) is Array:
+				return {"valid": false, "error": "reward entitlement %s is invalid" % field}
+		for item_id in entitlement.get("item_ids", []):
+			if not item_id is String or str(item_id).is_empty() or entitlement_item_ids.has(item_id):
+				return {"valid": false, "error": "reward entitlement item identity is invalid"}
+			entitlement_item_ids[item_id] = true
+		for item_id in entitlement.get("delivered_item_ids", []):
+			if not item_id is String or not item_id in entitlement.get("item_ids", []):
+				return {"valid": false, "error": "reward entitlement delivery is invalid"}
+	var pending: Variant = payload.get("pending_rewards", [])
+	if not pending is Array or pending.size() > MAX_PENDING_REWARDS:
+		return {"valid": false, "error": "pending rewards are invalid"}
+	var pending_ids := {}
+	for item in pending:
+		if not item is Dictionary:
+			return {"valid": false, "error": "pending reward item is invalid"}
+		var item_validation: Dictionary = item_definitions.validate_instance(item, production_catalog, production_affixes)
+		if not item_validation.valid or item.get("provenance", {}).get("kind", "") != "campaign":
+			return {"valid": false, "error": "pending reward item is invalid"}
+		var pending_id := str(item.get("instance_id", ""))
+		if pending_id.is_empty() or pending_ids.has(pending_id) or not entitlement_item_ids.has(pending_id):
+			return {"valid": false, "error": "pending reward identity is invalid"}
+		pending_ids[pending_id] = true
+	var discarded: Variant = payload.get("discarded_reward_ids", [])
+	if not discarded is Array:
+		return {"valid": false, "error": "discarded reward IDs must be an array"}
+	var discarded_seen := {}
+	for reward_id in discarded:
+		if not reward_id is String or str(reward_id).is_empty() or discarded_seen.has(reward_id):
+			return {"valid": false, "error": "discarded reward identity is invalid"}
+		discarded_seen[reward_id] = true
 	var kit_validation := _validate_hero_kits(payload.get("hero_kits", {}), item_instance_values, catalog)
 	if not kit_validation.valid:
 		return kit_validation
@@ -219,6 +265,11 @@ func from_save_payload(payload: Dictionary) -> void:
 	hero_kits = payload.get("hero_kits", {}).duplicate(true)
 	inventory_migration_version = int(payload.get("inventory_migration_version", 0))
 	last_loot_result = payload.get("last_loot_result", {"run_id": "", "item_ids": []}).duplicate(true)
+	reward_entitlements = payload.get("reward_entitlements", {}).duplicate(true)
+	pending_rewards.assign(payload.get("pending_rewards", []))
+	discarded_reward_ids.clear()
+	for reward_id in payload.get("discarded_reward_ids", []):
+		discarded_reward_ids[reward_id] = true
 	if inventory_migration_version < INVENTORY_MIGRATION_VERSION:
 		_migrate_legacy_items(payload)
 	if not payload.has("owned_items") and payload.has("item_instances"):

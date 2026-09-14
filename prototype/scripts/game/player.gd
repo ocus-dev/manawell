@@ -27,21 +27,21 @@ func _ready() -> void:
 	visual.configure("hero")
 	visual.set_facing(last_facing)
 
-func simulate_tick(delta: float, signed_input: float, jump_pressed: bool = false, jump_held: bool = true, drop_requested: bool = false, horizontal_speed: float = BalanceData.HERO_HORIZONTAL_SPEED) -> void:
-	simulate_motion(delta, signed_input, 0, false, jump_pressed, jump_held, drop_requested, horizontal_speed)
+func simulate_tick(delta: float, signed_input: float, jump_pressed: bool = false, jump_held: bool = true, drop_requested: bool = false) -> void:
+	simulate_motion(delta, signed_input, 0, false, jump_pressed, jump_held, drop_requested)
 
-func simulate_motion(delta: float, signed_input: float, dash_direction: int, dash_active: bool, jump_pressed: bool = false, jump_held: bool = true, drop_requested: bool = false, horizontal_speed: float = BalanceData.HERO_HORIZONTAL_SPEED) -> void:
+func simulate_motion(delta: float, signed_input: float, dash_direction: int, dash_active: bool, jump_pressed: bool = false, jump_held: bool = true, drop_requested: bool = false) -> void:
 	if not is_finite(delta) or delta < 0.0:
 		return
 	var horizontal_input := clampf(signed_input, -1.0, 1.0)
 	if not is_zero_approx(horizontal_input):
 		last_facing = 1 if horizontal_input > 0.0 else -1
-	var horizontal_speed_value := BalanceData.DASH_SPEED * 32.0 if dash_active else maxf(0.0, horizontal_speed)
+	var horizontal_speed := BalanceData.DASH_SPEED * 32.0 if dash_active else BalanceData.HERO_HORIZONTAL_SPEED
 	var horizontal_direction := horizontal_input
 	if dash_active:
 		horizontal_direction = -1.0 if dash_direction < 0 else 1.0
 		last_facing = -1 if dash_direction < 0 else 1
-	position.x = clampf(position.x + horizontal_direction * horizontal_speed_value * delta, LEFT_BOUND, RIGHT_BOUND)
+	position.x = clampf(position.x + horizontal_direction * horizontal_speed * delta, LEFT_BOUND, RIGHT_BOUND)
 	drop_through_remaining = maxf(0.0, drop_through_remaining - delta)
 	if ignored_support_id != "" and position.y > ArenaLayoutScript.hero_support_y(ignored_support_id) + ArenaLayoutScript.DROP_THROUGH_CLEARANCE:
 		ignored_support_id = ""

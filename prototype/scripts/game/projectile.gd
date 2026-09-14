@@ -17,10 +17,8 @@ var hit_target := false
 var owner_id := ""
 var target_id := ""
 var source_enemy_id: int = 0
-var pierce_remaining: int = 0
-var hit_target_ids: Dictionary = {}
 
-func setup(owner_controller: Node, origin: Vector2, target: Vector2, projectile_damage: float, speed_units: float, lifetime: float, is_hostile: bool, facing: int = 1, pierces: int = 0) -> void:
+func setup(owner_controller: Node, origin: Vector2, target: Vector2, projectile_damage: float, speed_units: float, lifetime: float, is_hostile: bool, facing: int = 1) -> void:
 	controller = owner_controller
 	position = origin
 	start_position = origin
@@ -34,7 +32,6 @@ func setup(owner_controller: Node, origin: Vector2, target: Vector2, projectile_
 	damage = projectile_damage
 	lifetime_remaining = lifetime
 	hostile = is_hostile
-	pierce_remaining = maxi(0, pierces)
 	queue_redraw()
 
 func simulate_tick(delta: float) -> void:
@@ -51,20 +48,15 @@ func simulate_tick(delta: float) -> void:
 	if hostile:
 		hit = controller.is_hero_on_segment(previous_position, position)
 	else:
-		target = controller.closest_live_enemy_between(previous_position, position, hit_target_ids)
+		target = controller.closest_live_enemy_between(previous_position, position)
 		hit = target != null
 	if hit:
 		hit_target = true
 		if hostile:
 			controller.apply_enemy_damage(RunStateScript.DamageTarget.HERO, damage)
 		elif target != null:
-			controller.apply_hero_attack_damage(target, damage, "gun")
-			var target_key := "enemy-%d" % target.enemy_id
-			hit_target_ids[target_key] = true
-			if pierce_remaining > 0:
-				pierce_remaining -= 1
-			else:
-				queue_free()
+			target.take_damage(damage)
+		queue_free()
 	queue_redraw()
 
 func _draw() -> void:

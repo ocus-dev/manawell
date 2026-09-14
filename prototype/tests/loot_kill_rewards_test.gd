@@ -9,10 +9,10 @@ const Enemy = preload("res://scripts/game/melee_enemy.gd")
 
 func _init() -> void:
     _test_account_transaction()
-    _test_campaign_has_no_fixed_grant()
+    _test_campaign_delivers_authored_grant()
     _test_snapshot_ledgers()
     _test_deferred_controller_death()
-    print("PASS L06 loot transactions: exact collection, duplicate protection, deferred death, retired ledgers, no fixed campaign grants")
+    print("PASS loot transactions: exact collection, duplicate protection, deferred death, retired ledgers, authored campaign grants")
     quit(0)
 
 func _input(state: int, enemy_id: int = 7) -> Dictionary:
@@ -43,14 +43,16 @@ func _test_account_transaction() -> void:
         push_error("account payload rejected after collection: %s" % payload_validation.error)
         quit(1)
 
-func _test_campaign_has_no_fixed_grant() -> void:
+func _test_campaign_delivers_authored_grant() -> void:
     var account := Account.new()
     var campaign := Campaign.new()
     assert(campaign.start_node("act_01", "act_01_node_01"))
     var result := {"run_id": "campaign-l06", "phase": Run.Phase.SUCCESS, "payout": 1, "completed_surges": 1}
     assert(campaign.commit_terminal_result(result, account))
-    assert(account.item_instances.is_empty())
-    assert(account.last_loot_result.item_ids.is_empty())
+    assert(account.item_instances.size() == 1)
+    assert(account.reward_entitlements.size() == 1)
+    assert(account.reward_entitlements.has("act_01_node_01.first_clear.heavy_breech"))
+    assert(account.reward_entitlements["act_01_node_01.first_clear.heavy_breech"].delivered_item_ids.size() == 1)
 
 func _test_snapshot_ledgers() -> void:
     var controller: Node = load("res://scenes/main.tscn").instantiate()

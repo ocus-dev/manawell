@@ -1,6 +1,8 @@
 # Cinematic foundry experiment — Luna assignments
 
-Status: Ready for exploration. Do not replace the active game's art or renderer.
+Status: C04 drill-first lighting pass in progress; C02 art review still pending. Do not replace the active game's art or renderer.
+
+Current checkpoint: `prototype/scenes/experiments/cinematic_foundry.tscn` attaches one restrained drill `PointLight2D`, authored exhaust/contact/lamp markers, front/rear steam and contact sparks, and a shared muzzle flash for single shots and volleys. F1 cycles baseline / environment-only / effects-only / full. C02 generated art remains unapproved, so environment comparison still uses the prepared baseline rather than substituting debug geometry.
 
 ## Objective
 Build one isolated playable comparison scene that tests whether richer environments, grounded actors and restrained lighting deliver the reference's industrial scale while preserving combat readability. Keep the existing animated actors initially. Preserve the current left-edge drill (40% enlarged), right-only enemy arrivals, platforming, actor ground anchors and gameplay balance.
@@ -87,3 +89,6 @@ REVIEW B: Present the visual comparison and recommendation. Wait for user select
 Only if REVIEW B shows the existing actors are the remaining mismatch, propose a separate sprite/animation assignment. Retain strict framing and animation calibration; trial one hero idle/run pair before a library-wide change.
 Suggested style addition: Preserve the reference design, proportions and side-facing silhouette. Realistically shaded painted metal or organic shell, restrained outlines, readable material highlights, soft upper-left key light and cool ambient fill. Neutral background for extraction. No ground shadow, scenery, particles or camera movement.
 Keep baked actor lighting gentle because facing flips can reverse it.
+
+## Corrective verification
+The foundry regression now checks multi-frame shadow disabling, frozen animation frame/progress, prepared baseline preservation, and repeat reset seed/position/spawn-index behavior. The original support-placement checks remain. Soft edges use layered opacity, pending visual review at actual game size. Lighting, final material response, candidate selection, visual captures and performance acceptance remain outstanding; see the workflow handoff for the unreviewed candidate inventory.

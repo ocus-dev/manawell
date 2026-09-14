@@ -1,0 +1,94 @@
+{
+  "seed": 20260913,
+  "players_per_profile": 100,
+  "horizon_seconds": 86400,
+  "max_attempts": 300,
+  "tick_seconds": 0.5,
+  "combat": {
+    "contact_probability_per_second": 0.12,
+    "skill_spread": 0.18,
+    "pulse_efficiency": 0.35,
+    "fan_extra_hit_fraction": 0.35,
+    "travel_seconds": 3.0
+  },
+  "profiles": [
+    {
+      "name": "target_1",
+      "skill": 1.0,
+      "target_surges": 1,
+      "retreat_health": 0.3,
+      "push_probability": 0.75,
+      "menu_seconds": 15,
+      "session_seconds": 1800,
+      "absence_seconds": 10800,
+      "purchase_style": "balanced",
+      "loadout": "standard",
+      "specialization": "harvest.rapid_seal"
+    },
+    {
+      "name": "target_2",
+      "skill": 1.0,
+      "target_surges": 2,
+      "retreat_health": 0.3,
+      "push_probability": 0.75,
+      "menu_seconds": 15,
+      "session_seconds": 1800,
+      "absence_seconds": 10800,
+      "purchase_style": "balanced",
+      "loadout": "standard",
+      "specialization": "harvest.rapid_seal"
+    },
+    {
+      "name": "target_3",
+      "skill": 1.0,
+      "target_surges": 3,
+      "retreat_health": 0.3,
+      "push_probability": 0.75,
+      "menu_seconds": 15,
+      "session_seconds": 1800,
+      "absence_seconds": 10800,
+      "purchase_style": "balanced",
+      "loadout": "standard",
+      "specialization": "harvest.rapid_seal"
+    },
+    {
+      "name": "target_4",
+      "skill": 1.0,
+      "target_surges": 4,
+      "retreat_health": 0.3,
+      "push_probability": 0.75,
+      "menu_seconds": 15,
+      "session_seconds": 1800,
+      "absence_seconds": 10800,
+      "purchase_style": "balanced",
+      "loadout": "standard",
+      "specialization": "harvest.rapid_seal"
+    },
+    {
+      "name": "target_6",
+      "skill": 1.0,
+      "target_surges": 6,
+      "retreat_health": 0.3,
+      "push_probability": 0.75,
+      "menu_seconds": 15,
+      "session_seconds": 1800,
+      "absence_seconds": 10800,
+      "purchase_style": "balanced",
+      "loadout": "standard",
+      "specialization": "harvest.rapid_seal"
+    },
+    {
+      "name": "target_8",
+      "skill": 1.0,
+      "target_surges": 8,
+      "retreat_health": 0.3,
+      "push_probability": 0.75,
+      "menu_seconds": 15,
+      "session_seconds": 1800,
+      "absence_seconds": 10800,
+      "purchase_style": "balanced",
+      "loadout": "standard",
+      "specialization": "harvest.rapid_seal"
+    }
+  ]
+}

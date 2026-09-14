@@ -1,6 +1,6 @@
-[gd_resource type="SpriteFrames" load_steps=22 format=3]
+[gd_resource type="SpriteFrames" format=3 uid="uid://b1e8tmu8khiyi"]
 
-[ext_resource type="Texture2D" path="atlas.png" id="1"]
+[ext_resource type="Texture2D" uid="uid://dbwbc8r0tt7ik" path="res://assets/side-view/animations/hero_attack/atlas.png" id="1"]
 
 [sub_resource type="AtlasTexture" id="Frame_0"]
 atlas = ExtResource("1")
@@ -83,23 +83,69 @@ atlas = ExtResource("1")
 region = Rect2(1200, 900, 400, 450)
 
 [resource]
-animations = [{"frames": [{"duration": 1.0, "texture": SubResource("Frame_0")},
-{"duration": 1.0, "texture": SubResource("Frame_1")},
-{"duration": 1.0, "texture": SubResource("Frame_2")},
-{"duration": 1.0, "texture": SubResource("Frame_3")},
-{"duration": 1.0, "texture": SubResource("Frame_4")},
-{"duration": 1.0, "texture": SubResource("Frame_5")},
-{"duration": 1.0, "texture": SubResource("Frame_6")},
-{"duration": 1.0, "texture": SubResource("Frame_7")},
-{"duration": 1.0, "texture": SubResource("Frame_8")},
-{"duration": 1.0, "texture": SubResource("Frame_9")},
-{"duration": 1.0, "texture": SubResource("Frame_10")},
-{"duration": 1.0, "texture": SubResource("Frame_11")},
-{"duration": 1.0, "texture": SubResource("Frame_12")},
-{"duration": 1.0, "texture": SubResource("Frame_13")},
-{"duration": 1.0, "texture": SubResource("Frame_14")},
-{"duration": 1.0, "texture": SubResource("Frame_15")},
-{"duration": 1.0, "texture": SubResource("Frame_16")},
-{"duration": 1.0, "texture": SubResource("Frame_17")},
-{"duration": 1.0, "texture": SubResource("Frame_18")},
-{"duration": 0.5000000000000009, "texture": SubResource("Frame_19")}], "loop": false, "name": &"attack", "speed": 12.0}]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("Frame_0")
+}, {
+"duration": 1.0,
+"texture": SubResource("Frame_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("Frame_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("Frame_3")
+}, {
+"duration": 1.0,
+"texture": SubResource("Frame_4")
+}, {
+"duration": 1.0,
+"texture": SubResource("Frame_5")
+}, {
+"duration": 1.0,
+"texture": SubResource("Frame_6")
+}, {
+"duration": 1.0,
+"texture": SubResource("Frame_7")
+}, {
+"duration": 1.0,
+"texture": SubResource("Frame_8")
+}, {
+"duration": 1.0,
+"texture": SubResource("Frame_9")
+}, {
+"duration": 1.0,
+"texture": SubResource("Frame_10")
+}, {
+"duration": 1.0,
+"texture": SubResource("Frame_11")
+}, {
+"duration": 1.0,
+"texture": SubResource("Frame_12")
+}, {
+"duration": 1.0,
+"texture": SubResource("Frame_13")
+}, {
+"duration": 1.0,
+"texture": SubResource("Frame_14")
+}, {
+"duration": 1.0,
+"texture": SubResource("Frame_15")
+}, {
+"duration": 1.0,
+"texture": SubResource("Frame_16")
+}, {
+"duration": 1.0,
+"texture": SubResource("Frame_17")
+}, {
+"duration": 1.0,
+"texture": SubResource("Frame_18")
+}, {
+"duration": 0.5,
+"texture": SubResource("Frame_19")
+}],
+"loop": 0,
+"name": &"attack",
+"speed": 12.0
+}]

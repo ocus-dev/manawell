@@ -4,6 +4,10 @@ extends RefCounted
 const BalanceData = preload("res://data/balance.gd")
 const ResearchCatalogScript = preload("res://scripts/model/research_catalog.gd")
 const LevelDataLoaderScript = preload("res://scripts/model/level_data_loader.gd")
+static var _cached_wells: Dictionary = {}
+
+static func invalidate_cache() -> void:
+	_cached_wells.clear()
 
 var wells: Dictionary = {
 	"well_1": {"label": "Well 1", "base_output": BalanceData.WELL_1_BASE_OUTPUT, "spawn_interval_factor": 1.0, "enemy_damage_factor": 1.0},
@@ -29,6 +33,9 @@ var surge_rules: Array[Dictionary] = [
 ]
 
 func _init() -> void:
+	if not _cached_wells.is_empty():
+		wells = _cached_wells.duplicate(true)
+		return
 	var loader: RefCounted = LevelDataLoaderScript.new()
 	if not loader.load("res://data/campaign"):
 		return
@@ -49,6 +56,7 @@ func _init() -> void:
 				"enemy_damage_factor": float(well.get("enemy_damage_factor", 1.0)),
 				"source_level_id": level_id,
 			}
+	_cached_wells = wells.duplicate(true)
 
 func define_well(well_id: String, definition: Dictionary) -> void:
 	wells[well_id] = definition.duplicate(true)

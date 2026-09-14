@@ -1,10 +1,11 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3 uid="uid://bme2hw3vkj5nc"]
 
-[ext_resource type="Script" path="res://scripts/game/cinematic_presentation_controller.gd" id="1_main"]
-[ext_resource type="Script" path="res://scripts/game/player.gd" id="2_hero"]
-[node name="SideViewDefense" type="Node2D"]
+[ext_resource type="Script" uid="uid://kjnagcscgtyi" path="res://scripts/game/cinematic_presentation_controller.gd" id="1_main"]
+[ext_resource type="Script" uid="uid://bb7ryxl0cro6b" path="res://scripts/game/player.gd" id="2_hero"]
+
+[node name="SideViewDefense" type="Node2D" unique_id=265919819]
 script = ExtResource("1_main")
 
-[node name="Hero" type="Node2D" parent="."]
+[node name="Hero" type="Node2D" parent="." unique_id=2061311390]
 position = Vector2(320, 612)
 script = ExtResource("2_hero")

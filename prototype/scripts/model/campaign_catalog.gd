@@ -2,12 +2,24 @@ class_name CampaignCatalog
 extends RefCounted
 
 const LevelDataLoaderScript = preload("res://scripts/model/level_data_loader.gd")
+const DEFAULT_ROOT := "res://data/campaign"
+static var _cached_acts: Dictionary = {}
+static var _cached_order: Array[String] = []
+
+static func invalidate_cache() -> void:
+	_cached_acts.clear()
+	_cached_order.clear()
 
 var acts: Dictionary = {}
 var act_order: Array[String] = []
 var validation_error: String = ""
 
 func _init(data_root: String = "res://data/campaign") -> void:
+	# Custom fixture roots stay uncached; invalid definitions never enter the cache.
+	if data_root == DEFAULT_ROOT and not _cached_acts.is_empty():
+		acts = _cached_acts.duplicate(true)
+		act_order = _cached_order.duplicate()
+		return
 	var loader: RefCounted = LevelDataLoaderScript.new()
 	if not loader.load(data_root):
 		var diagnostics: Array = loader.get_diagnostics()
@@ -29,6 +41,9 @@ func _init(data_root: String = "res://data/campaign") -> void:
 		if not result["valid"]:
 			validation_error = result["error"]
 			break
+	if data_root == DEFAULT_ROOT and validation_error.is_empty():
+		_cached_acts = acts.duplicate(true)
+		_cached_order = act_order.duplicate()
 
 func is_valid() -> bool:
 	return validation_error.is_empty()

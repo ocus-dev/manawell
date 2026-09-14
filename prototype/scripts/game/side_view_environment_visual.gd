@@ -4,7 +4,7 @@ extends Node2D
 const ArenaLayoutScript = preload("res://data/arena_layout.gd")
 const LOGICAL_SIZE := Vector2(1280.0, 720.0)
 const GROUND_Y := 652.0
-const BACKDROP_PATH := "res://assets/side-view/environment/backdrop.png"
+const BACKDROP_PATH := "res://assets/side-view/environment/backdrop_level_1.png"
 const LANE_PATH := "res://assets/side-view/environment/lane.png"
 
 @export var use_prepared_layers := true

@@ -2,8 +2,8 @@ class_name RunSnapshot
 extends RefCounted
 
 const SNAPSHOT_VERSION: int = 5
-const LEGACY_SNAPSHOT_VERSION: int = 1
-const CONFIG_VERSION: String = "prototype-loot-v1"
+const LEGACY_SNAPSHOT_VERSION: int = 4
+const CONFIG_VERSION: String = "prototype-platform-recovery-v1"
 const RunStateScript = preload("res://scripts/model/run_state.gd")
 const ArenaLayoutScript = preload("res://data/arena_layout.gd")
 
@@ -24,15 +24,11 @@ static func encode(snapshot: Dictionary) -> Dictionary:
 			"weapon_state": normalized["weapon_state"],
 			"spawner": normalized["spawner"],
 			"arena_config_id": normalized["arena_config_id"],
+			"level_definition": normalized["level_definition"],
+			"level_content_hash": normalized["level_content_hash"],
 			"campaign": normalized["campaign"],
-			"director": normalized["director"],
-			"resolved_stats": normalized["resolved_stats"],
-			"equipped_instance_ids": normalized["equipped_instance_ids"],
-			"selected_weapon_mode": normalized["selected_weapon_mode"],
-			"regen_state": normalized["regen_state"],
-			"weapon_runtime": normalized["weapon_runtime"],
-			"harvest_runtime": normalized["harvest_runtime"],
-			"loot_state": normalized["loot_state"],
+			"objective": normalized["objective"],
+			"reward_state": normalized["reward_state"],
 		},
 	}
 
@@ -44,6 +40,9 @@ static func decode(payload: Variant) -> Dictionary:
 		return {"valid": false, "error": "unsupported snapshot version"}
 	if not payload.get("config_version", "") is String or payload.get("config_version", "") != CONFIG_VERSION:
 		return {"valid": false, "error": "incompatible snapshot config version"}
+	for field in ["level_definition", "level_content_hash", "campaign", "objective", "reward_state"]:
+		if not payload.has(field):
+			return {"valid": false, "error": "snapshot missing %s" % field}
 	var normalized: Dictionary = _with_defaults(payload)
 	var validation: Dictionary = validate(normalized)
 	if not validation["valid"]:
@@ -64,29 +63,23 @@ static func _with_defaults(snapshot: Dictionary) -> Dictionary:
 		var spawner: Dictionary = normalized["spawner"].duplicate(true)
 		if not spawner.has("next_id"):
 			spawner["next_id"] = 1
+		if not spawner.has("rng_state"):
+			spawner["rng_state"] = 1
 		normalized["spawner"] = spawner
+	if not normalized.has("level_definition"):
+		normalized["level_definition"] = {}
+	if not normalized.has("level_content_hash"):
+		normalized["level_content_hash"] = ""
 	if not normalized.has("campaign"):
 		normalized["campaign"] = {}
-	if not normalized.has("director"):
-		normalized["director"] = {}
-	if not normalized.has("resolved_stats"):
-		normalized["resolved_stats"] = {"damage": 10.0, "attacks_per_second": 1.6666666667, "projectile_speed": 18.0, "max_health": 100.0, "move_speed": 192.0, "armor": 0.0, "health_regen": 0.0, "mining_bonus": 0.0, "drop_bonus": 0.0}
-	if not normalized.has("equipped_instance_ids"):
-		normalized["equipped_instance_ids"] = {"weapon": "", "hero": "", "harvester": ""}
-	if not normalized.has("selected_weapon_mode"):
-		normalized["selected_weapon_mode"] = "weapon.standard"
-	if not normalized.has("regen_state"):
-		normalized["regen_state"] = {"remaining_delay": 0.0}
-	if not normalized.has("weapon_runtime"):
-		normalized["weapon_runtime"] = {"interval": 0.6, "count": 1, "pierce": 0, "speed": 18.0}
-	if not normalized.has("harvest_runtime"):
-		normalized["harvest_runtime"] = {"cadence": 1.0, "accumulator": 0.0, "specialization": "harvest.standard"}
-	if not normalized.has("loot_state"):
-		normalized["loot_state"] = {"enabled": false, "generation_version": "loot-v1", "item_level": 1, "rng_state": 1, "retired_ranges": [], "acquired_item_ids": []}
+	if not normalized.has("objective"):
+		normalized["objective"] = {"objective_id": "", "progress": 0, "required": 0, "credited_ids": []}
+	if not normalized.has("reward_state"):
+		normalized["reward_state"] = {"claim_receipts": [], "pending_items": []}
 	return normalized
 
 static func validate(snapshot: Dictionary) -> Dictionary:
-	for field in ["run_state", "actors", "projectiles", "player_abilities", "spawner", "weapon_state", "arena_config_id"]:
+	for field in ["run_state", "actors", "projectiles", "player_abilities", "spawner", "weapon_state", "arena_config_id", "level_definition", "level_content_hash", "campaign", "objective", "reward_state"]:
 		if not snapshot.has(field):
 			return {"valid": false, "error": "snapshot missing %s" % field}
 	if not _valid_string(snapshot["arena_config_id"]) or snapshot["arena_config_id"] != ArenaLayoutScript.CONFIG_ID:
@@ -95,19 +88,6 @@ static func validate(snapshot: Dictionary) -> Dictionary:
 		return {"valid": false, "error": "snapshot state sections must be objects"}
 	if not snapshot["actors"] is Array or not snapshot["projectiles"] is Array:
 		return {"valid": false, "error": "actors and projectiles must be arrays"}
-	for field in ["campaign", "director", "resolved_stats", "equipped_instance_ids", "selected_weapon_mode", "regen_state", "weapon_runtime", "harvest_runtime", "loot_state"]:
-		if not snapshot.has(field):
-			return {"valid": false, "error": "snapshot missing %s" % field}
-	if not snapshot["campaign"] is Dictionary or not snapshot["director"] is Dictionary or not snapshot["resolved_stats"] is Dictionary or not snapshot["equipped_instance_ids"] is Dictionary or not snapshot["regen_state"] is Dictionary or not snapshot["weapon_runtime"] is Dictionary or not snapshot["harvest_runtime"] is Dictionary or not snapshot["loot_state"] is Dictionary:
-		return {"valid": false, "error": "snapshot v5 sections must be objects"}
-	if not snapshot["selected_weapon_mode"] is String:
-		return {"valid": false, "error": "snapshot weapon mode is invalid"}
-	var loot_state: Dictionary = snapshot["loot_state"]
-	if not loot_state.get("enabled", false) is bool or loot_state.get("generation_version", "") != "loot-v1" or not _valid_integer(loot_state.get("item_level", 0)) or int(loot_state.get("item_level", 0)) < 1 or not _valid_integer(loot_state.get("rng_state", 0)) or int(loot_state.get("rng_state", 0)) < 1:
-		return {"valid": false, "error": "snapshot loot state is invalid"}
-	var loot_validation := _validate_loot_state(loot_state, snapshot["spawner"], snapshot["actors"])
-	if not loot_validation.valid:
-		return loot_validation
 	var run_validation: Dictionary = _validate_run_state(snapshot["run_state"])
 	if not run_validation["valid"]:
 		return run_validation
@@ -120,6 +100,9 @@ static func validate(snapshot: Dictionary) -> Dictionary:
 	var weapon_validation: Dictionary = _validate_weapon(snapshot["weapon_state"])
 	if not weapon_validation["valid"]:
 		return weapon_validation
+	var frozen_validation: Dictionary = _validate_frozen_state(snapshot)
+	if not frozen_validation["valid"]:
+		return frozen_validation
 	var actor_ids: Dictionary = {}
 	var hero_count: int = 0
 	var machine_count: int = 0
@@ -148,38 +131,6 @@ static func validate(snapshot: Dictionary) -> Dictionary:
 		if projectile_ids.has(projectile_id):
 			return {"valid": false, "error": "projectile IDs must be unique"}
 		projectile_ids[projectile_id] = true
-	return {"valid": true}
-
-static func _validate_loot_state(loot_state: Dictionary, spawner: Dictionary, actors: Array) -> Dictionary:
-	if not loot_state.get("retired_ranges", []) is Array or not loot_state.get("acquired_item_ids", []) is Array:
-		return {"valid": false, "error": "snapshot loot ledgers must be arrays"}
-	var previous_end := 0
-	var first_range := true
-	var live_ids := {}
-	for actor in actors:
-		if actor is Dictionary and str(actor.get("id", "")).begins_with("enemy-"):
-			live_ids[int(str(actor["id"]).trim_prefix("enemy-"))] = true
-	for interval in loot_state["retired_ranges"]:
-		if not interval is Array or interval.size() != 2 or not _valid_integer(interval[0]) or not _valid_integer(interval[1]):
-			return {"valid": false, "error": "snapshot retired range is invalid"}
-		var range_start := int(interval[0])
-		var range_end := int(interval[1])
-		var contains_live_id := false
-		for live_id in live_ids.keys():
-			if int(live_id) >= range_start and int(live_id) <= range_end:
-				contains_live_id = true
-				break
-		if range_start < 1 or range_end < range_start or (not first_range and range_start <= previous_end) or contains_live_id:
-			return {"valid": false, "error": "snapshot retired ranges overlap live or prior IDs"}
-		if range_end >= int(spawner.get("next_id", 0)):
-			return {"valid": false, "error": "snapshot retired range exceeds next enemy ID"}
-		previous_end = range_end
-		first_range = false
-	var seen_items := {}
-	for item_id in loot_state["acquired_item_ids"]:
-		if not item_id is String or item_id.is_empty() or seen_items.has(item_id):
-			return {"valid": false, "error": "snapshot acquired item IDs are invalid"}
-		seen_items[item_id] = true
 	return {"valid": true}
 
 static func _validate_run_state(state: Dictionary) -> Dictionary:
@@ -288,16 +239,83 @@ static func _validate_abilities(abilities: Dictionary) -> Dictionary:
 	return {"valid": true}
 
 static func _validate_spawner(spawner: Dictionary) -> Dictionary:
-	for field in ["spawn_timer", "spawn_index", "spawn_position", "config_id", "next_id"]:
+	for field in ["spawn_timer", "spawn_index", "spawn_position", "config_id", "next_id", "rng_state"]:
 		if not spawner.has(field):
 			return {"valid": false, "error": "spawner missing %s" % field}
 	if not _finite_nonnegative(spawner["spawn_timer"]) or not _valid_integer(spawner["spawn_index"]) or int(spawner["spawn_index"]) < 0 or not _valid_vector(spawner["spawn_position"]):
 		return {"valid": false, "error": "spawner state is invalid"}
 	if not _valid_integer(spawner["next_id"]) or int(spawner["next_id"]) < 1:
 		return {"valid": false, "error": "spawner next ID is invalid"}
+	if not _valid_integer(spawner["rng_state"]) or int(spawner["rng_state"]) < 1 or int(spawner["rng_state"]) >= 2147483647:
+		return {"valid": false, "error": "spawner RNG state is invalid"}
 	if not _valid_string(spawner["config_id"]) or str(spawner["config_id"]).is_empty():
 		return {"valid": false, "error": "spawner config ID is invalid"}
 	return {"valid": true}
+
+static func _validate_frozen_state(snapshot: Dictionary) -> Dictionary:
+	if not snapshot["level_definition"] is Dictionary or not _valid_string(snapshot["level_content_hash"]):
+		return {"valid": false, "error": "frozen level definition is invalid"}
+	var definition: Dictionary = snapshot["level_definition"]
+	var content_hash := str(snapshot["level_content_hash"])
+	if definition.is_empty() != content_hash.is_empty():
+		return {"valid": false, "error": "frozen level definition and hash must agree"}
+	if not content_hash.is_empty() and content_hash != _definition_hash(definition):
+		return {"valid": false, "error": "frozen level definition hash mismatch"}
+	for field in ["campaign", "objective", "reward_state"]:
+		if not snapshot[field] is Dictionary:
+			return {"valid": false, "error": "%s state must be an object" % field}
+	var objective: Dictionary = snapshot["objective"]
+	for field in ["objective_id", "progress", "required", "credited_ids"]:
+		if not objective.has(field):
+			return {"valid": false, "error": "objective state missing %s" % field}
+	if not _valid_string(objective["objective_id"]) or not _valid_integer(objective["progress"]) or int(objective["progress"]) < 0 or not _valid_integer(objective["required"]) or int(objective["required"]) < 0 or not objective["credited_ids"] is Array:
+		return {"valid": false, "error": "objective state is invalid"}
+	var credited: Dictionary = {}
+	for credited_id in objective["credited_ids"]:
+		if not _valid_string(credited_id) or str(credited_id).is_empty() or credited.has(credited_id):
+			return {"valid": false, "error": "objective credited IDs are invalid"}
+		credited[credited_id] = true
+	var rewards: Dictionary = snapshot["reward_state"]
+	for field in ["claim_receipts", "pending_items"]:
+		if not rewards.has(field) or not rewards[field] is Array:
+			return {"valid": false, "error": "reward state is invalid"}
+	var receipts: Dictionary = {}
+	for receipt in rewards["claim_receipts"]:
+		if not _valid_string(receipt) or str(receipt).is_empty() or receipts.has(receipt):
+			return {"valid": false, "error": "claim receipts are invalid"}
+		receipts[receipt] = true
+	for item in rewards["pending_items"]:
+		if not item is Dictionary or not _valid_string(item.get("instance_id", "")) or str(item.get("instance_id", "")).is_empty():
+			return {"valid": false, "error": "pending reward item is invalid"}
+	return {"valid": true}
+
+static func _definition_hash(definition: Dictionary) -> String:
+	var copy := definition.duplicate(true)
+	copy.erase("content_hash")
+	var context := HashingContext.new()
+	context.start(HashingContext.HASH_SHA256)
+	context.update(_canonical_json(copy).to_utf8_buffer())
+	return context.finish().hex_encode()
+
+static func content_hash_for(definition: Dictionary) -> String:
+	return _definition_hash(definition)
+
+static func _canonical_json(value: Variant) -> String:
+	if value is Dictionary:
+		var keys: Array[String] = []
+		for key in value.keys():
+			keys.append(str(key))
+		keys.sort()
+		var parts: Array[String] = []
+		for key in keys:
+			parts.append(JSON.stringify(key) + ":" + _canonical_json(value[key]))
+		return "{" + ",".join(parts) + "}"
+	if value is Array:
+		var entries: Array[String] = []
+		for item in value:
+			entries.append(_canonical_json(item))
+		return "[" + ",".join(entries) + "]"
+	return JSON.stringify(value)
 
 static func _valid_vector(value: Variant) -> bool:
 	return value is Array and value.size() == 2 and value.all(func(component): return (component is int or component is float) and is_finite(float(component)))

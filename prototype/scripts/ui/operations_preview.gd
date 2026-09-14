@@ -8,7 +8,7 @@ const ExpeditionPanelScript = preload("res://scripts/ui/expedition_panel.gd")
 const ResourceStripScript = preload("res://scripts/ui/resource_strip.gd")
 const UpgradeCardScript = preload("res://scripts/ui/upgrade_card.gd")
 const CampaignMapScript = preload("res://scripts/ui/campaign_map.gd")
-const ENVIRONMENT_THUMBNAIL: Texture2D = preload("res://assets/side-view/environment/backdrop.png")
+const ENVIRONMENT_THUMBNAIL: Texture2D = preload("res://assets/side-view/environment/backdrop_level_1.png")
 const MONSTER_PORTRAITS: Dictionary = {
 	"pursuer": preload("res://assets/side-view/pursuer.png"),
 	"breaker": preload("res://assets/side-view/breaker.png"),
