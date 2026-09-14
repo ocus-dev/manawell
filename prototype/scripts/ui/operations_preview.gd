@@ -54,6 +54,7 @@ var monster_role_label: Label
 var monster_flavor_label: Label
 var monster_buttons: Dictionary = {}
 var selected_monster_id := "pursuer"
+var fitted_pages: Dictionary = {}
 
 func _get_minimum_size() -> Vector2:
 	return Vector2.ZERO
@@ -101,9 +102,9 @@ func _build() -> void:
 	margin.name = "OuterMargin"
 	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	for edge in ["left", "right"]:
-		margin.add_theme_constant_override("margin_" + edge, 16)
-	margin.add_theme_constant_override("margin_top", 8)
-	margin.add_theme_constant_override("margin_bottom", 0)
+		margin.add_theme_constant_override("margin_" + edge, 12)
+	margin.add_theme_constant_override("margin_top", 6)
+	margin.add_theme_constant_override("margin_bottom", 6)
 	scroll.add_child(margin)
 	var content := VBoxContainer.new()
 	content.name = "OperationsContent"
@@ -194,6 +195,13 @@ func _build() -> void:
 	well_popup.hero_selected.connect(func(hero_id: String, well_id: String): hero_selected.emit(hero_id, "guard", well_id))
 	well_popup.guard_recall_requested.connect(func(well_id: String): guard_recall_requested.emit(well_id))
 	add_child(well_popup)
+	for entry in [["operations", body], ["map", campaign_map], ["research", research_panel]]:
+		var fit = preload("res://scripts/ui/fitted_page.gd").new()
+		fit.name = str(entry[0]).capitalize() + "PageFit"
+		fit.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		content.add_child(fit)
+		fit.configure(entry[1])
+		fitted_pages[entry[0]] = fit
 	_show_page("operations")
 
 func _research_region() -> Control:
@@ -364,6 +372,13 @@ func _add_navigation_button(page_id: String, label: String) -> void:
 
 func _show_page(page_id: String) -> void:
 	active_page = page_id
+	var fitted := fitted_pages.has(page_id)
+	operations_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED if fitted else ScrollContainer.SCROLL_MODE_AUTO
+	operations_scroll.scroll_vertical = 0
+	var outer := operations_scroll.get_node("OuterMargin") as Control
+	outer.size_flags_vertical = Control.SIZE_EXPAND_FILL if fitted else Control.SIZE_FILL
+	for key in fitted_pages:
+		fitted_pages[key].visible = key == page_id
 	body.visible = page_id == "operations"
 	campaign_map.visible = page_id == "map"
 	research_panel.visible = page_id == "research"

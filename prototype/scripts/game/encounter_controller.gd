@@ -121,6 +121,8 @@ func _ready() -> void:
 	encounter_hud.guard_assigned.connect(assign_guard_by_id)
 	encounter_hud.guard_recalled.connect(recall_guard_by_well_id)
 	encounter_hud.upgrade_requested.connect(purchase_upgrade)
+	encounter_hud.campaign_node_selected.connect(select_campaign_node)
+	encounter_hud.campaign_node_activate.connect(activate_campaign_node)
 	_update_hud()
 	_restore_saved_snapshot()
 	queue_redraw()
@@ -304,9 +306,43 @@ func request_harvest() -> bool:
 
 func request_start_or_harvest() -> void:
 	if run_state.phase == RunStateScript.Phase.READY:
-		start_run()
+		var catalog: RefCounted = campaign_state_catalog()
+		var stage: Dictionary = campaign_state.furthest_progression_node(catalog)
+		if not stage.is_empty():
+			var act_id: String = campaign_state.active_act_id if not campaign_state.active_act_id.is_empty() else catalog.first_act_id()
+			start_campaign_node(act_id, str(stage.get("id", "")))
 	elif run_state.phase == RunStateScript.Phase.EXTRACTING:
 		request_harvest()
+
+func campaign_state_catalog() -> RefCounted:
+	return CampaignCatalogScript.new()
+
+func start_campaign_node(act_id: String, node_id: String) -> bool:
+	if run_state.phase != RunStateScript.Phase.READY or not campaign_state.start_node(act_id, node_id, campaign_state_catalog()):
+		return false
+	var node: Dictionary = campaign_state_catalog().get_node(act_id, node_id)
+	var well_id: String = str(node.get("well_id", selected_well_id))
+	if node.is_empty() or not content_catalog.has_well(well_id) or not account_state.is_well_unlocked(well_id):
+		campaign_state.clear_active_node()
+		return false
+	selected_well_id = well_id
+	selected_loadout_id = account_state.get_loadout_for_well(well_id)
+	if not start_run():
+		campaign_state.clear_active_node()
+		return false
+	frozen_level_definition = node.get("level_data", {}).duplicate(true)
+	frozen_level_content_hash = SnapshotScript.content_hash_for(frozen_level_definition)
+	return true
+
+func select_campaign_node(act_id: String, node_id: String) -> bool:
+	return campaign_state.node_status(act_id, node_id, campaign_state_catalog())["status"] != CampaignStateScript.STATUS_LOCKED
+
+func activate_campaign_node(act_id: String, node_id: String) -> bool:
+	if run_state.phase != RunStateScript.Phase.READY:
+		assignment_notice = "Resolve the current encounter before starting another level."
+		_update_hud()
+		return false
+	return start_campaign_node(act_id, node_id)
 
 func select_well_by_id(well_id: String) -> bool:
 	if run_state.phase != RunStateScript.Phase.READY and run_state.phase != RunStateScript.Phase.SUCCESS and run_state.phase != RunStateScript.Phase.FAILED:
@@ -439,7 +475,8 @@ func _credit_if_complete() -> void:
 	if run_state.phase != RunStateScript.Phase.SUCCESS or credited_run_id == run_state.run_id:
 		return
 	var result: Dictionary = run_state.get_terminal_result()
-	if account_state.complete_run(result, run_state.run_id, run_state.selected_well_id, run_state.completed_surges):
+	var completed: bool = campaign_state.commit_terminal_result(result, account_state, campaign_state_catalog()) if not campaign_state.active_node_id.is_empty() else account_state.complete_run(result, run_state.run_id, run_state.selected_well_id, run_state.completed_surges)
+	if completed:
 		credited_run_id = run_state.run_id
 		_save_account()
 
@@ -607,7 +644,7 @@ func _update_hud() -> void:
 		"dash_cooldown_remaining": dash_cooldown_remaining,
 		"pulse_cooldown_remaining": pulse_cooldown_remaining,
 	}
-	var view_state: Dictionary = UiViewStateScript.build(account_state, run_state, selected_well_id, {}, ability_state)
+	var view_state: Dictionary = UiViewStateScript.build(account_state, run_state, selected_well_id, {}, ability_state, campaign_state)
 	view_state["director"] = get_director_state()
 	var combat_view: Dictionary = view_state.get("combat", {})
 	var director_state: Dictionary = view_state["director"]
