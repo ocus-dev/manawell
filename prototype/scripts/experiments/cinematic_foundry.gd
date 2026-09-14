@@ -31,7 +31,7 @@ func _ready() -> void:
 	persistence_enabled = false
 	use_prepared_environment = true
 	super._ready()
-	loot_rng_state = scene_seed
+	spawner_rng_state = scene_seed
 	if environment_visual != null:
 		baseline_backdrop = environment_visual.backdrop_texture
 		baseline_lane = environment_visual.lane_texture
@@ -47,7 +47,7 @@ func _ready() -> void:
 	_refresh_activity()
 	if run_state.phase == RunStateScript.Phase.READY:
 		start_run()
-	loot_rng_state = scene_seed
+	spawner_rng_state = scene_seed
 
 func _process(delta: float) -> void:
 	if not frozen:
@@ -177,8 +177,6 @@ func _exclude_hud_from_lights() -> void:
 		_set_light_mask_recursive(hud_layer, 0)
 	if experiment_controls != null:
 		_set_light_mask_recursive(experiment_controls, 0)
-	if loot_dev_console != null:
-		_set_light_mask_recursive(loot_dev_console, 0)
 	if environment_visual != null:
 		environment_visual.light_mask = 1
 	if harvester_visual != null:
