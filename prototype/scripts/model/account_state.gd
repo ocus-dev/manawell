@@ -8,8 +8,11 @@ const ContentCatalogScript = preload("res://scripts/model/content_catalog.gd")
 const ResearchCatalogScript = preload("res://scripts/model/research_catalog.gd")
 const ItemCatalogScript = preload("res://scripts/model/item_catalog.gd")
 const ItemDefinitionsScript = preload("res://scripts/model/item_definitions.gd")
+const CampaignCatalogScript = preload("res://scripts/model/campaign_catalog.gd")
+const LootGeneratorScript = preload("res://scripts/model/loot_generator.gd")
 const INVENTORY_CAPACITY := 100
 const INVENTORY_MIGRATION_VERSION := 1
+const MAX_PENDING_REWARDS := 3200000
 
 var owned_items: Dictionary = {}
 var new_items: Dictionary = {}
@@ -19,6 +22,9 @@ var item_instances: Dictionary = {}
 var hero_kits: Dictionary = {}
 var inventory_migration_version: int = 0
 var last_loot_result: Dictionary = {"run_id": "", "item_ids": []}
+var reward_entitlements: Dictionary = {}
+var pending_rewards: Array[Dictionary] = []
+var discarded_reward_ids: Dictionary = {}
 var inventory_command_error := ""
 
 var bank: float = 0.0
@@ -485,10 +491,85 @@ func inspect_item(id: String) -> bool:
 
 func reconcile_item_rewards(completed: Dictionary) -> bool:
 	var changed := false
-	for i in range(ItemCatalogScript.REWARDS.size()):
-		if completed.has("act_01/act_01_node_%02d" % (i + 1)):
-			changed = add_transitional_item(ItemCatalogScript.REWARDS[i], "", "act_01_node_%02d" % (i + 1)) or changed
+	var catalog: RefCounted = CampaignCatalogScript.new()
+	if not catalog.is_valid():
+		return false
+	for act_id in catalog.act_order:
+		for node_id in catalog.level_ids(act_id):
+			var completion_key := "%s/%s" % [act_id, node_id]
+			if not completed.has(completion_key):
+				continue
+			var level: Dictionary = catalog.get_node(act_id, node_id).get("level_data", {})
+			for reward in level.get("rewards", {}).get("guaranteed_items", []):
+				var reward_id := str(reward.get("reward_id", ""))
+				var base_id := str(reward.get("base_id", ""))
+				if reward.get("trigger", "") != "first_clear" or reward_id.is_empty() or reward_entitlements.has(reward_id) or discarded_reward_ids.has(reward_id):
+					continue
+				var legacy_id := "legacy:" + base_id
+				if item_instances.has(legacy_id) or add_transitional_item(base_id, "", node_id):
+					reward_entitlements[reward_id] = {"node_id": node_id, "completion_run_id": "", "item_ids": [legacy_id], "delivered_item_ids": [legacy_id], "migration": "completion_evidence"}
+					changed = true
 	return changed
+
+func complete_campaign_run(result: Dictionary, expected_run_id: String, node_id: String, level_data: Dictionary, well_id: String = "", completed_surges: int = 0) -> bool:
+	var rewards: Array = level_data.get("rewards", {}).get("guaranteed_items", [])
+	var prepared: Array[Dictionary] = []
+	for reward in rewards:
+		var reward_id := str(reward.get("reward_id", ""))
+		if reward_id.is_empty() or reward.get("trigger", "") != "first_clear" or reward_entitlements.has(reward_id):
+			continue
+		for index in range(int(reward.get("quantity", 0))):
+			var child_id := "reward:%s:%d" % [reward_id, index]
+			var generated := LootGeneratorScript.generate_guaranteed({"reward_id": reward_id, "instance_id": child_id, "base_id": reward.get("base_id", ""), "rarity": reward.get("rarity", ""), "item_level": reward.get("item_level", 0), "run_id": expected_run_id, "node_id": node_id}, LootGeneratorScript.seed_for(child_id))
+			if not generated.valid:
+				return false
+			prepared.append(generated.instance)
+	if not complete_run(result, expected_run_id, well_id, completed_surges):
+		return false
+	for reward in rewards:
+		var reward_id := str(reward.get("reward_id", ""))
+		if reward_id.is_empty() or reward_entitlements.has(reward_id):
+			continue
+		var item_ids: Array[String] = []
+		for item in prepared:
+			if str(item.provenance.get("node_id", "")) == node_id and str(item.instance_id).begins_with("reward:%s:" % reward_id):
+				item_ids.append(str(item.instance_id))
+				pending_rewards.append(item.duplicate(true))
+		reward_entitlements[reward_id] = {"node_id": node_id, "completion_run_id": expected_run_id, "item_ids": item_ids, "delivered_item_ids": []}
+		if pending_rewards.size() > MAX_PENDING_REWARDS:
+			return false
+	claim_pending_rewards()
+	return true
+
+func claim_pending_rewards() -> int:
+	var delivered := 0
+	while not pending_rewards.is_empty() and item_instances.size() < INVENTORY_CAPACITY:
+		var item: Dictionary = pending_rewards.pop_front()
+		if add_campaign_instance(item):
+			delivered += 1
+			var instance_id := str(item.instance_id)
+			for reward_id in reward_entitlements.keys():
+				var entitlement: Dictionary = reward_entitlements[reward_id]
+				if instance_id in entitlement.get("item_ids", []) and not instance_id in entitlement.get("delivered_item_ids", []):
+					entitlement.delivered_item_ids.append(instance_id)
+					break
+		else:
+			pending_rewards.push_front(item)
+			break
+	return delivered
+
+func add_campaign_instance(instance: Dictionary) -> bool:
+	var validation := ItemDefinitionsScript.new().validate_instance(instance, ItemDefinitionsScript.PRODUCTION_BASES, ItemDefinitionsScript.PRODUCTION_AFFIXES)
+	if not validation.valid or instance.get("provenance", {}).get("kind", "") != "campaign" or item_instances.has(instance.get("instance_id", "")) or item_instances.size() >= INVENTORY_CAPACITY:
+		return false
+	item_instances[str(instance.instance_id)] = instance.duplicate(true)
+	owned_items[str(instance.base_id)] = true
+	new_items[str(instance.base_id)] = true
+	item_reward_run_id = str(instance.get("provenance", {}).get("run_id", item_reward_run_id))
+	if not item_reward_ids.has(str(instance.base_id)):
+		item_reward_ids.append(str(instance.base_id))
+	inventory_migration_version = INVENTORY_MIGRATION_VERSION
+	return true
 
 func equip_instance(hero_id: String, slot: String, instance_id: String, active_run: bool = false) -> bool:
 	inventory_command_error = ""
@@ -534,11 +615,29 @@ func discard_instance(instance_id: String, confirmed_name: String = "", active_r
 	if confirmed_name != label:
 		inventory_command_error = "Item name confirmation is required."
 		return false
+	var provenance: Dictionary = instance.get("provenance", {})
+	if provenance.get("kind", "") == "campaign":
+		var reward_id := _campaign_reward_id_for_node(str(provenance.get("node_id", "")), str(instance.get("base_id", "")))
+		if not reward_id.is_empty():
+			discarded_reward_ids[reward_id] = true
+			if reward_entitlements.has(reward_id):
+				reward_entitlements[reward_id].item_ids.erase(instance_id)
+				reward_entitlements[reward_id].delivered_item_ids.erase(instance_id)
 	item_instances.erase(instance_id)
 	owned_items.erase(instance.base_id)
 	new_items.erase(instance.base_id)
 	last_loot_result.item_ids.erase(instance_id)
 	return true
+
+func _campaign_reward_id_for_node(node_id: String, base_id: String) -> String:
+	var catalog: RefCounted = CampaignCatalogScript.new()
+	if not catalog.is_valid():
+		return ""
+	var level: Dictionary = catalog.get_node("act_01", node_id).get("level_data", {})
+	for reward in level.get("rewards", {}).get("guaranteed_items", []):
+		if reward.get("trigger", "") == "first_clear" and str(reward.get("base_id", "")) == base_id:
+			return str(reward.get("reward_id", ""))
+	return ""
 
 func credit_terminal_result(result: Dictionary) -> bool:
 	return complete_run(result, result.get("run_id", ""), "", 0)

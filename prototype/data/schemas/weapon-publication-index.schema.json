@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Telos weapon publication index",
+  "type": "object",
+  "required": ["schema_version", "weapons"],
+  "properties": {"schema_version": {"const": 1}, "weapons": {"type": "object", "additionalProperties": {"$ref": "weapon-revision.schema.json"}}}
+}

@@ -24,3 +24,17 @@ static func reward_for(act_id: String, node_id: String) -> String:
 
 static func source_for(id: String) -> String:
     return "Act 1 · Level %d first clear" % (REWARDS.find(id) + 1)
+
+static func has_item(id: String) -> bool:
+    return ITEMS.has(id)
+
+static func definition_for(id: String) -> Dictionary:
+    return ITEMS.get(id, {}).duplicate(true)
+
+static func description_for(id: String) -> String:
+    return str(ITEMS.get(id, {}).get("description", ""))
+
+static func icon_path_for(id: String) -> String:
+    if not ITEMS.has(id):
+        return ""
+    return "res://assets/ui-icons/items/%s.png" % id

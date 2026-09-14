@@ -3,7 +3,7 @@ extends Node2D
 
 const ArenaLayoutScript = preload("res://data/arena_layout.gd")
 const LOGICAL_SIZE := Vector2(1280.0, 720.0)
-const GROUND_Y := 540.0
+const GROUND_Y := ArenaLayoutScript.FLOOR_TOP_Y
 const DEFAULT_WELL_ID := "well_1"
 const BACKDROP_PATHS := {
 	"well_1": "res://assets/side-view/environment/backdrop_level_1.png",
@@ -13,6 +13,7 @@ const BACKDROP_PATHS := {
 const LANE_PATH := "res://assets/side-view/environment/lane.png"
 
 @export var use_prepared_layers := true
+@export var show_lane := false
 
 var backdrop_texture: Texture2D
 var lane_texture: Texture2D
@@ -45,7 +46,8 @@ func get_platform_rects() -> Array[Dictionary]:
 func _draw() -> void:
 	if is_prepared():
 		draw_texture_rect(backdrop_texture, Rect2(Vector2.ZERO, LOGICAL_SIZE), false)
-		draw_texture_rect(lane_texture, Rect2(0.0, GROUND_Y, LOGICAL_SIZE.x, LOGICAL_SIZE.y - GROUND_Y), false)
+		if show_lane:
+			draw_texture_rect(lane_texture, Rect2(0.0, GROUND_Y, LOGICAL_SIZE.x, LOGICAL_SIZE.y - GROUND_Y), false)
 	else:
 		_draw_debug_fallback()
 	_draw_platforms()

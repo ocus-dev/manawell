@@ -12,7 +12,7 @@ config_version=5
 
 config/name="Telos Prototype"
 config/description="Active side-view defense prototype"
-run/main_scene="res://scenes/main.tscn"
+run/main_scene="res://scenes/title_screen.tscn"
 config/features=PackedStringArray("4.8")
 config/user_data_dir="user://telos_side_view_defense_experiment"
 

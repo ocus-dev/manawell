@@ -107,6 +107,38 @@ func node_status(act_id: String, node_id: String, catalog: RefCounted = null) ->
 			return {"status": STATUS_LOCKED, "reason": "Requires %s." % str(prerequisite)}
 	return {"status": STATUS_AVAILABLE, "reason": "Ready to launch."}
 
+## Returns the campaign node that should drive the Operations briefing.
+## Nodes are authored in progression order. An explicitly active node wins;
+## otherwise use the first available node after the furthest completed node.
+func furthest_progression_node(catalog: RefCounted = null) -> Dictionary:
+	var definitions: RefCounted = CampaignCatalogScript.new() if catalog == null else catalog
+	var act_id: String = active_act_id if not active_act_id.is_empty() and definitions.has_act(active_act_id) else definitions.first_act_id()
+	if act_id.is_empty():
+		return {}
+	var act: Dictionary = definitions.get_act(act_id)
+	var nodes: Array = act.get("nodes", [])
+	if nodes.is_empty():
+		return {}
+	if not active_node_id.is_empty():
+		var active_node: Dictionary = definitions.get_node(act_id, active_node_id)
+		if not active_node.is_empty() and node_status(act_id, active_node_id, definitions)["status"] != STATUS_LOCKED:
+			return active_node
+	var furthest_completed_index := -1
+	for index in nodes.size():
+		var node_id := str(nodes[index].get("id", ""))
+		if node_status(act_id, node_id, definitions)["status"] == STATUS_COMPLETED:
+			furthest_completed_index = index
+	for index in range(furthest_completed_index + 1, nodes.size()):
+		var candidate_id := str(nodes[index].get("id", ""))
+		if node_status(act_id, candidate_id, definitions)["status"] == STATUS_AVAILABLE:
+			return nodes[index].duplicate(true)
+	if furthest_completed_index >= 0:
+		return nodes[furthest_completed_index].duplicate(true)
+	for node in nodes:
+		if node_status(act_id, str(node.get("id", "")), definitions)["status"] == STATUS_AVAILABLE:
+			return node.duplicate(true)
+	return nodes[0].duplicate(true)
+
 func well_status(well_id: String, account: RefCounted, active_well_id: String = "") -> Dictionary:
 	var commissioned: bool = account.is_well_commissioned(well_id)
 	var guard_id: String = account.get_guard_for_well(well_id)
@@ -129,7 +161,7 @@ func commit_terminal_result(result: Dictionary, account: RefCounted, catalog: Re
 	var surge_count: int = int(result.get("completed_surges", 0))
 	if node["type"] == "well" and surge_count < 1:
 		return false
-	if not account.complete_run(result, run_id, well_id, surge_count):
+	if not account.complete_campaign_run(result, run_id, active_node_id, node.get("level_data", {}), well_id, surge_count):
 		return false
 	if node["type"] == "well" and not account.is_well_commissioned(well_id):
 		return false

@@ -1,6 +1,7 @@
 class_name CampaignEncounters
 extends RefCounted
 
+# LEGACY MIGRATION DATA: LD02 authors parity values in prototype/data/campaign.
 const MONSTER_CONFIGS: Dictionary = {
 	"act_01_node_01": {"kind": "monster", "waves": [["pursuer", "pursuer"], ["breaker"]], "reward": 3},
 	"act_01_node_03": {"kind": "monster", "waves": [["pursuer", "ranged"], ["breaker", "pursuer"]], "reward": 4},

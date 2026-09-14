@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Telos weapon draft",
+  "type": "object",
+  "required": ["schema_version", "draft_id", "weapon_id", "label", "description", "behavior_id", "base_modifiers"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "draft_id": {"type": "string", "minLength": 1},
+    "weapon_id": {"type": "string", "minLength": 1},
+    "label": {"type": "string", "minLength": 1, "maxLength": 80},
+    "description": {"type": "string", "maxLength": 2000},
+    "behavior_id": {"enum": ["weapon.standard", "weapon.fan", "weapon.lance"]},
+    "base_modifiers": {"type": "array", "maxItems": 3}
+  },
+  "additionalProperties": true
+}

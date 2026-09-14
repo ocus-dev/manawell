@@ -7,6 +7,7 @@ func _init() -> void:
 
 func _run() -> void:
 	var controller: Node = load("res://scenes/main.tscn").instantiate()
+	controller.persistence_enabled = false
 	root.add_child(controller)
 	await process_frame
 	assert(controller.encounter_hud != null)

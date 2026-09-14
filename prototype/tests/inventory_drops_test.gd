@@ -16,7 +16,7 @@ func _init() -> void:
         assert(campaign.start_node("act_01", id))
         var result := {"run_id": "inventory-%d" % i, "phase": Run.Phase.FAILED, "payout": 10, "completed_surges": 1}
         assert(not campaign.commit_terminal_result(result, account))
-        assert(account.owned_items.is_empty())
+        assert(account.item_instances.size() == i)
         if i in [1, 4, 7]:
             result.phase = Run.Phase.SUCCESS
             result.completed_surges = 0
@@ -24,16 +24,22 @@ func _init() -> void:
             result.completed_surges = 1
         result.phase = Run.Phase.SUCCESS
         assert(campaign.commit_terminal_result(result, account))
-        assert(account.item_instances.is_empty())
-        assert(account.item_reward_ids.is_empty())
+        assert(account.item_instances.size() == i + 1)
+        assert(account.item_reward_ids.size() == i + 1)
         assert(not campaign.commit_terminal_result(result, account))
     assert(account.bank == 90)
     assert(campaign.start_node("act_01", "act_01_node_01"))
     assert(campaign.commit_terminal_result({"run_id": "inventory-replay", "phase": Run.Phase.SUCCESS, "payout": 10}, account))
-    assert(account.owned_items.is_empty() and account.item_reward_ids.is_empty())
-    assert(not account.inspect_item(Items.REWARDS[0]))
-    assert(not account.inspect_item(Items.REWARDS[0]))
-    assert(not account.new_items.has(Items.REWARDS[0]))
+    assert(account.item_instances.size() == 9)
+    assert(account.item_reward_ids.size() == 9)
+    var first_instance_id := "reward:act_01_node_01.first_clear.heavy_breech:0"
+    print("LD05 replay instances=", account.item_instances.keys())
+    assert(account.item_instances.has(first_instance_id))
+    assert(account.reward_entitlements.has("act_01_node_01.first_clear.heavy_breech"))
+    assert(account.reward_entitlements["act_01_node_01.first_clear.heavy_breech"].delivered_item_ids == [first_instance_id])
+    assert(account.inspect_item(first_instance_id))
+    assert(not account.inspect_item(first_instance_id))
+    assert(account.new_items.has(Items.REWARDS[0]))
     var payload := account.to_save_payload()
     assert(Account.validate_save_payload(payload).valid)
     var invalid := payload.duplicate(true)
@@ -63,7 +69,7 @@ func _init() -> void:
     assert(store.save_envelope({"account": account, "campaign_state": campaign.to_save_payload()}))
     var session := Session.new(Store.new(BASE + ".json", BASE + ".tmp", BASE + ".bak"), Account.new(), Callable(), Callable(), Campaign.new())
     var loaded = session.load_account()
-    assert(loaded.owned_items.is_empty() and loaded.new_items.is_empty())
+    assert(loaded.item_instances.size() == 9 and loaded.new_items.size() == 9)
     assert(loaded.bank == 100)
     var spy := preload("res://tests/spy_save_store.gd").new(account)
     spy.fail_next_saves = 1
@@ -72,7 +78,7 @@ func _init() -> void:
     assert(retry_session.has_pending_save())
     assert(retry_session.retry_pending_save())
     assert(not retry_session.has_pending_save())
-    assert(account.owned_items.is_empty() and account.new_items.is_empty())
+    assert(account.item_instances.size() == 9 and account.new_items.size() == 9)
     assert(account.bank == 100 and spy.saved_envelopes.size() == 1)
     restored.from_save_payload(legacy)
     assert(restored.reconcile_item_rewards(campaign.completed_nodes))

@@ -1,0 +1,19 @@
+{
+  "seed": 20260913,
+  "players_per_profile": 100,
+  "horizon_seconds": 86400,
+  "max_attempts": 300,
+  "tick_seconds": 0.5,
+  "combat": {
+    "contact_probability_per_second": 0.12,
+    "skill_spread": 0.18,
+    "pulse_efficiency": 0.35,
+    "fan_extra_hit_fraction": 0.35,
+    "travel_seconds": 3.0
+  },
+  "profiles": [
+    {"name": "cautious", "skill": 0.7, "target_surges": 2, "retreat_health": 0.55, "push_probability": 0.65, "menu_seconds": 25, "session_seconds": 900, "absence_seconds": 14400, "purchase_style": "balanced", "loadout": "fortified", "specialization": "harvest.rapid_seal"},
+    {"name": "balanced", "skill": 1.0, "target_surges": 4, "retreat_health": 0.3, "push_probability": 0.75, "menu_seconds": 15, "session_seconds": 1800, "absence_seconds": 10800, "purchase_style": "balanced", "loadout": "standard", "specialization": "harvest.rapid_seal"},
+    {"name": "risk_seeking", "skill": 1.2, "target_surges": 7, "retreat_health": 0.12, "push_probability": 0.8, "menu_seconds": 10, "session_seconds": 2700, "absence_seconds": 7200, "purchase_style": "production", "loadout": "overdrive", "specialization": "harvest.deep_draw"}
+  ]
+}

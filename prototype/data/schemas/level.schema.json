@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Telos level v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "content_revision", "id", "act_id", "display_name", "type", "map", "requires_completed", "environment_id", "encounter", "completion", "rewards"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "content_revision": {"type": "integer", "minimum": 0},
+    "id": {"type": "string", "minLength": 1},
+    "act_id": {"type": "string", "minLength": 1},
+    "display_name": {"type": "string", "minLength": 1},
+    "type": {"enum": ["monster", "well", "boss"]},
+    "map": {"type": "object", "additionalProperties": false, "required": ["position"], "properties": {"position": {"type": "array", "prefixItems": [{"type": "number", "minimum": 0, "maximum": 1}, {"type": "number", "minimum": 0, "maximum": 1}], "minItems": 2, "maxItems": 2}}},
+    "requires_completed": {"type": "array", "items": {"type": "string"}},
+    "environment_id": {"type": "string"},
+    "designer_notes": {"type": "string"},
+    "tuning_targets": {"type": "object"},
+    "encounter": {"type": "object"},
+    "completion": {"type": "object"},
+    "rewards": {"type": "object"},
+    "well": {"type": "object"}
+  }
+}

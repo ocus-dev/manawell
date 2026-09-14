@@ -73,6 +73,7 @@ static func _campaign_view(account: RefCounted, campaign_state: RefCounted) -> D
 	var act_id: String = state.active_act_id if not state.active_act_id.is_empty() else definitions.first_act_id()
 	var act: Dictionary = definitions.get_act(act_id)
 	var nodes: Array = act.get("nodes", [])
+	var briefing_node: Dictionary = state.furthest_progression_node(definitions)
 	var statuses: Dictionary = {}
 	var wells: Dictionary = {}
 	var paths: Array[Dictionary] = []
@@ -91,7 +92,7 @@ static func _campaign_view(account: RefCounted, campaign_state: RefCounted) -> D
 		var previous_node: Dictionary = nodes[index - 1]
 		var node: Dictionary = nodes[index]
 		paths.append({"from": str(previous_node.get("id", "")), "to": str(node.get("id", "")), "points": [previous_node.get("position", [0.0, 0.0]), node.get("position", [0.0, 0.0])]})
-	return {"act_id": act_id, "act_name": str(act.get("display_name", act_id)), "nodes": nodes, "statuses": statuses, "wells": wells, "paths": paths, "active_act_id": state.active_act_id}
+	return {"act_id": act_id, "act_name": str(act.get("display_name", act_id)), "nodes": nodes, "statuses": statuses, "wells": wells, "paths": paths, "active_act_id": state.active_act_id, "active_node_id": state.active_node_id, "briefing_node": briefing_node}
 
 static func _inventory_view(account: RefCounted) -> Dictionary:
 	var items: Array[Dictionary] = []

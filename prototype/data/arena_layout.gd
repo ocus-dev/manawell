@@ -3,7 +3,7 @@ extends RefCounted
 
 const FLOOR_ID := "floor"
 const CONFIG_ID := "foundry-platforms-v1"
-const FLOOR_TOP_Y: float = 540.0
+const FLOOR_TOP_Y: float = 652.0 # 8 px above the hotbar at y=660.
 const LEFT_BOUND: float = 96.0
 const RIGHT_BOUND: float = 1184.0
 const HERO_HALF_WIDTH: float = 18.0
@@ -12,8 +12,8 @@ const DROP_THROUGH_DURATION: float = 0.12
 const DROP_THROUGH_CLEARANCE: float = 8.0
 
 const SUPPORTS: Array[Dictionary] = [
-	{"id": "platform_left", "rect": Rect2(260.0, 430.0, 210.0, 16.0)},
-	{"id": "platform_right", "rect": Rect2(810.0, 430.0, 210.0, 16.0)},
+	{"id": "platform_left", "rect": Rect2(260.0, FLOOR_TOP_Y - 110.0, 210.0, 16.0)},
+	{"id": "platform_right", "rect": Rect2(810.0, FLOOR_TOP_Y - 110.0, 210.0, 16.0)},
 ]
 
 static func support_by_id(support_id: String) -> Dictionary:

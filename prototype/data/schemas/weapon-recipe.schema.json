@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Telos weapon recipe",
+  "type": "object",
+  "required": ["schema_version", "recipe_id", "weapon_id", "revision", "rarity", "item_level", "explicit_modifiers", "provenance"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "recipe_id": {"type": "string", "minLength": 1},
+    "weapon_id": {"type": "string", "minLength": 1},
+    "revision": {"type": "integer", "minimum": 1, "maximum": 99},
+    "rarity": {"enum": ["common", "magic", "rare", "epic"]},
+    "item_level": {"type": "integer", "minimum": 1, "maximum": 99},
+    "explicit_modifiers": {"type": "array", "maxItems": 3},
+    "provenance": {"type": "object"}
+  }
+}

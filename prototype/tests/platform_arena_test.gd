@@ -12,15 +12,15 @@ func _init() -> void:
 	quit(0)
 
 func _test_authored_layout() -> void:
-	assert(ArenaLayoutScript.FLOOR_TOP_Y == 540.0)
+	assert(ArenaLayoutScript.FLOOR_TOP_Y == 652.0)
 	assert(ArenaLayoutScript.LEFT_BOUND == 96.0)
 	assert(ArenaLayoutScript.RIGHT_BOUND == 1184.0)
 	var supports := ArenaLayoutScript.platform_supports()
 	assert(supports.size() == 2)
 	assert(supports[0]["id"] == "platform_left")
 	assert(supports[1]["id"] == "platform_right")
-	assert(supports[0]["rect"] == Rect2(260.0, 430.0, 210.0, 16.0))
-	assert(supports[1]["rect"] == Rect2(810.0, 430.0, 210.0, 16.0))
+	assert(supports[0]["rect"] == Rect2(260.0, 542.0, 210.0, 16.0))
+	assert(supports[1]["rect"] == Rect2(810.0, 542.0, 210.0, 16.0))
 
 func _test_one_way_landing_and_ascent() -> void:
 	var hero: Node = HeroScript.new()

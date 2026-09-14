@@ -27,6 +27,9 @@ var damage_feedback_remaining := 0.0
 var damage_feedback_amount := 0.0
 var controller: Node
 var damage_multiplier: float = 1.0
+var attack_interval: float = BalanceData.MELEE_ATTACK_INTERVAL
+var spawn_id: String = ""
+var spawn_role: String = ""
 var visual: Node
 
 func _ready() -> void:
@@ -37,13 +40,14 @@ func _ready() -> void:
 	visual.configure(VisualConfigScript.enemy_asset(enemy_kind))
 	visual.set_facing(-side)
 
-func setup(kind: EnemyKind, id: int, spawn_side: int, owner_controller: Node, new_damage_multiplier: float = 1.0) -> void:
+func setup(kind: EnemyKind, id: int, spawn_side: int, owner_controller: Node, new_damage_multiplier: float = 1.0, profile: Dictionary = {}) -> void:
 	enemy_kind = kind
 	enemy_id = id
 	side = -1 if spawn_side < 0 else 1
 	controller = owner_controller
 	damage_multiplier = new_damage_multiplier if is_finite(new_damage_multiplier) and new_damage_multiplier > 0.0 else 1.0
 	_apply_stats()
+	_apply_profile(profile)
 	warning_remaining = 0.8
 	warning_visible = true
 	queue_redraw()
@@ -92,7 +96,7 @@ func _simulate_melee(_delta: float) -> void:
 			controller.apply_enemy_damage(RunStateScript.DamageTarget.HERO if enemy_kind == EnemyKind.PURSUER else RunStateScript.DamageTarget.MACHINE, attack_damage)
 			if visual != null:
 				visual.play_attack()
-			cooldown_remaining = BalanceData.MELEE_ATTACK_INTERVAL
+			cooldown_remaining = attack_interval
 
 func _simulate_ranged(delta: float) -> void:
 	var distance := absf(controller.hero.position.x - position.x)
@@ -101,6 +105,7 @@ func _simulate_ranged(delta: float) -> void:
 		if is_zero_approx(windup_remaining):
 			locked_target_point = CombatGeometryScript.body_center("hero", controller.hero.position)
 			controller.spawn_hostile_projectile(position.x, locked_target_point.x, attack_damage, self, locked_target_point.y)
+			cooldown_remaining = attack_interval
 		return
 	if distance > BalanceData.RANGED_STOP_RANGE * controller.SPATIAL_PIXELS_PER_UNIT:
 		position.x += signf(controller.hero.position.x - position.x) * speed_pixels * controller.FIXED_STEP
@@ -125,15 +130,41 @@ func _apply_stats() -> void:
 		max_health = BalanceData.RANGED_HEALTH
 		speed_pixels = BalanceData.RANGED_SPEED * controller.SPATIAL_PIXELS_PER_UNIT
 		attack_damage = BalanceData.RANGED_DAMAGE * damage_multiplier
+		attack_interval = BalanceData.RANGED_ATTACK_INTERVAL
 	health = max_health
 
+func _apply_profile(profile: Dictionary) -> void:
+	var hp_multiplier := float(profile.get("hp_multiplier", 1.0))
+	var damage_profile_multiplier := float(profile.get("damage_multiplier", 1.0))
+	var move_multiplier := float(profile.get("move_speed_multiplier", 1.0))
+	var interval_multiplier := float(profile.get("attack_interval_multiplier", 1.0))
+	max_health *= hp_multiplier
+	health = max_health
+	speed_pixels *= move_multiplier
+	attack_damage *= damage_profile_multiplier
+	attack_interval *= interval_multiplier
+	if profile.has("boss_health"):
+		max_health = float(profile["boss_health"]) * hp_multiplier
+		health = max_health
+	if profile.has("boss_damage"):
+		attack_damage = float(profile["boss_damage"]) * damage_profile_multiplier
+	if profile.has("boss_attack_interval"):
+		attack_interval = float(profile["boss_attack_interval"]) * interval_multiplier
+	if profile.has("boss_move_multiplier"):
+		speed_pixels = BalanceData.PURSUER_SPEED * controller.SPATIAL_PIXELS_PER_UNIT * float(profile["boss_move_multiplier"]) * move_multiplier
+	spawn_id = str(profile.get("spawn_id", ""))
+	spawn_role = str(profile.get("role", ""))
+
 func capture_snapshot_state() -> Dictionary:
-	return {"side": side, "enemy_id": enemy_id, "damage_multiplier": damage_multiplier, "locked_target_point": [locked_target_point.x, locked_target_point.y], "warning_remaining": warning_remaining, "warning_visible": warning_visible, "damage_feedback_remaining": damage_feedback_remaining, "damage_feedback_amount": damage_feedback_amount}
+	return {"side": side, "enemy_id": enemy_id, "damage_multiplier": damage_multiplier, "attack_interval": attack_interval, "spawn_id": spawn_id, "spawn_role": spawn_role, "locked_target_point": [locked_target_point.x, locked_target_point.y], "warning_remaining": warning_remaining, "warning_visible": warning_visible, "damage_feedback_remaining": damage_feedback_remaining, "damage_feedback_amount": damage_feedback_amount}
 
 func restore_snapshot_state(state: Dictionary) -> void:
 	side = -1 if int(state.get("side", side)) < 0 else 1
 	enemy_id = int(state.get("enemy_id", enemy_id))
 	damage_multiplier = float(state.get("damage_multiplier", damage_multiplier))
+	attack_interval = maxf(0.0, float(state.get("attack_interval", attack_interval)))
+	spawn_id = str(state.get("spawn_id", spawn_id))
+	spawn_role = str(state.get("spawn_role", spawn_role))
 	var locked_point: Array = state.get("locked_target_point", [0.0, 0.0])
 	locked_target_point = Vector2(float(locked_point[0]), float(locked_point[1]))
 	warning_remaining = maxf(0.0, float(state.get("warning_remaining", 0.0)))

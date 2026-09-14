@@ -28,7 +28,7 @@ const LOGICAL_SIZE := Vector2(1280.0, 720.0)
 const SPATIAL_PIXELS_PER_UNIT: float = 32.0
 const FIXED_STEP: float = 1.0 / 60.0
 const GROUND_Y: float = 540.0
-const MACHINE_X: float = 160.0
+const MACHINE_X: float = 240.0
 
 @export var persistence_enabled: bool = true
 @export var use_prepared_environment: bool = true
@@ -119,7 +119,6 @@ func _ready() -> void:
 	environment_visual = EnvironmentScript.new()
 	environment_visual.name = "EnvironmentVisual"
 	environment_visual.use_prepared_layers = use_prepared_environment
-	environment_visual.set_well_id(selected_well_id)
 	add_child(environment_visual)
 	harvester_visual = VisualScript.new()
 	harvester_visual.name = "HarvesterVisual"
@@ -127,7 +126,6 @@ func _ready() -> void:
 	harvester_visual.z_index = 1
 	add_child(harvester_visual)
 	harvester_visual.configure("harvester")
-	harvester_visual.set_scale_multiplier(1.4)
 	if hero != null:
 		hero.z_index = 2
 	_ensure_session_persistence()
@@ -427,8 +425,6 @@ func select_well_by_id(well_id: String) -> bool:
 		return false
 	selected_well_id = well_id
 	selected_loadout_id = account_state.get_loadout_for_well(well_id)
-	if environment_visual != null:
-		environment_visual.set_well_id(selected_well_id)
 	_update_hud()
 	return true
 
@@ -581,10 +577,7 @@ func _toggle_sealing_setting() -> void:
 func set_resolution(width: int, height: int) -> void:
 	if width <= 0 or height <= 0:
 		return
-	# Resizing a maximized/fullscreen window does not resize its visible area.
-	var window := get_window()
-	window.mode = Window.MODE_WINDOWED
-	window.size = Vector2i(width, height)
+	DisplayServer.window_set_size(Vector2i(width, height))
 
 func set_ui_scale(value: float) -> void:
 	ui_scale = clampf(value, 0.7, 1.0)
@@ -726,13 +719,8 @@ func execute_loot_command(value: String) -> String:
 	if not OS.is_debug_build():
 		return "Loot commands are available in development builds only."
 	var words := value.strip_edges().to_lower().split(" ", false)
-	if words.size() == 1 and words[0] == "enable_all_levels":
-		campaign_state.all_levels_enabled = true
-		for well_id in ["well_1", "well_2", "well_3"]:
-			account_state.unlocked_wells[well_id] = true
-		return "All authored levels enabled for this session."
 	if words.size() != 2 or words[0] != "drop_rate":
-		return "Use: enable_all_levels, drop_rate <0–100> or drop_rate reset"
+		return "Use: drop_rate <0–100> or drop_rate reset"
 	if words[1] == "reset":
 		development_drop_percent = -1.0
 		return "Normal drop rates restored (including equipment bonuses)."
@@ -1044,15 +1032,13 @@ func try_pulse() -> int:
 	return hit_count
 
 func spawn_enemy(kind: int, side: int) -> Node:
-	# This arena is defended from the left; all new arrivals enter on the right.
-	side = 1
 	_prune_enemies()
 	if enemies.size() >= BalanceData.MAX_LIVE_ENEMIES:
 		return null
 	var enemy: Node = EnemyScript.new()
 	enemy.setup(kind, next_enemy_id, side, self, _enemy_damage_multiplier())
 	next_enemy_id += 1
-	enemy.position = Vector2(1240.0, GROUND_Y - 40.0)
+	enemy.position = Vector2(40.0 if side < 0 else 1240.0, GROUND_Y - 40.0)
 	pending_entry_warnings.append({"id": next_enemy_id, "side": side, "remaining": 0.8})
 	add_child(enemy)
 	enemy.z_index = 2
@@ -1205,7 +1191,7 @@ func _spawn_campaign_wave() -> void:
 	var wave: Array = waves[campaign_wave_index]
 	for index in wave.size():
 		var kind_id: String = str(wave[index])
-		var enemy: Node = spawn_enemy(CampaignEncountersScript.enemy_kind_id(kind_id), 1)
+		var enemy: Node = spawn_enemy(CampaignEncountersScript.enemy_kind_id(kind_id), -1 if index % 2 == 0 else 1)
 		if kind_id == "boss" and enemy != null:
 			boss_enemy = enemy
 			enemy.max_health = float(campaign_config.get("boss_health", 240.0))
@@ -1231,7 +1217,10 @@ func _spawn_next_enemy() -> void:
 		spawn_index += 1
 		return
 	var kind := _next_enemy_kind()
-	spawn_enemy(kind, 1)
+	var side := -1 if side_sequence % 2 == 0 else 1
+	if spawn_index % 3 == 2:
+		side = -side
+	spawn_enemy(kind, side)
 	spawn_index += 1
 	side_sequence += 1
 

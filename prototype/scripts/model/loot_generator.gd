@@ -91,6 +91,58 @@ static func generate(input: Dictionary, rng_state: int) -> Dictionary:
         return {"valid": false, "error": validation.error, "rng_state": initial_state}
     return {"valid": true, "generated": true, "instance": instance, "rng_state": state, "occurrence_roll": occurrence_roll, "occurrence_threshold": occurrence_threshold, "rarity_roll": rarity_roll}
 
+static func generate_guaranteed(input: Dictionary, rng_state: int) -> Dictionary:
+    var initial_state: int = _normalize_state(rng_state)
+    var table_result: Dictionary = _validate_tables()
+    if not table_result.valid:
+        return {"valid": false, "error": table_result.error, "rng_state": initial_state}
+    var base_id := str(input.get("base_id", ""))
+    var rarity := str(input.get("rarity", ""))
+    var item_level: Variant = input.get("item_level", 0)
+    var instance_id := str(input.get("instance_id", ""))
+    if not ItemDefinitionsScript.PRODUCTION_BASES.has(base_id) or not RARITIES.has(rarity):
+        return {"valid": false, "error": "guaranteed item definition is invalid", "rng_state": initial_state}
+    if not (item_level is int or item_level is float) or int(item_level) < 1 or int(item_level) > 3 or float(item_level) != floor(float(item_level)):
+        return {"valid": false, "error": "guaranteed item level is invalid", "rng_state": initial_state}
+    if instance_id.is_empty() or str(input.get("reward_id", "")).is_empty() or str(input.get("run_id", "")).is_empty() or str(input.get("node_id", "")).is_empty():
+        return {"valid": false, "error": "guaranteed item identity is invalid", "rng_state": initial_state}
+    var base: Dictionary = ItemDefinitionsScript.PRODUCTION_BASES[base_id]
+    var state: int = initial_state
+    var explicit_modifiers: Array[Dictionary] = []
+    var eligible_affixes: Array[String] = _eligible_affix_ids(str(base.get("slot", "")), int(item_level))
+    var explicit_count: int = int(ItemDefinitionsScript.RARITY_MODIFIER_COUNTS[rarity])
+    if eligible_affixes.size() < explicit_count:
+        return {"valid": false, "error": "unsatisfiable guaranteed affix pool", "rng_state": initial_state}
+    var remaining_affixes: Array[String] = eligible_affixes.duplicate()
+    for _index in range(explicit_count):
+        var family_draw: Array = _draw_bounded(state, _weighted_total(remaining_affixes))
+        state = int(family_draw[0])
+        var affix_id: String = _weighted_affix_at(remaining_affixes, int(family_draw[1]))
+        remaining_affixes.erase(affix_id)
+        var affix: Dictionary = ItemDefinitionsScript.PRODUCTION_AFFIXES[affix_id]
+        var tier: int = mini(3, int(item_level))
+        var tier_range: Dictionary = affix.tiers[tier]
+        var steps: int = int(round((float(tier_range.max) - float(tier_range.min)) / float(tier_range.step)))
+        var value_draw: Array = _draw_bounded(state, steps + 1)
+        state = int(value_draw[0])
+        var value: float = _stable_round(float(tier_range.min) + float(value_draw[1]) * float(tier_range.step), float(tier_range.step))
+        explicit_modifiers.append({"affix_id": affix_id, "tier": tier, "value": value})
+    var instance := {"schema_version": 1, "instance_id": instance_id, "base_id": base_id, "rarity": rarity, "item_level": int(item_level), "implicit_modifiers": base.get("implicits", []).duplicate(true), "explicit_modifiers": explicit_modifiers, "generation_version": GENERATION_VERSION, "provenance": {"kind": "campaign", "run_id": str(input.get("run_id", "")), "enemy_id": 0, "node_id": str(input.get("node_id", ""))}, "inspected": false, "locked": false}
+    var validation: Dictionary = ItemDefinitionsScript.new().validate_instance(instance, ItemDefinitionsScript.PRODUCTION_BASES, ItemDefinitionsScript.PRODUCTION_AFFIXES)
+    if not validation.valid:
+        return {"valid": false, "error": validation.error, "rng_state": initial_state}
+    return {"valid": true, "generated": true, "instance": instance, "rng_state": state}
+
+static func seed_for(identity: String) -> int:
+    var context := HashingContext.new()
+    context.start(HashingContext.HASH_SHA256)
+    context.update((GENERATION_VERSION + "|" + identity).to_utf8_buffer())
+    var digest: PackedByteArray = context.finish()
+    var value := 0
+    for index in range(4):
+        value = (value << 8) | int(digest[index])
+    return (value % (RNG_MODULUS - 1)) + 1
+
 static func _validate_input(input: Dictionary) -> Dictionary:
     if input.has("development_drop_percent"):
         var override: Variant = input.development_drop_percent
@@ -109,8 +161,8 @@ static func _validate_input(input: Dictionary) -> Dictionary:
     var occurrence_kind: String = str(input.get("occurrence_kind", "ordinary"))
     if not ["ordinary", "boss"].has(occurrence_kind):
         return {"valid": false, "error": "occurrence kind is invalid"}
-        if str(input.get("run_id", "")).is_empty() or int(input.get("enemy_id", 0)) <= 0 or str(input.get("node_id", "")).is_empty():
-            return {"valid": false, "error": "monster provenance is incomplete"}
+    if str(input.get("run_id", "")).is_empty() or int(input.get("enemy_id", 0)) <= 0 or str(input.get("node_id", "")).is_empty():
+        return {"valid": false, "error": "monster provenance is incomplete"}
     return {"valid": true}
 
 static func _validate_tables() -> Dictionary:

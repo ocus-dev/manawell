@@ -1,0 +1,200 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/hero_hub.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/portraits/hero_1.png" id="2_hero"]
+
+[sub_resource type="StyleBoxFlat" id="StagePanel"]
+bg_color = Color(0.025, 0.038, 0.055, 1)
+
+[sub_resource type="StyleBoxFlat" id="RosterPanel"]
+bg_color = Color(0.045, 0.058, 0.075, 0.97)
+border_width_left = 2
+border_color = Color(0.34, 0.7, 0.76, 0.65)
+
+[sub_resource type="StyleBoxFlat" id="ButtonNormal"]
+bg_color = Color(0.075, 0.095, 0.12, 0.92)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.3, 0.36, 0.42, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="ButtonHover"]
+bg_color = Color(0.09, 0.16, 0.19, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.45, 0.9, 0.94, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="Theme" id="HubTheme"]
+default_font_size = 16
+Label/colors/font_color = Color(0.9, 0.93, 0.94, 1)
+Button/colors/font_color = Color(0.88, 0.92, 0.94, 1)
+Button/colors/font_disabled_color = Color(0.42, 0.46, 0.49, 0.72)
+Button/styles/normal = SubResource("ButtonNormal")
+Button/styles/hover = SubResource("ButtonHover")
+Button/styles/pressed = SubResource("ButtonHover")
+Button/styles/focus = SubResource("ButtonHover")
+Button/styles/disabled = SubResource("ButtonNormal")
+PanelContainer/styles/panel = SubResource("StagePanel")
+
+[node name="HeroHub" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = SubResource("HubTheme")
+script = ExtResource("1_script")
+
+[node name="HeroStage" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HeroArt" type="TextureRect" parent="HeroStage"]
+layout_mode = 2
+texture = ExtResource("2_hero")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="FallbackArt" type="Control" parent="HeroStage"]
+visible = false
+layout_mode = 2
+
+[node name="Initials" type="Label" parent="HeroStage/FallbackArt"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -120.0
+offset_top = -90.0
+offset_right = 120.0
+offset_bottom = 90.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.32, 0.7, 0.75, 0.55)
+theme_override_font_sizes/font_size = 96
+text = "H2"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Shade" type="ColorRect" parent="HeroStage"]
+layout_mode = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.16)
+
+[node name="Identity" type="VBoxContainer" parent="HeroStage"]
+layout_mode = 2
+alignment = 2
+theme_override_constants/separation = 4
+
+[node name="HeroName" type="Label" parent="HeroStage/Identity"]
+layout_mode = 2
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 38
+text = "HERO 1"
+
+[node name="HeroStatus" type="Label" parent="HeroStage/Identity"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.51, 0.9, 0.91, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 14
+text = "ACTIVE HERO  ·  READY FOR DEPLOYMENT"
+
+[node name="RosterPanel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -360.0
+grow_horizontal = 0
+grow_vertical = 2
+theme_override_styles/panel = SubResource("RosterPanel")
+
+[node name="RosterMargin" type="MarginContainer" parent="RosterPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 22
+theme_override_constants/margin_top = 22
+theme_override_constants/margin_right = 22
+theme_override_constants/margin_bottom = 22
+
+[node name="RosterContent" type="VBoxContainer" parent="RosterPanel/RosterMargin"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="RosterHeader" type="HBoxContainer" parent="RosterPanel/RosterMargin/RosterContent"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="RosterPanel/RosterMargin/RosterContent/RosterHeader"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 25
+text = "HERO ROSTER"
+
+[node name="Collapse" type="Button" parent="RosterPanel/RosterMargin/RosterContent/RosterHeader"]
+custom_minimum_size = Vector2(46, 42)
+layout_mode = 2
+text = ">"
+tooltip_text = "Collapse roster"
+
+[node name="Rule" type="HSeparator" parent="RosterPanel/RosterMargin/RosterContent"]
+layout_mode = 2
+
+[node name="RosterScroll" type="ScrollContainer" parent="RosterPanel/RosterMargin/RosterContent"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="RosterGrid" type="GridContainer" parent="RosterPanel/RosterMargin/RosterContent/RosterScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 14
+theme_override_constants/v_separation = 14
+columns = 2
+
+[node name="Operations" type="Button" parent="RosterPanel/RosterMargin/RosterContent"]
+custom_minimum_size = Vector2(0, 54)
+layout_mode = 2
+text = "CONTINUE TO OPERATIONS"
+
+[node name="CollapsedHandle" type="Button" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -76.0
+grow_horizontal = 0
+grow_vertical = 2
+text = "<\n\nR\nO\nS\nT\nE\nR"
+tooltip_text = "Expand hero roster"
+
+[node name="BackButton" type="Button" parent="."]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 22.0
+offset_right = 112.0
+offset_bottom = 66.0
+text = "BACK"

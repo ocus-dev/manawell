@@ -1,0 +1,168 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/title_screen.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/title/title-background.png" id="2_background"]
+[ext_resource type="Texture2D" path="res://assets/title/telos-title.png" id="3_title"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleButton"]
+content_margin_top = 8.0
+content_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxFlat" id="StyleHover"]
+bg_color = Color(0.96, 0.67, 0.31, 0.13)
+border_width_bottom = 2
+border_color = Color(0.96, 0.67, 0.31, 0.9)
+content_margin_top = 8.0
+content_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxFlat" id="StyleFocus"]
+bg_color = Color(0.96, 0.67, 0.31, 0.08)
+border_width_bottom = 1
+border_color = Color(0.96, 0.67, 0.31, 0.8)
+content_margin_top = 8.0
+content_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxFlat" id="StylePanel"]
+bg_color = Color(0.04, 0.055, 0.07, 0.88)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.65, 0.7, 0.72, 0.55)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+content_margin_left = 28.0
+content_margin_top = 24.0
+content_margin_right = 28.0
+content_margin_bottom = 24.0
+
+[sub_resource type="Theme" id="ThemeTitle"]
+default_font_size = 18
+Button/colors/font_color = Color(0.08, 0.1, 0.12, 1)
+Button/colors/font_disabled_color = Color(0.25, 0.28, 0.31, 0.55)
+Button/colors/font_focus_color = Color(0.06, 0.075, 0.09, 1)
+Button/colors/font_hover_color = Color(0.04, 0.055, 0.07, 1)
+Button/colors/font_pressed_color = Color(0.04, 0.055, 0.07, 1)
+Button/constants/outline_size = 2
+Button/colors/font_outline_color = Color(0.92, 0.94, 0.96, 0.32)
+Button/styles/normal = SubResource("StyleButton")
+Button/styles/hover = SubResource("StyleHover")
+Button/styles/pressed = SubResource("StyleHover")
+Button/styles/focus = SubResource("StyleFocus")
+PanelContainer/styles/panel = SubResource("StylePanel")
+Label/colors/font_color = Color(0.92, 0.94, 0.95, 1)
+CheckButton/colors/font_color = Color(0.92, 0.94, 0.95, 1)
+
+[node name="TitleScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = SubResource("ThemeTitle")
+script = ExtResource("1_script")
+
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_background")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Title" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 92.0
+offset_bottom = 235.0
+grow_horizontal = 2
+mouse_filter = 2
+texture = ExtResource("3_title")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Menu" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -115.0
+offset_top = -140.0
+offset_right = 115.0
+offset_bottom = 100.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 8
+
+[node name="Continue" type="Button" parent="Menu"]
+custom_minimum_size = Vector2(230, 48)
+layout_mode = 2
+focus_neighbor_top = NodePath("../Quit")
+text = "C O N T I N U E"
+
+[node name="NewGame" type="Button" parent="Menu"]
+custom_minimum_size = Vector2(230, 48)
+layout_mode = 2
+text = "N E W   G A M E"
+
+[node name="Settings" type="Button" parent="Menu"]
+custom_minimum_size = Vector2(230, 48)
+layout_mode = 2
+text = "S E T T I N G S"
+
+[node name="Quit" type="Button" parent="Menu"]
+custom_minimum_size = Vector2(230, 48)
+layout_mode = 2
+focus_neighbor_bottom = NodePath("../Continue")
+text = "Q U I T"
+
+[node name="SettingsPanel" type="PanelContainer" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -190.0
+offset_top = -90.0
+offset_right = 190.0
+offset_bottom = 110.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Settings" type="VBoxContainer" parent="SettingsPanel"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Heading" type="Label" parent="SettingsPanel/Settings"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "SETTINGS"
+horizontal_alignment = 1
+
+[node name="Fullscreen" type="CheckButton" parent="SettingsPanel/Settings"]
+custom_minimum_size = Vector2(280, 44)
+layout_mode = 2
+text = "Fullscreen"
+
+[node name="Back" type="Button" parent="SettingsPanel/Settings"]
+custom_minimum_size = Vector2(280, 44)
+layout_mode = 2
+text = "B A C K"
+
+[node name="NewGameConfirmation" type="ConfirmationDialog" parent="."]
+title = "Start New Game"
+dialog_text = "Start over and replace the current save?"
+ok_button_text = "Start New Game"
+cancel_button_text = "Cancel"

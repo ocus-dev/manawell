@@ -1,0 +1,237 @@
+{
+  "seed": 20260913,
+  "players_per_profile": 100,
+  "horizon_seconds": 86400,
+  "max_attempts": 300,
+  "tick_seconds": 0.1,
+  "combat": {
+    "contact_probability_per_second": 0.12,
+    "skill_spread": 0.18,
+    "pulse_efficiency": 0.35,
+    "fan_extra_hit_fraction": 0.35,
+    "travel_seconds": 3.0
+  },
+  "profiles": [
+    {
+      "name": "cautious",
+      "skill": 0.7,
+      "target_surges": 2,
+      "retreat_health": 0.55,
+      "push_probability": 0.65,
+      "menu_seconds": 25,
+      "session_seconds": 900,
+      "absence_seconds": 14400,
+      "purchase_style": "balanced",
+      "loadout": "fortified",
+      "specialization": "harvest.rapid_seal"
+    },
+    {
+      "name": "balanced",
+      "skill": 1.0,
+      "target_surges": 4,
+      "retreat_health": 0.3,
+      "push_probability": 0.75,
+      "menu_seconds": 15,
+      "session_seconds": 1800,
+      "absence_seconds": 10800,
+      "purchase_style": "balanced",
+      "loadout": "standard",
+      "specialization": "harvest.rapid_seal"
+    },
+    {
+      "name": "risk_seeking",
+      "skill": 1.2,
+      "target_surges": 7,
+      "retreat_health": 0.12,
+      "push_probability": 0.8,
+      "menu_seconds": 10,
+      "session_seconds": 2700,
+      "absence_seconds": 7200,
+      "purchase_style": "production",
+      "loadout": "overdrive",
+      "specialization": "harvest.deep_draw"
+    }
+  ],
+  "combat_model": "discrete",
+  "experiments": [
+    {
+      "overrides": {},
+      "name": "baseline"
+    },
+    {
+      "overrides": {
+        "stage_overrides": {
+          "act_01_node_04": {
+            "damage_multiplier": 1.1,
+            "waves": 3,
+            "hp_multiplier": 4.0
+          },
+          "act_01_node_09": {
+            "hp_multiplier": 12.0,
+            "damage_multiplier": 1.2
+          },
+          "act_01_node_01": {
+            "damage_multiplier": 1.0,
+            "waves": 2,
+            "hp_multiplier": 2.0
+          },
+          "act_01_node_07": {
+            "damage_multiplier": 1.2,
+            "waves": 3,
+            "hp_multiplier": 6.0
+          },
+          "act_01_node_06": {
+            "damage_multiplier": 1.15,
+            "waves": 3,
+            "hp_multiplier": 5.0
+          },
+          "act_01_node_03": {
+            "damage_multiplier": 1.05,
+            "waves": 3,
+            "hp_multiplier": 3.0
+          }
+        }
+      },
+      "name": "longer_scaled_encounters"
+    },
+    {
+      "overrides": {
+        "passive_income_multiplier": 0.85,
+        "specialization_cost_multiplier": 1.0,
+        "post_surge_four_increment": 0.25,
+        "research_rank_cost_multipliers": [
+          1,
+          2,
+          4
+        ]
+      },
+      "name": "economy_changes"
+    },
+    {
+      "overrides": {
+        "post_surge_four_increment": 0.25,
+        "passive_income_multiplier": 0.85,
+        "research_rank_cost_multipliers": [
+          1,
+          2,
+          4
+        ],
+        "stage_overrides": {
+          "act_01_node_04": {
+            "damage_multiplier": 1.1,
+            "waves": 3,
+            "hp_multiplier": 4.0
+          },
+          "act_01_node_09": {
+            "hp_multiplier": 12.0,
+            "damage_multiplier": 1.2
+          },
+          "act_01_node_01": {
+            "damage_multiplier": 1.0,
+            "waves": 2,
+            "hp_multiplier": 2.0
+          },
+          "act_01_node_07": {
+            "damage_multiplier": 1.2,
+            "waves": 3,
+            "hp_multiplier": 6.0
+          },
+          "act_01_node_06": {
+            "damage_multiplier": 1.15,
+            "waves": 3,
+            "hp_multiplier": 5.0
+          },
+          "act_01_node_03": {
+            "damage_multiplier": 1.05,
+            "waves": 3,
+            "hp_multiplier": 3.0
+          }
+        },
+        "specialization_cost_multiplier": 1.0
+      },
+      "name": "combined_changes"
+    },
+    {
+      "overrides": {
+        "specialization_cost_multiplier": 1.0,
+        "xp_settings": {
+          "default_completion_xp": 60,
+          "kill_xp_by_enemy": {
+            "boss": 100,
+            "breaker": 18,
+            "pursuer": 8,
+            "ranged": 12
+          },
+          "stat_bonuses": {
+            "max_health": {
+              "per_level": 2,
+              "mode": "flat"
+            },
+            "attack_damage": {
+              "per_level": 0.01,
+              "mode": "fraction"
+            }
+          },
+          "milestone_levels": [
+            2,
+            3,
+            5,
+            10
+          ],
+          "completion_xp_by_encounter": {
+            "level": 90,
+            "well": 60,
+            "boss": 180
+          },
+          "leveling": {
+            "curve": "quadratic",
+            "max_level": 20,
+            "growth": 1,
+            "first_level_xp": 100
+          },
+          "enabled": true,
+          "default_kill_xp": 8
+        },
+        "passive_income_multiplier": 0.85,
+        "research_rank_cost_multipliers": [
+          1,
+          2,
+          4
+        ],
+        "post_surge_four_increment": 0.25,
+        "stage_overrides": {
+          "act_01_node_04": {
+            "damage_multiplier": 1.1,
+            "waves": 3,
+            "hp_multiplier": 4.0
+          },
+          "act_01_node_09": {
+            "hp_multiplier": 12.0,
+            "damage_multiplier": 1.2
+          },
+          "act_01_node_01": {
+            "damage_multiplier": 1.0,
+            "waves": 2,
+            "hp_multiplier": 2.0
+          },
+          "act_01_node_07": {
+            "damage_multiplier": 1.2,
+            "waves": 3,
+            "hp_multiplier": 6.0
+          },
+          "act_01_node_06": {
+            "damage_multiplier": 1.15,
+            "waves": 3,
+            "hp_multiplier": 5.0
+          },
+          "act_01_node_03": {
+            "damage_multiplier": 1.05,
+            "waves": 3,
+            "hp_multiplier": 3.0
+          }
+        }
+      },
+      "name": "combined_plus_xp"
+    }
+  ]
+}

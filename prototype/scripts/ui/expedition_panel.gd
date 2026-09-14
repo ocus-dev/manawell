@@ -74,7 +74,8 @@ func _create_loadout_button(loadout_id: String) -> Button:
 	var button := Button.new()
 	button.name = "Loadout_%s" % loadout_id
 	button.set_meta("loadout_id", loadout_id)
-	button.custom_minimum_size = Vector2(0, 78)
+	button.custom_minimum_size = Vector2(280, 52)
+	button.size_flags_horizontal = Control.SIZE_SHRINK_END
 	button.toggle_mode = true
 	button.pressed.connect(loadout_requested.emit.bind(loadout_id))
 	var content := VBoxContainer.new()
@@ -82,18 +83,19 @@ func _create_loadout_button(loadout_id: String) -> Button:
 	content.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	content.offset_left = 8
-	content.offset_top = 6
+	content.offset_top = 4
 	content.offset_right = -8
-	content.offset_bottom = -6
+	content.offset_bottom = -4
 	content.add_theme_constant_override("separation", 2)
 	var label := Label.new()
 	label.name = "LoadoutLabel"
-	label.add_theme_font_size_override("font_size", 16)
+	label.add_theme_font_size_override("font_size", 13)
 	content.add_child(label)
 	var summary := Label.new()
 	summary.name = "LoadoutSummary"
-	summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	summary.add_theme_font_size_override("font_size", 12)
+	summary.autowrap_mode = TextServer.AUTOWRAP_OFF
+	summary.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	summary.add_theme_font_size_override("font_size", 10)
 	content.add_child(summary)
 	button.add_child(content)
 	return button
@@ -103,11 +105,13 @@ func _configure_loadout_button(button: Button, loadout: Dictionary) -> void:
 	var label: String = str(loadout.get("label", loadout.get("id", "")))
 	button.text = ""
 	button.button_pressed = selected
-	button.tooltip_text = str(loadout.get("availability_reason", ""))
+	var summary_text := str(loadout.get("summary", ""))
+	var availability := str(loadout.get("availability_reason", ""))
+	button.tooltip_text = summary_text if availability.is_empty() else "%s\n%s" % [summary_text, availability]
 	button.disabled = not bool(loadout.get("available", false))
 	var status_prefix := "Selected - " if selected else "Locked - " if button.disabled else ""
 	button.get_node("LoadoutContent/LoadoutLabel").text = status_prefix + label
-	button.get_node("LoadoutContent/LoadoutSummary").text = str(loadout.get("summary", ""))
+	button.get_node("LoadoutContent/LoadoutSummary").text = summary_text
 
 func request_start() -> void:
 	if not start_button.disabled:
@@ -130,17 +134,17 @@ func _input(event: InputEvent) -> void:
 func _build() -> void:
 	var content := VBoxContainer.new()
 	content.name = "ExpeditionPanelContent"
-	content.add_theme_constant_override("separation", 12)
+	content.add_theme_constant_override("separation", 6)
 	add_child(content)
 	var heading := Label.new()
 	heading.text = "EXPEDITION"
-	heading.add_theme_font_size_override("font_size", 14)
+	heading.add_theme_font_size_override("font_size", 12)
 	content.add_child(heading)
 	var hero_row := HBoxContainer.new()
 	hero_row.name = "ControlledHero"
 	hero_initials = Label.new()
 	hero_initials.text = "YOU"
-	hero_initials.custom_minimum_size = Vector2(56, 48)
+	hero_initials.custom_minimum_size = Vector2(44, 38)
 	hero_initials.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hero_initials.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	hero_row.add_child(hero_initials)
@@ -149,59 +153,60 @@ func _build() -> void:
 	hero_copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hero_label = Label.new()
 	hero_label.name = "HeroName"
-	hero_label.add_theme_font_size_override("font_size", 18)
+	hero_label.add_theme_font_size_override("font_size", 16)
 	hero_copy.add_child(hero_label)
 	capability_label = Label.new()
 	capability_label.name = "Capability"
 	capability_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	capability_label.add_theme_font_size_override("font_size", 14)
+	capability_label.add_theme_font_size_override("font_size", 12)
 	hero_copy.add_child(capability_label)
 	hero_row.add_child(hero_copy)
 	var change_hero := Button.new()
 	change_hero.name = "ChangeHero"
 	change_hero.text = "Change hero"
-	change_hero.custom_minimum_size = Vector2(0, 40)
+	change_hero.custom_minimum_size = Vector2(0, 32)
 	change_hero.pressed.connect(change_hero_requested.emit)
 	hero_row.add_child(change_hero)
 	content.add_child(hero_row)
 	var destination_heading := Label.new()
 	destination_heading.text = "DESTINATION"
-	destination_heading.add_theme_font_size_override("font_size", 14)
+	destination_heading.add_theme_font_size_override("font_size", 12)
 	content.add_child(destination_heading)
 	destination_label = Label.new()
 	destination_label.name = "Destination"
-	destination_label.add_theme_font_size_override("font_size", 16)
+	destination_label.add_theme_font_size_override("font_size", 14)
 	content.add_child(destination_label)
 	rate_label = Label.new()
 	rate_label.name = "BaseRate"
-	rate_label.add_theme_font_size_override("font_size", 14)
+	rate_label.add_theme_font_size_override("font_size", 12)
 	content.add_child(rate_label)
 	threat_label = Label.new()
 	threat_label.name = "ThreatSummary"
 	threat_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	threat_label.add_theme_font_size_override("font_size", 14)
+	threat_label.add_theme_font_size_override("font_size", 12)
 	content.add_child(threat_label)
 	guard_warning_label = Label.new()
 	guard_warning_label.name = "GuardWarning"
 	guard_warning_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	guard_warning_label.add_theme_font_size_override("font_size", 14)
+	guard_warning_label.add_theme_font_size_override("font_size", 12)
 	content.add_child(guard_warning_label)
 	var loadout_heading := Label.new()
 	loadout_heading.text = "HARVESTER LOADOUT"
-	loadout_heading.add_theme_font_size_override("font_size", 14)
+	loadout_heading.add_theme_font_size_override("font_size", 12)
 	content.add_child(loadout_heading)
 	loadout_rows = VBoxContainer.new()
 	loadout_rows.name = "LoadoutChoices"
-	loadout_rows.add_theme_constant_override("separation", 8)
+	loadout_rows.add_theme_constant_override("separation", 4)
 	content.add_child(loadout_rows)
 	start_button = Button.new()
 	start_button.name = "StartExtraction"
 	start_button.text = "Start extraction [E]"
-	start_button.custom_minimum_size = Vector2(0, 48)
+	start_button.custom_minimum_size = Vector2(220, 34)
+	start_button.size_flags_horizontal = Control.SIZE_SHRINK_END
 	start_button.pressed.connect(request_start)
 	content.add_child(start_button)
 	start_reason_label = Label.new()
 	start_reason_label.name = "StartDisabledReason"
 	start_reason_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	start_reason_label.add_theme_font_size_override("font_size", 14)
+	start_reason_label.add_theme_font_size_override("font_size", 12)
 	content.add_child(start_reason_label)

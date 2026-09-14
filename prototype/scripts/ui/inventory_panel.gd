@@ -53,7 +53,7 @@ func _ready() -> void:
     workspace.add_theme_constant_override("separation", 10)
     content.add_child(workspace)
     equipment_pane = preload("res://scripts/ui/inventory_equipment_pane.gd").new()
-    equipment_pane.custom_minimum_size.x = 250
+    equipment_pane.custom_minimum_size.x = 240
     equipment_pane.hero_selected.connect(func(id: String): selected_hero_id = id; _refresh_panes())
     equipment_pane.item_selected.connect(_inspect)
     equipment_pane.unequip_requested.connect(func(hero_id: String, slot: String): unequip_requested.emit(hero_id, slot))
@@ -101,7 +101,7 @@ func _ready() -> void:
     var help := _label("Select to compare · New: ●  Equipped: E  Locked: L", 12)
     stash.add_child(help)
     detail_pane = preload("res://scripts/ui/inventory_detail_pane.gd").new()
-    detail_pane.custom_minimum_size.x = 300
+    detail_pane.custom_minimum_size.x = 282
     detail_pane.equip_requested.connect(func(hero_id: String, slot: String, id: String): equip_requested.emit(hero_id, slot, id))
     detail_pane.lock_toggled.connect(func(id: String, locked: bool): lock_toggled.emit(id, locked))
     detail_pane.discard_requested.connect(func(id: String, name_value: String): discard_requested.emit(id, name_value))

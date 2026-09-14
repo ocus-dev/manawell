@@ -1,10 +1,10 @@
 [gd_scene load_steps=3 format=3]
 
-[ext_resource type="Script" path="res://scripts/game/encounter_controller.gd" id="1_main"]
+[ext_resource type="Script" path="res://scripts/game/cinematic_presentation_controller.gd" id="1_main"]
 [ext_resource type="Script" path="res://scripts/game/player.gd" id="2_hero"]
 [node name="SideViewDefense" type="Node2D"]
 script = ExtResource("1_main")
 
 [node name="Hero" type="Node2D" parent="."]
-position = Vector2(320, 500)
+position = Vector2(320, 612)
 script = ExtResource("2_hero")

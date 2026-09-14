@@ -7,5 +7,5 @@
 script = ExtResource("1_foundry")
 
 [node name="Hero" type="Node2D" parent="."]
-position = Vector2(320, 500)
+position = Vector2(320, 612)
 script = ExtResource("2_hero")

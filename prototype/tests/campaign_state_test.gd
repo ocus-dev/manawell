@@ -22,17 +22,20 @@ func _init() -> void:
 	var campaign: RefCounted = CampaignStateScript.new()
 	assert(campaign.node_status("act_01", "act_01_node_01", catalog)["status"] == CampaignStateScript.STATUS_AVAILABLE)
 	assert(campaign.node_status("act_01", "act_01_node_02", catalog)["status"] == CampaignStateScript.STATUS_LOCKED)
+	assert(campaign.furthest_progression_node(catalog)["id"] == "act_01_node_01", "Fresh progress briefs the first campaign node")
 	assert(campaign.start_node("act_01", "act_01_node_01", catalog))
 	var account: RefCounted = AccountStateScript.new()
 	var result := {"run_id": "campaign-run-1", "phase": RunStateScript.Phase.SUCCESS, "payout": 3, "completed_surges": 0}
 	assert(campaign.commit_terminal_result(result, account, catalog))
 	assert(campaign.node_status("act_01", "act_01_node_01", catalog)["status"] == CampaignStateScript.STATUS_COMPLETED)
+	assert(campaign.furthest_progression_node(catalog)["id"] == "act_01_node_02", "Operations advances to the newly available node")
 	assert(not campaign.commit_terminal_result(result, account, catalog))
 	assert(campaign.start_node("act_01", "act_01_node_02", catalog))
 	result = {"run_id": "campaign-run-2", "phase": RunStateScript.Phase.SUCCESS, "payout": 3, "completed_surges": 1}
 	assert(campaign.commit_terminal_result(result, account, catalog))
 	assert(account.is_well_commissioned("well_1"))
 	assert(account.is_well_unlocked("well_2"))
+	assert(campaign.furthest_progression_node(catalog)["id"] == "act_01_node_03", "Operations follows the next stage after the well")
 	assert(not account.is_well_unlocked("well_3"))
 	account.commissioned_wells["well_2"] = true
 	account.unlocked_wells["well_3"] = true

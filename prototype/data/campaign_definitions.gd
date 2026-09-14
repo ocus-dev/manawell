@@ -1,6 +1,7 @@
 class_name CampaignDefinitions
 extends RefCounted
 
+# LEGACY MIGRATION DATA: CampaignCatalog now reads prototype/data/campaign JSON.
 const ACTS: Array[Dictionary] = [
 	{
 		"id": "act_01",

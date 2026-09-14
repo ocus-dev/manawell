@@ -1,21 +1,29 @@
 class_name CampaignCatalog
 extends RefCounted
 
-const CampaignDefinitionsScript = preload("res://data/campaign_definitions.gd")
+const LevelDataLoaderScript = preload("res://scripts/model/level_data_loader.gd")
 
 var acts: Dictionary = {}
 var act_order: Array[String] = []
 var validation_error: String = ""
 
-func _init() -> void:
-	for act in CampaignDefinitionsScript.ACTS:
-		var act_copy: Dictionary = act.duplicate(true)
-		var act_id: String = str(act_copy.get("id", ""))
-		if acts.has(act_id):
-			validation_error = "duplicate act ID: %s" % act_id
-		else:
-			acts[act_id] = act_copy
-			act_order.append(act_id)
+func _init(data_root: String = "res://data/campaign") -> void:
+	var loader: RefCounted = LevelDataLoaderScript.new()
+	if not loader.load(data_root):
+		var diagnostics: Array = loader.get_diagnostics()
+		validation_error = str(diagnostics.front()) if not diagnostics.is_empty() else "campaign data failed to load"
+		return
+	for act_id in loader.act_ids():
+		var resolved_act: Dictionary = loader.get_act(act_id)
+		var nodes: Array[Dictionary] = []
+		for node_id in loader.level_ids(act_id):
+			var level: Dictionary = loader.get_level(act_id, node_id)
+			var node := {"id": level["id"], "display_name": level["display_name"], "type": level["type"], "position": level["map"]["position"].duplicate(), "prerequisites": level["requires_completed"].duplicate(), "encounter_key": "campaign.%s" % level["id"], "level_data": level.duplicate(true)}
+			if level["type"] == "well":
+				node["well_id"] = level["well"]["id"]
+			nodes.append(node)
+		acts[act_id] = {"id": act_id, "display_name": resolved_act.get("display_name", act_id), "layout_revision": resolved_act.get("layout_revision", ""), "nodes": nodes}
+		act_order.append(act_id)
 	for act_id in act_order:
 		var result := validate_act(acts[act_id])
 		if not result["valid"]:
@@ -58,9 +66,6 @@ static func validate_act(act: Dictionary) -> Dictionary:
 	if not act["id"] is String or str(act["id"]).is_empty() or not act["nodes"] is Array:
 		return {"valid": false, "error": "act identity or nodes are invalid"}
 	var ids: Dictionary = {}
-	var well_count := 0
-	var monster_count := 0
-	var boss_count := 0
 	for node: Dictionary in act["nodes"]:
 		if not node is Dictionary:
 			return {"valid": false, "error": "node must be an object"}
@@ -81,27 +86,12 @@ static func validate_act(act: Dictionary) -> Dictionary:
 			if not prerequisite is String:
 				return {"valid": false, "error": "prerequisite IDs must be strings"}
 		if node["type"] == "well":
-			well_count += 1
 			if not node.has("well_id") or not node["well_id"] is String or str(node["well_id"]).is_empty():
 				return {"valid": false, "error": "well node needs a well ID"}
-		elif node["type"] == "monster":
-			monster_count += 1
-		else:
-			boss_count += 1
-	if act["nodes"].size() != 9 or well_count != 3 or monster_count != 5 or boss_count != 1:
-		return {"valid": false, "error": "act must contain 9 nodes: 3 wells, 5 monsters, 1 boss"}
-	var boss: Dictionary = {}
 	for node: Dictionary in act["nodes"]:
 		for prerequisite in node["prerequisites"]:
 			if not ids.has(prerequisite):
 				return {"valid": false, "error": "missing prerequisite reference: %s" % prerequisite}
-		if node["type"] == "boss":
-			boss = node
-	if boss.is_empty() or boss["prerequisites"].size() != 8:
-		return {"valid": false, "error": "boss must require all eight previous nodes"}
-	for prerequisite in boss["prerequisites"]:
-		if not ids.has(prerequisite) or prerequisite == boss["id"]:
-			return {"valid": false, "error": "boss prerequisite is invalid"}
 	if _has_cycle(act["nodes"], ids):
 		return {"valid": false, "error": "act prerequisites contain a cycle"}
 	var reachable: Dictionary = {}
