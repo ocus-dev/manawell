@@ -3,6 +3,7 @@ extends RefCounted
 
 const BalanceData = preload("res://data/balance.gd")
 const ResearchCatalogScript = preload("res://scripts/model/research_catalog.gd")
+const LevelDataLoaderScript = preload("res://scripts/model/level_data_loader.gd")
 
 var wells: Dictionary = {
 	"well_1": {"label": "Well 1", "base_output": BalanceData.WELL_1_BASE_OUTPUT, "spawn_interval_factor": 1.0, "enemy_damage_factor": 1.0},
@@ -26,6 +27,28 @@ var surge_rules: Array[Dictionary] = [
 	{"tier": 2, "spawn_interval": 2.0, "breaker_cycle": 2, "ranged_cycle": 3},
 	{"tier": 3, "spawn_interval": 2.0, "breaker_cycle": 2, "ranged_cycle": 3},
 ]
+
+func _init() -> void:
+	var loader: RefCounted = LevelDataLoaderScript.new()
+	if not loader.load("res://data/campaign"):
+		return
+	for act_id in loader.act_ids():
+		for level_id in loader.level_ids(act_id):
+			var level: Dictionary = loader.get_level(act_id, level_id)
+			if level.get("type", "") != "well":
+				continue
+			var well: Dictionary = level.get("well", {})
+			var well_id := str(well.get("id", ""))
+			if well_id.is_empty():
+				continue
+			wells[well_id] = {
+				"id": well_id,
+				"label": level.get("display_name", well_id),
+				"base_output": float(well.get("base_mana_per_second", 0.0)),
+				"spawn_interval_factor": float(well.get("spawn_interval_multiplier", 1.0)),
+				"enemy_damage_factor": float(well.get("enemy_damage_factor", 1.0)),
+				"source_level_id": level_id,
+			}
 
 func define_well(well_id: String, definition: Dictionary) -> void:
 	wells[well_id] = definition.duplicate(true)
