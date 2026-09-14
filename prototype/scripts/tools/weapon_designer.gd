@@ -15,6 +15,9 @@ var affixes: Array[Dictionary] = []
 var validation_label: Label
 var job_label: Label
 var preview_label: RichTextLabel
+var preview_icon: TextureRect
+var preview_world: TextureRect
+var preview_visual_status: Label
 var draft_list: ItemList
 var job_list: ItemList
 var source_path: OptionButton
@@ -107,6 +110,16 @@ func _build() -> void:
 	side.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	columns.add_child(side)
 	side.add_child(_heading("PREVIEW", 20))
+	var visual_row := HBoxContainer.new()
+	visual_row.add_theme_constant_override("separation", 8)
+	side.add_child(visual_row)
+	preview_icon = _preview_image("ICON")
+	preview_world = _preview_image("WORLD SPRITE")
+	visual_row.add_child(preview_icon)
+	visual_row.add_child(preview_world)
+	preview_visual_status = _label("Prepare art to generate a visual preview.", 11)
+	preview_visual_status.modulate = Color("9ab0bc")
+	side.add_child(preview_visual_status)
 	preview_label = RichTextLabel.new()
 	preview_label.bbcode_enabled = true
 	preview_label.custom_minimum_size.y = 190
@@ -137,6 +150,7 @@ func _refresh() -> void:
 	validation_label.text = "VALID" if result.valid else _diagnostic_text(result)
 	validation_label.add_theme_color_override("font_color", Color("75d5a5") if result.valid else Color("f09a9a"))
 	preview_label.text = _preview_text()
+	_refresh_visual_preview()
 	draft_list.clear()
 	for draft_id in Store.list_drafts():
 		draft_list.add_item(draft_id)
@@ -197,6 +211,59 @@ func _preview_text() -> String:
 	var instance := {"instance_id": "designer-preview", "base_id": "core.heavy_breech", "rarity": "common", "item_level": int(draft.get("item_level", 1)), "implicit_modifiers": draft.get("base_modifiers", []).duplicate(true), "explicit_modifiers": draft.get("explicit_modifiers", []).duplicate(true)}
 	var resolved := Resolver.resolve({}, {"designer-preview": instance}, {"weapon": "designer-preview"})
 	return "[b]%s[/b]\n%s\n\nAttack: %.2f\nAttacks / sec: %.2f\nProjectile speed: %.2f\n\nIcon: %s\nEquipped-stat preview uses HeroStatResolver." % [draft.get("label", "New weapon"), draft.get("description", ""), resolved.stats.attack_damage, resolved.stats.attacks_per_second, resolved.stats.projectile_speed, str(draft.get("art", {}).get("icon", "prepared icon pending"))]
+
+func _preview_image(caption: String) -> TextureRect:
+	var image := TextureRect.new()
+	image.custom_minimum_size = Vector2(148, 116)
+	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	image.tooltip_text = caption
+	return image
+
+func _refresh_visual_preview() -> void:
+	if preview_icon == null:
+		return
+	var icon_path := ""
+	var world_path := ""
+	var job_id := str(draft.get("art", {}).get("job_id", ""))
+	if not job_id.is_empty():
+		var run_root := ProjectSettings.globalize_path("res://../art/weapons/runs/%s" % job_id)
+		if FileAccess.file_exists(run_root.path_join("square-icon.png")):
+			icon_path = run_root.path_join("square-icon.png")
+		if FileAccess.file_exists(run_root.path_join("world-sprite.png")):
+			world_path = run_root.path_join("world-sprite.png")
+	if icon_path.is_empty() or world_path.is_empty():
+		var published := _published_assets(str(draft.get("weapon_id", "")))
+		if icon_path.is_empty():
+			icon_path = str(published.get("icon", ""))
+		if world_path.is_empty():
+			world_path = str(published.get("world_sprite", ""))
+	preview_icon.texture = _load_preview_texture(icon_path)
+	preview_world.texture = _load_preview_texture(world_path)
+	var has_visual := preview_icon.texture != null or preview_world.texture != null
+	preview_visual_status.text = "Prepared art preview" if has_visual else "Prepare art to generate a visual preview."
+
+func _published_assets(weapon_id: String) -> Dictionary:
+	if weapon_id.is_empty():
+		return {}
+	var file := FileAccess.open(ProjectSettings.globalize_path("res://data/weapons/index.json"), FileAccess.READ)
+	if file == null:
+		return {}
+	var value = JSON.parse_string(file.get_as_text())
+	file.close()
+	if not value is Dictionary:
+		return {}
+	return value.get("weapons", {}).get(weapon_id, {}).get("assets", {})
+
+func _load_preview_texture(path: String) -> Texture2D:
+	if path.is_empty():
+		return null
+	if path.begins_with("res://"):
+		return load(path) as Texture2D
+	if not FileAccess.file_exists(path):
+		return null
+	var image := Image.load_from_file(path)
+	return ImageTexture.create_from_image(image) if image != null and not image.is_empty() else null
 
 func _save_draft() -> void:
 	_sync_art()
