@@ -7,6 +7,7 @@ const Catalog = preload("res://scripts/model/weapon_catalog.gd")
 const Definitions = preload("res://scripts/model/item_definitions.gd")
 const Resolver = preload("res://scripts/model/hero_stat_resolver.gd")
 const ThemeScript = preload("res://scripts/ui/industrial_theme.gd")
+const SOURCE_FOLDER_RELATIVE := "art/ui-items/Weapons"
 
 var draft: Dictionary = {}
 var fields := {}
@@ -16,7 +17,7 @@ var job_label: Label
 var preview_label: RichTextLabel
 var draft_list: ItemList
 var job_list: ItemList
-var source_path: LineEdit
+var source_path: OptionButton
 var description_edit: TextEdit
 
 func _ready() -> void:
@@ -43,8 +44,13 @@ func _build() -> void:
 	editor.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	columns.add_child(editor)
 	editor.add_child(_heading("WEAPON AUTHORING", 20))
-	source_path = _line(editor, "Source image", "source")
-	source_path.placeholder_text = "repository path or prepared source"
+	editor.add_child(_label("SOURCE IMAGE"))
+	source_path = OptionButton.new()
+	editor.add_child(source_path)
+	_populate_source_options()
+	source_path.item_selected.connect(func(index: int):
+		draft.art.source = str(source_path.get_item_metadata(index))
+		_refresh())
 	editor.add_child(_heading("CROP", 14))
 	_spin(editor, "Crop X", "crop_x", 0, 10000, 1)
 	_spin(editor, "Crop Y", "crop_y", 0, 10000, 1)
@@ -155,7 +161,11 @@ func _reopen_draft() -> void:
 func _start_job() -> void:
 	_sync_art()
 	var job_id := "job_%s" % Time.get_datetime_string_from_system().replace(":", "").replace("-", "")
-	var receipt := {"job_id": job_id, "draft_id": draft.draft_id, "status": "starting", "stage": "snapshot", "progress": 0.0, "failure": "", "source": source_path.text, "created_at": Time.get_datetime_string_from_system(true)}
+	var source := _selected_source()
+	if source.is_empty():
+		job_label.text = "Select a PNG source image before preparing art."
+		return
+	var receipt := {"job_id": job_id, "draft_id": draft.draft_id, "status": "starting", "stage": "snapshot", "progress": 0.0, "failure": "", "source": source, "created_at": Time.get_datetime_string_from_system(true)}
 	draft.art.job_id = job_id
 	if not Store.save_job_receipt(receipt).valid:
 		job_label.text = "Could not save the job receipt."
@@ -168,7 +178,7 @@ func _start_job() -> void:
 		job_label.text = receipt.failure
 		_refresh()
 		return
-	var process_id := OS.create_process("powershell", PackedStringArray(["-ExecutionPolicy", "Bypass", "-File", runner, "start", "--job-id", job_id, "--source", source_path.text, "--root", ProjectSettings.globalize_path("res://../art/weapons/runs")]))
+	var process_id := OS.create_process("powershell", PackedStringArray(["-ExecutionPolicy", "Bypass", "-File", runner, "start", "--job-id", job_id, "--source", source, "--root", ProjectSettings.globalize_path("res://../art/weapons/runs")]))
 	receipt.status = "running" if process_id > 0 else "blocked"
 	receipt.failure = "" if process_id > 0 else "worker could not be launched"
 	Store.save_job_receipt(receipt)
@@ -201,7 +211,7 @@ func _resume_job() -> void:
 	job_label.text = "Job %s: %s, stage %s, %.0f%%\n%s" % [job_id, receipt.get("status", "unknown"), receipt.get("stage", "unknown"), float(receipt.get("progress", 0.0)) * 100.0, receipt.get("failure", "No failure details.")]
 
 func _sync_art() -> void:
-	draft.art.source = source_path.text
+	draft.art.source = _selected_source()
 	draft.art.crop = [_spin_value("crop_x", 0.0), _spin_value("crop_y", 0.0), _spin_value("crop_w", 0.0), _spin_value("crop_h", 0.0)]
 	draft.art.grip = [_spin_value("grip_x", 0.5), _spin_value("grip_y", 0.75)]
 	draft.art.world_scale = _spin_value("world_scale", 1.0)
@@ -213,7 +223,7 @@ func _spin_value(key: String, fallback: float) -> float:
 func _apply_draft_to_controls() -> void:
 	if source_path == null:
 		return
-	source_path.text = str(draft.get("art", {}).get("source", ""))
+	_select_source(str(draft.get("art", {}).get("source", "")))
 	description_edit.text = str(draft.get("description", ""))
 	for key in ["label"]:
 		var line: LineEdit = fields.get(key)
@@ -244,6 +254,43 @@ func _apply_draft_to_controls() -> void:
 				option.select(option_index)
 		record.tier.value = int(modifier.get("tier", 1))
 		record.value.value = float(modifier.get("value", 0.0))
+
+func _populate_source_options() -> void:
+	source_path.clear()
+	var files: Array[String] = []
+	var directory := DirAccess.open(ProjectSettings.globalize_path("res://../" + SOURCE_FOLDER_RELATIVE))
+	if directory != null:
+		directory.list_dir_begin()
+		var filename := directory.get_next()
+		while not filename.is_empty():
+			if not directory.current_is_dir() and filename.to_lower().ends_with(".png"):
+				files.append(filename)
+			filename = directory.get_next()
+		directory.list_dir_end()
+	files.sort()
+	for filename in files:
+		var index := source_path.item_count
+		source_path.add_item(filename)
+		source_path.set_item_metadata(index, SOURCE_FOLDER_RELATIVE.path_join(filename))
+	if files.is_empty():
+		source_path.add_item("No PNG files found in Weapons folder")
+		source_path.set_item_disabled(0, true)
+	else:
+		source_path.select(0)
+
+func _select_source(path: String) -> void:
+	for index in range(source_path.item_count):
+		if str(source_path.get_item_metadata(index)) == path:
+			source_path.select(index)
+			return
+	if source_path.item_count > 0 and not source_path.is_item_disabled(0):
+		source_path.select(0)
+
+func _selected_source() -> String:
+	var index := source_path.selected
+	if index < 0 or source_path.is_item_disabled(index):
+		return ""
+	return str(source_path.get_item_metadata(index))
 
 func _stat_control(parent: Control, key: String, title: String, operation: String, initial: float) -> void:
 	var spin := _spin(parent, title, key, -100.0, 100.0, 0.01)
