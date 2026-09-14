@@ -332,6 +332,7 @@ func start_campaign_node(act_id: String, node_id: String) -> bool:
 		return false
 	frozen_level_definition = node.get("level_data", {}).duplicate(true)
 	frozen_level_content_hash = SnapshotScript.content_hash_for(frozen_level_definition)
+	_apply_level_backdrop()
 	return true
 
 func select_campaign_node(act_id: String, node_id: String) -> bool:
@@ -603,6 +604,7 @@ func _restore_saved_snapshot() -> void:
 	spawner_rng_state = int(snapshot["spawner"]["rng_state"])
 	frozen_level_definition = snapshot["level_definition"].duplicate(true)
 	frozen_level_content_hash = str(snapshot["level_content_hash"])
+	_apply_level_backdrop()
 	var campaign: Dictionary = snapshot["campaign"]
 	if campaign.has("act_id") and campaign["act_id"] is String:
 		campaign_state.active_act_id = campaign["act_id"]
@@ -636,6 +638,12 @@ func _freeze_level_definition(well_data: Dictionary) -> void:
 	if frozen_level_definition.is_empty():
 		frozen_level_definition = {"well": well_data.duplicate(true)}
 	frozen_level_content_hash = SnapshotScript.content_hash_for(frozen_level_definition)
+	_apply_level_backdrop()
+
+func _apply_level_backdrop() -> void:
+	if environment_visual == null:
+		return
+	environment_visual.call("set_backdrop_id", str(frozen_level_definition.get("backdrop_id", "")))
 
 func _update_hud() -> void:
 	if encounter_hud == null:

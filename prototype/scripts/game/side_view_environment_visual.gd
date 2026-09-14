@@ -4,7 +4,8 @@ extends Node2D
 const ArenaLayoutScript = preload("res://data/arena_layout.gd")
 const LOGICAL_SIZE := Vector2(1280.0, 720.0)
 const GROUND_Y := 652.0
-const BACKDROP_PATH := "res://assets/side-view/environment/backdrop_level_1.png"
+const BACKDROP_ROOT := "res://assets/side-view/environment/"
+const GENERIC_BACKDROP_ID := "generic_backdrop"
 const LANE_PATH := "res://assets/side-view/environment/lane.png"
 
 @export var use_prepared_layers := true
@@ -12,11 +13,24 @@ const LANE_PATH := "res://assets/side-view/environment/lane.png"
 
 var backdrop_texture: Texture2D
 var lane_texture: Texture2D
+var backdrop_id := GENERIC_BACKDROP_ID
 
 func _ready() -> void:
 	z_index = 0
-	backdrop_texture = load(BACKDROP_PATH)
+	set_backdrop_id(GENERIC_BACKDROP_ID)
 	lane_texture = load(LANE_PATH)
+	queue_redraw()
+
+func set_backdrop_id(requested_id: String) -> void:
+	var candidate_id := requested_id.strip_edges()
+	if candidate_id.is_empty():
+		candidate_id = GENERIC_BACKDROP_ID
+	var candidate_path := BACKDROP_ROOT + candidate_id + ".png"
+	if not ResourceLoader.exists(candidate_path):
+		candidate_id = GENERIC_BACKDROP_ID
+		candidate_path = BACKDROP_ROOT + GENERIC_BACKDROP_ID + ".png"
+	backdrop_id = candidate_id
+	backdrop_texture = load(candidate_path) as Texture2D
 	queue_redraw()
 
 func is_prepared() -> bool:

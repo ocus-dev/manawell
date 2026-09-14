@@ -130,7 +130,7 @@ func _resolve_level(value: Variant, path: String, expected_act_id: String) -> Di
 	if not value is Dictionary:
 		return _invalid("%s: root must be an object" % path)
 	var required := ["schema_version", "content_revision", "id", "act_id", "display_name", "type", "map", "requires_completed", "environment_id", "encounter", "completion", "rewards"]
-	var optional := ["designer_notes", "tuning_targets", "well", "boss"]
+	var optional := ["designer_notes", "tuning_targets", "backdrop_id", "well", "boss"]
 	if not _check_object(value, required, optional, path):
 		return {"valid": false}
 	var level: Dictionary = value
@@ -173,6 +173,10 @@ func _resolve_level(value: Variant, path: String, expected_act_id: String) -> Di
 	elif level.has("well"):
 		return _invalid("%s: only well levels may contain a well block" % path)
 	var resolved := {"schema_version": 1, "content_revision": level["content_revision"], "id": level["id"], "act_id": level["act_id"], "display_name": level["display_name"], "type": level["type"], "map": {"position": [float(level["map"]["position"][0]), float(level["map"]["position"][1])]}, "requires_completed": level["requires_completed"].duplicate(), "environment_id": level["environment_id"], "encounter": encounter_result["value"], "completion": completion_result["value"], "rewards": rewards_result["value"]}
+	if level.has("backdrop_id"):
+		if not _nonempty_string(level["backdrop_id"]):
+			return _invalid("%s: backdrop_id must be a nonempty string" % path)
+		resolved["backdrop_id"] = level["backdrop_id"]
 	if level.has("designer_notes"):
 		if not level["designer_notes"] is String:
 			return _invalid("%s: designer_notes must be a string" % path)
