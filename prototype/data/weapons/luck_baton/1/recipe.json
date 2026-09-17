@@ -1,0 +1,20 @@
+{
+  "explicit_modifiers": [
+    {
+      "affix_id": "affix.fortune",
+      "tier": 1,
+      "value": 0.05
+    }
+  ],
+  "item_level": 1,
+  "provenance": {
+    "kind": "designer",
+    "run_id": "",
+    "source_id": "draft.new_weapon"
+  },
+  "rarity": "magic",
+  "recipe_id": "luck_baton.magic",
+  "revision": 1,
+  "schema_version": 1,
+  "weapon_id": "luck_baton"
+}

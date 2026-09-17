@@ -6,6 +6,7 @@ const Publisher = preload("res://scripts/model/weapon_publisher.gd")
 const Catalog = preload("res://scripts/model/weapon_catalog.gd")
 const Definitions = preload("res://scripts/model/item_definitions.gd")
 const Resolver = preload("res://scripts/model/hero_stat_resolver.gd")
+const TestProfile = preload("res://scripts/tools/weapon_test_profile.gd")
 const ThemeScript = preload("res://scripts/ui/industrial_theme.gd")
 const SOURCE_FOLDER_RELATIVE := "art/ui-items/Weapons"
 
@@ -20,6 +21,13 @@ var preview_world: TextureRect
 var preview_visual_status: Label
 var draft_list: ItemList
 var job_list: ItemList
+var published_list: ItemList
+var published_icon: TextureRect
+var published_world: TextureRect
+var published_detail: RichTextLabel
+var published_status: Label
+var test_profile_status: Label
+var test_profile: RefCounted
 var source_path: OptionButton
 var description_edit: TextEdit
 var add_button: Button
@@ -28,6 +36,7 @@ var job_poll_timer: Timer
 func _ready() -> void:
 	theme = ThemeScript.create()
 	draft = Store.default_draft("draft.new_weapon")
+	test_profile = TestProfile.new()
 	_build()
 	_apply_draft_to_controls()
 	job_poll_timer = Timer.new()
@@ -38,77 +47,105 @@ func _ready() -> void:
 	_refresh()
 
 func _build() -> void:
-	var scroll := ScrollContainer.new()
-	scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	add_child(scroll)
-	var margin := MarginContainer.new()
+	var tabs := TabContainer.new()
+	tabs.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(tabs)
+	var page := MarginContainer.new()
+	page.name = "Authoring"
 	for edge in ["left", "right", "top", "bottom"]:
-		margin.add_theme_constant_override("margin_" + edge, 18)
-	scroll.add_child(margin)
-	var columns := HBoxContainer.new()
-	columns.add_theme_constant_override("separation", 14)
-	margin.add_child(columns)
-	var editor := VBoxContainer.new()
-	editor.custom_minimum_size.x = 520
-	editor.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	columns.add_child(editor)
-	editor.add_child(_heading("WEAPON AUTHORING", 20))
-	editor.add_child(_label("SOURCE IMAGE"))
-	source_path = OptionButton.new()
-	editor.add_child(source_path)
-	_populate_source_options()
-	source_path.item_selected.connect(func(index: int):
-		draft.art.source = str(source_path.get_item_metadata(index))
-		_refresh())
-	editor.add_child(_heading("CROP", 14))
-	_spin(editor, "Crop X", "crop_x", 0, 10000, 1)
-	_spin(editor, "Crop Y", "crop_y", 0, 10000, 1)
-	_spin(editor, "Crop width", "crop_w", 0, 10000, 1)
-	_spin(editor, "Crop height", "crop_h", 0, 10000, 1)
-	_line(editor, "Weapon name", "label")
-	description_edit = TextEdit.new()
-	description_edit.placeholder_text = "Plain-text description"
-	description_edit.custom_minimum_size.y = 74
-	description_edit.text_changed.connect(func(): draft.description = description_edit.text; _refresh())
-	editor.add_child(_label("DESCRIPTION"))
-	editor.add_child(description_edit)
-	_option(editor, "Supported behavior", "behavior_id", Catalog.SUPPORTED_BEHAVIOR_IDS)
-	editor.add_child(_heading("BASE STATS", 14))
-	_stat_control(editor, "attack_damage", "Attack damage", "flat", 0.0)
-	_stat_control(editor, "attacks_per_second", "Attacks / sec", "increased", 0.0)
-	_stat_control(editor, "projectile_speed", "Projectile speed", "increased", 0.0)
-	_option(editor, "Rarity", "rarity", ["common", "magic", "rare", "epic"])
-	_spin(editor, "Item level", "item_level", 1, 99, 1)
-	editor.add_child(_heading("EXPLICIT AFFIXES", 14))
-	for index in range(3):
-		_affix_control(editor, index)
-	editor.add_child(_heading("GRIP / WORLD SCALE", 14))
-	_spin(editor, "Grip X", "grip_x", 0.0, 1.0, 0.01)
-	_spin(editor, "Grip Y", "grip_y", 0.0, 1.0, 0.01)
-	_spin(editor, "World scale", "world_scale", 0.1, 4.0, 0.05)
-	_option(editor, "Facing", "facing", ["right", "left"])
-	var actions := HBoxContainer.new()
-	editor.add_child(actions)
+		page.add_theme_constant_override("margin_" + edge, 16)
+	tabs.add_child(page)
+	tabs.set_tab_title(0, "AUTHOR")
+	var workspace := VBoxContainer.new()
+	workspace.add_theme_constant_override("separation", 12)
+	page.add_child(workspace)
+	var toolbar := HBoxContainer.new()
+	toolbar.name = "AuthoringToolbar"
+	toolbar.add_theme_constant_override("separation", 8)
+	workspace.add_child(toolbar)
+	var title := _heading("WEAPON AUTHORING", 20)
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	toolbar.add_child(title)
 	var save := Button.new()
 	save.text = "Save draft"
 	save.pressed.connect(_save_draft)
-	actions.add_child(save)
+	toolbar.add_child(save)
 	var prepare := Button.new()
 	prepare.text = "Prepare art"
 	prepare.pressed.connect(_start_job)
-	actions.add_child(prepare)
+	toolbar.add_child(prepare)
 	add_button = Button.new()
 	add_button.text = "Add to game"
 	add_button.disabled = true
 	add_button.pressed.connect(_publish)
-	actions.add_child(add_button)
+	toolbar.add_child(add_button)
+	var body := HSplitContainer.new()
+	body.name = "AuthoringBody"
+	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	body.split_offset = 760
+	workspace.add_child(body)
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	body.add_child(scroll)
+	var editor := GridContainer.new()
+	editor.name = "EditorGrid"
+	editor.columns = 2
+	editor.add_theme_constant_override("h_separation", 12)
+	editor.add_theme_constant_override("v_separation", 12)
+	editor.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(editor)
+	var identity := _section("SOURCE & IDENTITY")
+	editor.add_child(identity)
+	identity.add_child(_label("SOURCE IMAGE"))
+	source_path = OptionButton.new()
+	identity.add_child(source_path)
+	_populate_source_options()
+	source_path.item_selected.connect(func(index: int):
+		draft.art.source = str(source_path.get_item_metadata(index))
+		_refresh())
+	var crop_grid := GridContainer.new()
+	crop_grid.columns = 4
+	crop_grid.add_theme_constant_override("h_separation", 8)
+	identity.add_child(crop_grid)
+	_compact_spin(crop_grid, "X", "crop_x", 0, 10000, 1)
+	_compact_spin(crop_grid, "Y", "crop_y", 0, 10000, 1)
+	_compact_spin(crop_grid, "W", "crop_w", 0, 10000, 1)
+	_compact_spin(crop_grid, "H", "crop_h", 0, 10000, 1)
+	_line(identity, "Weapon ID", "weapon_id")
+	_line(identity, "Weapon name", "label")
+	description_edit = TextEdit.new()
+	description_edit.placeholder_text = "Plain-text description"
+	description_edit.custom_minimum_size.y = 64
+	description_edit.text_changed.connect(func(): draft.description = description_edit.text; _refresh())
+	identity.add_child(_label("DESCRIPTION"))
+	identity.add_child(description_edit)
+	_option(identity, "Supported behavior", "behavior_id", Catalog.SUPPORTED_BEHAVIOR_IDS)
+	var tuning := _section("COMBAT & ITEM")
+	editor.add_child(tuning)
+	_stat_control(tuning, "attack_damage", "Attack damage", "flat", 0.0)
+	_stat_control(tuning, "attacks_per_second", "Attacks / sec", "increased", 0.0)
+	_stat_control(tuning, "projectile_speed", "Projectile speed", "increased", 0.0)
+	_option(tuning, "Rarity", "rarity", ["common", "magic", "rare", "epic"])
+	_spin(tuning, "Item level", "item_level", 1, 99, 1)
+	tuning.add_child(_heading("EXPLICIT AFFIXES", 13))
+	for index in range(3):
+		_affix_control(tuning, index)
+	var placement := _section("PLACEMENT")
+	editor.add_child(placement)
+	_spin(placement, "Grip X", "grip_x", 0.0, 1.0, 0.01)
+	_spin(placement, "Grip Y", "grip_y", 0.0, 1.0, 0.01)
+	_spin(placement, "World scale", "world_scale", 0.1, 4.0, 0.05)
+	_option(placement, "Facing", "facing", ["right", "left"])
+	var status := _section("VALIDATION")
+	editor.add_child(status)
 	validation_label = _label("")
-	editor.add_child(validation_label)
+	status.add_child(validation_label)
 	var side := VBoxContainer.new()
-	side.custom_minimum_size.x = 320
-	side.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	columns.add_child(side)
+	side.name = "PreviewSidebar"
+	side.custom_minimum_size.x = 390
+	side.add_theme_constant_override("separation", 8)
+	body.add_child(side)
 	side.add_child(_heading("PREVIEW", 20))
 	var visual_row := HBoxContainer.new()
 	visual_row.add_theme_constant_override("separation", 8)
@@ -122,26 +159,87 @@ func _build() -> void:
 	side.add_child(preview_visual_status)
 	preview_label = RichTextLabel.new()
 	preview_label.bbcode_enabled = true
-	preview_label.custom_minimum_size.y = 190
+	preview_label.custom_minimum_size.y = 150
 	side.add_child(preview_label)
-	side.add_child(_heading("DRAFTS", 14))
+	var library_tabs := TabContainer.new()
+	library_tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	side.add_child(library_tabs)
+	var drafts_page := VBoxContainer.new()
+	drafts_page.name = "Drafts"
+	library_tabs.add_child(drafts_page)
 	draft_list = ItemList.new()
-	draft_list.custom_minimum_size.y = 100
-	side.add_child(draft_list)
+	draft_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	drafts_page.add_child(draft_list)
 	var reopen := Button.new()
 	reopen.text = "Reopen selected draft"
 	reopen.pressed.connect(_reopen_draft)
-	side.add_child(reopen)
-	side.add_child(_heading("JOBS", 14))
+	drafts_page.add_child(reopen)
+	var jobs_page := VBoxContainer.new()
+	jobs_page.name = "Jobs"
+	library_tabs.add_child(jobs_page)
 	job_list = ItemList.new()
-	job_list.custom_minimum_size.y = 130
-	side.add_child(job_list)
+	job_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	jobs_page.add_child(job_list)
 	var resume := Button.new()
 	resume.text = "Resume selected job"
 	resume.pressed.connect(_resume_job)
-	side.add_child(resume)
+	jobs_page.add_child(resume)
 	job_label = _label("No running job selected.")
-	side.add_child(job_label)
+	job_label.custom_minimum_size.y = 42
+	jobs_page.add_child(job_label)
+	_build_published_tab(tabs)
+
+func _build_published_tab(tabs: TabContainer) -> void:
+	var page := MarginContainer.new()
+	page.name = "PublishedItems"
+	for edge in ["left", "right", "top", "bottom"]:
+		page.add_theme_constant_override("margin_" + edge, 18)
+	tabs.add_child(page)
+	tabs.set_tab_title(1, "PUBLISHED ITEMS")
+	var columns := HBoxContainer.new()
+	columns.add_theme_constant_override("separation", 14)
+	page.add_child(columns)
+	var list_column := VBoxContainer.new()
+	list_column.custom_minimum_size.x = 300
+	list_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	columns.add_child(list_column)
+	list_column.add_child(_heading("IN-GAME CATALOG", 20))
+	list_column.add_child(_label("Published weapons available to the game.", 12))
+	published_list = ItemList.new()
+	published_list.name = "PublishedWeaponList"
+	published_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	published_list.item_selected.connect(_select_published_weapon)
+	list_column.add_child(published_list)
+	var detail_column := VBoxContainer.new()
+	detail_column.custom_minimum_size.x = 420
+	detail_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	columns.add_child(detail_column)
+	detail_column.add_child(_heading("ITEM DETAILS", 20))
+	var visual_row := HBoxContainer.new()
+	visual_row.add_theme_constant_override("separation", 8)
+	detail_column.add_child(visual_row)
+	published_icon = _preview_image("PUBLISHED ICON")
+	published_world = _preview_image("PUBLISHED WORLD SPRITE")
+	visual_row.add_child(published_icon)
+	visual_row.add_child(published_world)
+	published_status = _label("Select a published item.", 11)
+	published_status.modulate = Color("9ab0bc")
+	detail_column.add_child(published_status)
+	published_detail = RichTextLabel.new()
+	published_detail.bbcode_enabled = true
+	published_detail.fit_content = false
+	published_detail.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	published_detail.custom_minimum_size.y = 220
+	detail_column.add_child(published_detail)
+	var acquire := Button.new()
+	acquire.name = "AcquireTestWeapon"
+	acquire.text = "Acquire in test profile"
+	acquire.tooltip_text = "Creates a disposable instance without changing the player's save."
+	acquire.pressed.connect(_acquire_selected_for_test)
+	detail_column.add_child(acquire)
+	test_profile_status = _label("Test acquisitions are isolated from the player profile.", 11)
+	test_profile_status.modulate = Color("9ab0bc")
+	detail_column.add_child(test_profile_status)
 
 func _refresh() -> void:
 	if validation_label == null:
@@ -151,6 +249,7 @@ func _refresh() -> void:
 	validation_label.add_theme_color_override("font_color", Color("75d5a5") if result.valid else Color("f09a9a"))
 	preview_label.text = _preview_text()
 	_refresh_visual_preview()
+	_refresh_published_items()
 	draft_list.clear()
 	for draft_id in Store.list_drafts():
 		draft_list.add_item(draft_id)
@@ -173,7 +272,8 @@ func _update_job_indicator() -> void:
 	if not manifest.is_empty():
 		var status := str(manifest.get("status", "unknown"))
 		var progress := _manifest_progress(manifest)
-		job_label.text = "Job %s: %s, %.0f%%" % [job_id, status, progress * 100.0]
+		var failure := str(manifest.get("error", ""))
+		job_label.text = "Job %s: %s, %.0f%%%s" % [job_id, status, progress * 100.0, "\nError: " + failure if not failure.is_empty() else ""]
 		return
 	var receipt := Store.load_job_receipt(job_id)
 	job_label.text = "Job %s: %s" % [job_id, receipt.get("status", "unknown")]
@@ -244,25 +344,91 @@ func _refresh_visual_preview() -> void:
 	preview_visual_status.text = "Prepared art preview" if has_visual else "Prepare art to generate a visual preview."
 
 func _published_assets(weapon_id: String) -> Dictionary:
-	if weapon_id.is_empty():
-		return {}
+	return _published_entry(weapon_id).get("assets", {})
+
+func _published_index() -> Dictionary:
 	var file := FileAccess.open(ProjectSettings.globalize_path("res://data/weapons/index.json"), FileAccess.READ)
 	if file == null:
 		return {}
 	var value = JSON.parse_string(file.get_as_text())
 	file.close()
-	if not value is Dictionary:
+	return value if value is Dictionary else {}
+
+func _published_entry(weapon_id: String) -> Dictionary:
+	if weapon_id.is_empty():
 		return {}
-	return value.get("weapons", {}).get(weapon_id, {}).get("assets", {})
+	var index := _published_index()
+	return index.get("weapons", {}).get(weapon_id, {})
+
+func _refresh_published_items() -> void:
+	if published_list == null:
+		return
+	var selected_id := ""
+	if not published_list.get_selected_items().is_empty():
+		selected_id = str(published_list.get_item_metadata(published_list.get_selected_items()[0]))
+	published_list.clear()
+	var weapons: Dictionary = _published_index().get("weapons", {})
+	var ids: Array[String] = []
+	for weapon_id in weapons:
+		ids.append(str(weapon_id))
+	ids.sort()
+	for weapon_id in ids:
+		var entry: Dictionary = weapons[weapon_id]
+		var index := published_list.item_count
+		published_list.add_item("%s  ·  r%d" % [str(entry.get("label", weapon_id)), int(entry.get("revision", 0))])
+		published_list.set_item_metadata(index, weapon_id)
+	if ids.is_empty():
+		published_status.text = "No published weapons yet. Use AUTHOR to add one to the game."
+		published_icon.texture = null
+		published_world.texture = null
+		published_detail.text = ""
+		return
+	var selected_index := ids.find(selected_id)
+	selected_index = 0 if selected_index < 0 else selected_index
+	published_list.select(selected_index)
+	_select_published_weapon(selected_index)
+
+func _select_published_weapon(index: int) -> void:
+	if published_list == null or index < 0 or index >= published_list.item_count:
+		return
+	var weapon_id := str(published_list.get_item_metadata(index))
+	var entry := _published_entry(weapon_id)
+	var assets: Dictionary = entry.get("assets", {})
+	published_icon.texture = _load_preview_texture(str(assets.get("icon", "")))
+	published_world.texture = _load_preview_texture(str(assets.get("world_sprite", "")))
+	published_status.text = "Published item · %s · revision %d" % [weapon_id, int(entry.get("revision", 0))]
+	var lines: Array[String] = ["[b]%s[/b]" % str(entry.get("label", weapon_id)), str(entry.get("description", "")), "", "ID: %s" % weapon_id, "Revision: %d" % int(entry.get("revision", 0)), "Behavior: %s" % str(entry.get("behavior_id", ""))]
+	for modifier in entry.get("base_modifiers", []):
+		lines.append("Base: %s %s" % [str(modifier.get("stat", "")), _format_modifier_value(modifier)])
+	var pivot: Dictionary = entry.get("pivot", {})
+	lines.append("Grip: %.2f, %.2f · Facing: %s" % [float(pivot.get("grip", [0.5, 0.75])[0]), float(pivot.get("grip", [0.5, 0.75])[1]), str(pivot.get("facing", "right"))])
+	published_detail.text = "\n".join(lines)
+
+func _acquire_selected_for_test() -> void:
+	if published_list == null or published_list.get_selected_items().is_empty():
+		test_profile_status.text = "Select a published weapon first."
+		return
+	var index := published_list.get_selected_items()[0]
+	var weapon_id := str(published_list.get_item_metadata(index))
+	var result: Dictionary = test_profile.acquire(weapon_id)
+	if not result.get("valid", false):
+		test_profile_status.text = "Test acquisition failed: %s" % str(result.get("error", "unknown error"))
+		test_profile_status.add_theme_color_override("font_color", Color("f09a9a"))
+		return
+	test_profile_status.text = "Test profile acquired %s\n%s" % [weapon_id, str(result.get("instance_id", ""))]
+	test_profile_status.add_theme_color_override("font_color", Color("75d5a5"))
+
+func _format_modifier_value(modifier: Dictionary) -> String:
+	var value := float(modifier.get("value", 0.0))
+	return "+%.2f" % value
 
 func _load_preview_texture(path: String) -> Texture2D:
 	if path.is_empty():
 		return null
-	if path.begins_with("res://"):
-		return load(path) as Texture2D
-	if not FileAccess.file_exists(path):
+	var file_path := ProjectSettings.globalize_path(path) if path.begins_with("res://") else path
+	if not FileAccess.file_exists(file_path):
 		return null
-	var image := Image.load_from_file(path)
+	var image := Image.load_from_file(file_path)
 	return ImageTexture.create_from_image(image) if image != null and not image.is_empty() else null
 
 func _save_draft() -> void:
@@ -302,12 +468,51 @@ func _start_job() -> void:
 		job_label.text = receipt.failure
 		_refresh()
 		return
-	var process_id := OS.create_process("powershell", PackedStringArray(["-ExecutionPolicy", "Bypass", "-File", runner, "start", "--job-id", job_id, "--source", source, "--root", ProjectSettings.globalize_path("res://../art/weapons/runs")]))
+	var process_args := PackedStringArray(["-ExecutionPolicy", "Bypass", "-File", runner, "start", "--job-id", job_id, "--source", source, "--root", ProjectSettings.globalize_path("res://../art/weapons/runs")])
+	var cutout_mode := _cutout_mode_for_source(source)
+	process_args.append("--cutout")
+	process_args.append(cutout_mode)
+	if cutout_mode == "comfy":
+		var comfy_url := _asset_pipeline_comfy_url()
+		if comfy_url.is_empty():
+			receipt.status = "blocked"
+			receipt.failure = "Opaque source requires ComfyUI cutout, but tools/asset_pipeline/config.json has no concept_url."
+			Store.save_job_receipt(receipt)
+			job_label.text = receipt.failure
+			_refresh()
+			return
+		process_args.append("--comfy-url")
+		process_args.append(comfy_url)
+	var process_id := OS.create_process("powershell", process_args)
 	receipt.status = "running" if process_id > 0 else "blocked"
 	receipt.failure = "" if process_id > 0 else "worker could not be launched"
 	Store.save_job_receipt(receipt)
-	job_label.text = "Job %s: %s. The editor remains responsive; reopen to resume." % [job_id, receipt.status]
+	job_label.text = "Job %s: %s using %s cutout. The editor remains responsive; reopen to resume." % [job_id, receipt.status, "ComfyUI" if cutout_mode == "comfy" else "existing alpha"]
 	_refresh()
+
+func _cutout_mode_for_source(source: String) -> String:
+	var path := ProjectSettings.globalize_path("res://../" + source)
+	if not FileAccess.file_exists(path):
+		return "comfy"
+	var image := Image.load_from_file(path)
+	if image == null or image.is_empty():
+		return "comfy"
+	for y in range(image.get_height()):
+		for x in range(image.get_width()):
+			if image.get_pixel(x, y).a < 0.999:
+				return "transparent"
+	return "comfy"
+
+func _asset_pipeline_comfy_url() -> String:
+	var path := ProjectSettings.globalize_path("res://../tools/asset_pipeline/config.json")
+	if not FileAccess.file_exists(path):
+		return ""
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return ""
+	var value = JSON.parse_string(file.get_as_text())
+	file.close()
+	return str(value.get("concept_url", "")) if value is Dictionary else ""
 
 func _publish() -> void:
 	_sync_art()
@@ -326,7 +531,16 @@ func _resume_job() -> void:
 	var receipt := Store.load_job_receipt(job_id)
 	var runner := ProjectSettings.globalize_path("res://../weapon.ps1")
 	if receipt.get("status", "") in ["running", "starting", "interrupted", "blocked"] and FileAccess.file_exists(runner):
-		var process_id := OS.create_process("powershell", PackedStringArray(["-ExecutionPolicy", "Bypass", "-File", runner, "resume", "--job-id", job_id, "--root", ProjectSettings.globalize_path("res://../art/weapons/runs")]))
+		var process_args := PackedStringArray(["-ExecutionPolicy", "Bypass", "-File", runner, "resume", "--job-id", job_id, "--root", ProjectSettings.globalize_path("res://../art/weapons/runs")])
+		var manifest := _load_preparation_manifest(job_id)
+		if str(manifest.get("settings", {}).get("cutout", "")) == "comfy":
+			var comfy_url := _asset_pipeline_comfy_url()
+			if comfy_url.is_empty():
+				job_label.text = "Cannot resume %s: tools/asset_pipeline/config.json has no concept_url." % job_id
+				return
+			process_args.append("--comfy-url")
+			process_args.append(comfy_url)
+		var process_id := OS.create_process("powershell", process_args)
 		if process_id > 0:
 			receipt.status = "running"
 			receipt.failure = ""
@@ -348,7 +562,7 @@ func _apply_draft_to_controls() -> void:
 		return
 	_select_source(str(draft.get("art", {}).get("source", "")))
 	description_edit.text = str(draft.get("description", ""))
-	for key in ["label"]:
+	for key in ["weapon_id", "label"]:
 		var line: LineEdit = fields.get(key)
 		if line != null:
 			line.text = str(draft.get(key, ""))
@@ -456,29 +670,61 @@ func _sync_affixes() -> void:
 			selected.append({"affix_id": option.get_item_text(option.selected), "tier": int(record.tier.value), "value": float(record.value.value)})
 	draft.explicit_modifiers = selected
 
+func _section(title: String) -> VBoxContainer:
+	var section := VBoxContainer.new()
+	section.add_theme_constant_override("separation", 6)
+	section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	section.add_child(_heading(title, 14))
+	return section
+
+func _field_row(parent: Control, title: String) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	parent.add_child(row)
+	var caption := _label(title.to_upper(), 11)
+	caption.custom_minimum_size.x = 128
+	caption.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	row.add_child(caption)
+	return row
+
 func _line(parent: Control, title: String, key: String) -> LineEdit:
-	parent.add_child(_label(title.to_upper()))
+	var row := _field_row(parent, title)
 	var line := LineEdit.new()
-	parent.add_child(line)
+	line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(line)
 	fields[key] = line
 	line.text_changed.connect(func(value: String): draft[key] = value; _refresh())
 	return line
 
 func _option(parent: Control, title: String, key: String, values: Array) -> OptionButton:
-	parent.add_child(_label(title.to_upper()))
+	var row := _field_row(parent, title)
 	var option := OptionButton.new()
 	for value in values:
 		option.add_item(value)
 	option.select(maxi(0, values.find(draft.get(key, values[0]))))
-	parent.add_child(option)
+	option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(option)
 	fields[key] = option
 	option.item_selected.connect(func(index: int): draft[key] = option.get_item_text(index); _refresh())
 	return option
 
 func _spin(parent: Control, title: String, key: String, minimum: float, maximum: float, step: float) -> SpinBox:
-	parent.add_child(_label(title.to_upper()))
+	var row := _field_row(parent, title)
 	var spin := SpinBox.new()
 	spin.min_value = minimum; spin.max_value = maximum; spin.step = step
+	spin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(spin)
+	fields[key] = spin
+	spin.value_changed.connect(func(value: float): draft[key] = value; _refresh())
+	return spin
+
+func _compact_spin(parent: Control, title: String, key: String, minimum: float, maximum: float, step: float) -> SpinBox:
+	var caption := _label(title, 11)
+	caption.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	parent.add_child(caption)
+	var spin := SpinBox.new()
+	spin.min_value = minimum; spin.max_value = maximum; spin.step = step
+	spin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	parent.add_child(spin)
 	fields[key] = spin
 	spin.value_changed.connect(func(value: float): draft[key] = value; _refresh())

@@ -135,6 +135,13 @@ static func validate_instance(instance: Dictionary, catalog: Dictionary, affix_t
         return _failure("instance ID must be a non-empty opaque string")
     if not instance.base_id is String or not catalog.has(instance.base_id):
         return _failure("instance base ID is unknown")
+    # Authored weapons retain their immutable publication identity. Legacy and
+    # built-in instances intentionally omit these fields and keep their old meaning.
+    if instance.has("weapon_id") or instance.has("revision"):
+        if not instance.has("weapon_id") or not instance.has("revision") or instance.weapon_id != instance.base_id:
+            return _failure("authored weapon identity does not match its base ID")
+        if not _valid_integer(instance.revision) or int(instance.revision) < 1:
+            return _failure("authored weapon revision is invalid")
     if instance.instance_id == instance.base_id:
         return _failure("instance ID must be separate from base ID")
     if not instance.rarity is String or not RARITIES.has(instance.rarity):

@@ -18,6 +18,9 @@ var animation_scale := 1.0
 var animation_source_anchor := Vector2.ZERO
 var static_offset := Vector2.ZERO
 
+signal attack_started
+signal attack_finished
+
 func _ready() -> void:
     if sprite != null:
         return
@@ -111,9 +114,11 @@ func play_attack() -> void:
     attack_sprite.visible = true
     attack_sprite.frame = 0
     attack_sprite.play(&"attack")
+    attack_started.emit()
 
 func _on_attack_animation_finished() -> void:
     _show_locomotion_sprite()
+    attack_finished.emit()
 
 func set_facing(new_facing: int) -> void:
     facing = -1 if new_facing < 0 else 1

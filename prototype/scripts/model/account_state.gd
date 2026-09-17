@@ -68,7 +68,8 @@ func _register_published_weapons() -> void:
 		var revision_number := int(revision.get("revision", 0))
 		var recipe_path := ProjectSettings.globalize_path("res://data/weapons/%s/%d/recipe.json" % [weapon_id, revision_number])
 		var recipe := _read_json_file(recipe_path)
-		if recipe.is_empty():
+		var recipe_check := WeaponCatalogScript.validate_recipe(recipe, revision)
+		if not recipe_check.valid:
 			continue
 		var base := {
 			"id": str(weapon_id),
@@ -143,6 +144,10 @@ func _known_ids(values: Dictionary) -> Array[String]:
 	return ids
 
 static func validate_save_payload(payload: Dictionary, definitions: RefCounted = null) -> Dictionary:
+	# Save validation is static and can run before SaveStore constructs the account.
+	# Bootstrap the published catalog so authored instances survive a fresh restart.
+	if ItemCatalogScript.PUBLISHED_ITEMS.is_empty():
+		AccountState.new()
 	var catalog: RefCounted = ContentCatalogScript.new() if definitions == null else definitions
 	var item_instance_values: Variant = payload.get("item_instances", [])
 	if not item_instance_values is Array or item_instance_values.size() > INVENTORY_CAPACITY:
@@ -214,7 +219,7 @@ static func validate_save_payload(payload: Dictionary, definitions: RefCounted =
 			return {"valid": false, "error": field + " must be an array"}
 		var seen := {}
 		for id in values:
-			if not id is String or not ItemCatalogScript.ITEMS.has(id) or seen.has(id):
+			if not id is String or not ItemCatalogScript.has_item(id) or seen.has(id):
 				return {"valid": false, "error": "Invalid or duplicate inventory item"}
 			seen[id] = true
 			if field != "owned_items" and not id in payload.get("owned_items", []):
@@ -553,8 +558,6 @@ func has_upgrade(upgrade_id: String) -> bool:
 	return owned_upgrades.has(upgrade_id)
 
 func grant_item(id: String) -> bool:
-	if published_weapons.has(id):
-		return grant_published_weapon(id)
 	if not ItemCatalogScript.ITEMS.has(id):
 		return false
 	return add_transitional_item(id, "", "")
@@ -571,14 +574,14 @@ func grant_published_weapon(weapon_id: String) -> bool:
 	var revision: Dictionary = publication.revision
 	var recipe: Dictionary = publication.recipe
 	var revision_number := int(revision.get("revision", 0))
-	var instance_id := "designer:%s:%d" % [weapon_id, revision_number]
-	if item_instances.has(instance_id):
-		inventory_command_error = "Published weapon is already in the inventory."
-		return false
+	var instance_id := _next_published_instance_id(weapon_id, revision_number)
 	var instance := {
 		"schema_version": 1,
 		"instance_id": instance_id,
 		"base_id": weapon_id,
+		"weapon_id": weapon_id,
+		"revision": revision_number,
+		"recipe_id": str(recipe.get("recipe_id", "")),
 		"rarity": str(recipe.get("rarity", "common")),
 		"item_level": int(recipe.get("item_level", 1)),
 		"implicit_modifiers": revision.get("base_modifiers", []).duplicate(true),
@@ -597,6 +600,15 @@ func grant_published_weapon(weapon_id: String) -> bool:
 	new_items[weapon_id] = true
 	inventory_migration_version = INVENTORY_MIGRATION_VERSION
 	return true
+
+func _next_published_instance_id(weapon_id: String, revision_number: int) -> String:
+	var prefix := "designer:%s:%d" % [weapon_id, revision_number]
+	if not item_instances.has(prefix):
+		return prefix
+	var sequence := 2
+	while item_instances.has("%s:%d" % [prefix, sequence]):
+		sequence += 1
+	return "%s:%d" % [prefix, sequence]
 
 func add_transitional_item(base_id: String, run_id: String, node_id: String) -> bool:
 	if not ItemCatalogScript.ITEMS.has(base_id):

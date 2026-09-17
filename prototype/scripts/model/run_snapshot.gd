@@ -66,6 +66,21 @@ static func _with_defaults(snapshot: Dictionary) -> Dictionary:
 		if not spawner.has("rng_state"):
 			spawner["rng_state"] = 1
 		normalized["spawner"] = spawner
+	if normalized.get("weapon_state", null) is Dictionary:
+		var weapon: Dictionary = normalized["weapon_state"].duplicate(true)
+		if not weapon.has("behavior_id"):
+			weapon["behavior_id"] = "weapon.ranged"
+		if not weapon.has("phase"):
+			weapon["phase"] = ""
+		if not weapon.has("strike_delay_remaining"):
+			weapon["strike_delay_remaining"] = 0.0
+		if not weapon.has("locked_facing"):
+			weapon["locked_facing"] = 1
+		if not weapon.has("target_id"):
+			weapon["target_id"] = ""
+		if not weapon.has("damage_committed"):
+			weapon["damage_committed"] = false
+		normalized["weapon_state"] = weapon
 	if not normalized.has("level_definition"):
 		normalized["level_definition"] = {}
 	if not normalized.has("level_content_hash"):
@@ -340,4 +355,16 @@ static func _validate_weapon(weapon: Dictionary) -> Dictionary:
 		return {"valid": false, "error": "weapon state value is invalid"}
 	if not weapon["spread_enabled"] is bool:
 		return {"valid": false, "error": "weapon spread flag is invalid"}
+	if weapon.has("behavior_id") and (not weapon["behavior_id"] is String or not ["weapon.ranged", "weapon.melee", "weapon.standard", "weapon.fan", "weapon.lance"].has(weapon["behavior_id"])):
+		return {"valid": false, "error": "weapon behavior ID is invalid"}
+	if weapon.has("phase") and (not weapon["phase"] is String or not ["", "windup", "recovery"].has(weapon["phase"])):
+		return {"valid": false, "error": "weapon phase is invalid"}
+	if weapon.has("strike_delay_remaining") and not _finite_nonnegative(weapon["strike_delay_remaining"]):
+		return {"valid": false, "error": "weapon strike delay is invalid"}
+	if weapon.has("locked_facing") and (not _valid_integer(weapon["locked_facing"]) or not [-1, 1].has(int(weapon["locked_facing"]))):
+		return {"valid": false, "error": "weapon facing is invalid"}
+	if weapon.has("target_id") and not _valid_string(weapon["target_id"]):
+		return {"valid": false, "error": "weapon target ID is invalid"}
+	if weapon.has("damage_committed") and not weapon["damage_committed"] is bool:
+		return {"valid": false, "error": "weapon damage flag is invalid"}
 	return {"valid": true}

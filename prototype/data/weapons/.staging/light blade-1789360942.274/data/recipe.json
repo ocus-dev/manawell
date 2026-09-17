@@ -1,0 +1,14 @@
+{
+  "explicit_modifiers": [],
+  "item_level": 1,
+  "provenance": {
+    "kind": "designer",
+    "run_id": "",
+    "source_id": "draft.new_weapon"
+  },
+  "rarity": "common",
+  "recipe_id": "light blade.common",
+  "revision": 1,
+  "schema_version": 1,
+  "weapon_id": "light blade"
+}

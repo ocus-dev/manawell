@@ -1,0 +1,36 @@
+{
+  "assets": {
+    "icon": "res://assets/weapons/batton of beating/1/icon.png",
+    "world_sprite": "res://assets/weapons/batton of beating/1/world-sprite.png"
+  },
+  "base_modifiers": [
+    {
+      "family": "designer.base.attack_damage",
+      "operation": "flat",
+      "stat": "attack_damage",
+      "value": 0
+    }
+  ],
+  "behavior_id": "weapon.standard",
+  "description": "Really hurts",
+  "label": "beat stick",
+  "pivot": {
+    "coordinate_space": "normalized",
+    "facing": "right",
+    "grip": [
+      0.5,
+      0.75
+    ],
+    "origin": "top_left",
+    "world_scale": 1.0
+  },
+  "revision": 1,
+  "schema_version": 1,
+  "source_hashes": {
+    "icon_sha256": "889de072fda580bc2b452d6777bd269af83dda09aa9a3e92c908a17c0cca587b",
+    "job_id": "job_20260913T231240",
+    "manifest_sha256": "f9d3efa4bc91e9a14f232c0662f30fdf891cdcdbc2ac0d3d308c58df75147dbd",
+    "world_sprite_sha256": "744e0c66e55920955200b297518fd347588b338453a484ff4cbbda94f1af15ca"
+  },
+  "weapon_id": "batton of beating"
+}

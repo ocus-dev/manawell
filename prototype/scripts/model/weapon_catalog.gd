@@ -10,7 +10,7 @@ const MAX_ITEM_LEVEL := 99
 const MAX_LABEL_LENGTH := 80
 const MAX_DESCRIPTION_LENGTH := 2000
 const MAX_AFFIXES := 3
-const SUPPORTED_BEHAVIOR_IDS := ["weapon.standard", "weapon.fan", "weapon.lance"]
+const SUPPORTED_BEHAVIOR_IDS := ["weapon.standard", "weapon.melee", "weapon.fan", "weapon.lance"]
 const ASSET_KEYS := ["icon", "world_sprite"]
 const IMAGE_COORDINATE_CONVENTION := "pixel origin is top-left; pivot is normalized [0,1] with x right and y down"
 
@@ -237,6 +237,8 @@ static func _validate_pivot(pivot: Variant) -> Dictionary:
         return _failure("revision.pivot.grip", "INVALID_PIVOT", "grip coordinates must be finite normalized values in [0,1]")
     if not ["right", "left"].has(str(pivot.get("facing", ""))):
         return _failure("revision.pivot.facing", "INVALID_FACING", "facing must be right or left")
+    if pivot.has("world_scale") and (not _finite_number(pivot.world_scale) or float(pivot.world_scale) < 0.1 or float(pivot.world_scale) > 4.0):
+        return _failure("revision.pivot.world_scale", "INVALID_WORLD_SCALE", "world scale must be finite and in [0.1,4.0]")
     return _success()
 
 static func _validate_modifiers(modifiers: Variant, path: String) -> Dictionary:

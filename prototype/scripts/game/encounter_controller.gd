@@ -20,9 +20,12 @@ const SessionPersistenceScript = preload("res://scripts/model/session_persistenc
 const SnapshotScript = preload("res://scripts/model/run_snapshot.gd")
 const CampaignStateScript = preload("res://scripts/model/campaign_state.gd")
 const CampaignCatalogScript = preload("res://scripts/model/campaign_catalog.gd")
+const HeroStatResolverScript = preload("res://scripts/model/hero_stat_resolver.gd")
 const EnvironmentScript = preload("res://scripts/game/side_view_environment_visual.gd")
 const LOGICAL_SIZE := Vector2(1280.0, 720.0)
 const SPATIAL_PIXELS_PER_UNIT: float = 32.0
+const MELEE_REACH_UNITS: float = 1.5
+const MELEE_STRIKE_FRACTION: float = 0.4
 const FIXED_STEP: float = 1.0 / 60.0
 const GROUND_Y: float = 652.0
 const MACHINE_X: float = 160.0
@@ -81,7 +84,14 @@ var production: RefCounted = ProductionScript.new()
 var production_time_override: float = -1.0
 var last_production_time: float = 0.0
 var weapon_damage: float = BalanceData.WEAPON_DAMAGE
+var weapon_interval: float = BalanceData.WEAPON_INTERVAL
 var weapon_projectile_count: int = 1
+var weapon_behavior_id := "weapon.ranged"
+var melee_phase := ""
+var melee_strike_delay_remaining := 0.0
+var melee_locked_facing := 1
+var melee_target_id := ""
+var melee_damage_committed := false
 var checkpoint_elapsed: float = 0.0
 var save_store: RefCounted = SaveStoreScript.new()
 var session_persistence: RefCounted
@@ -277,7 +287,9 @@ func start_run() -> bool:
 	var extraction_rate: float = float(well_data.get("base_output", BalanceData.WELL_1_BASE_OUTPUT)) * float(modifiers["extraction_multiplier"])
 	if account_state.has_upgrade("pump_1"):
 		extraction_rate *= BalanceData.PUMP_OUTPUT_MULTIPLIER
-	weapon_damage = BalanceData.WEAPON_DAMAGE + (BalanceData.DAMAGE_UPGRADE_BONUS if account_state.has_upgrade("damage_1") else 0.0)
+	_configure_weapon_loadout(hero_id)
+	_cancel_melee_swing()
+	weapon_clock = 0.0
 	var run_id: String = account_state.allocate_run_id()
 	var machine_max: float = BalanceData.MACHINE_INTEGRITY * float(modifiers["machine_integrity_multiplier"])
 	if not run_state.start(run_id, selected_well_id, hero_id, selected_loadout_id, extraction_rate, BalanceData.SEALING_DURATION, BalanceData.HERO_HEALTH, machine_max, float(modifiers["pressure_time_scale"])):
@@ -296,6 +308,43 @@ func start_run() -> bool:
 	_save_account()
 	_update_hud()
 	return true
+
+func _configure_weapon_loadout(hero_id: String) -> void:
+	weapon_behavior_id = "weapon.ranged"
+	weapon_interval = BalanceData.WEAPON_INTERVAL
+	weapon_damage = BalanceData.WEAPON_DAMAGE + (BalanceData.DAMAGE_UPGRADE_BONUS if account_state.has_upgrade("damage_1") else 0.0)
+	weapon_projectile_count = 1
+	var kit: Dictionary = account_state.hero_kits.get(hero_id, {})
+	var instance_id := str(kit.get("weapon", ""))
+	var instance: Dictionary = account_state.item_instances.get(instance_id, {})
+	var publication: Dictionary = account_state.published_weapons.get(str(instance.get("base_id", "")), {})
+	var revision: Dictionary = publication.get("revision", {})
+	var authored := not instance.is_empty() and not revision.is_empty() and instance.has("revision")
+	var behavior_id := str(revision.get("behavior_id", "")) if authored else ""
+	# Cleave can extend this dispatch as a future skill/effect. The base melee
+	# behavior intentionally locks and damages exactly one target.
+	if authored and behavior_id == "weapon.melee":
+		weapon_behavior_id = "weapon.melee"
+	var research_mode: String = str(account_state.equipped_weapon_mode_id) if weapon_behavior_id != "weapon.melee" else "weapon.standard"
+	var resolved: Dictionary = HeroStatResolverScript.resolve(account_state.research_ranks, account_state.item_instances, kit, float(content_catalog.get_well(selected_well_id).get("base_output", BalanceData.WELL_1_BASE_OUTPUT)), 1.0, "", research_mode)
+	weapon_damage = float(resolved.get("stats", {}).get("attack_damage", weapon_damage))
+	weapon_interval = maxf(0.01, float(resolved.get("stats", {}).get("attack_interval", weapon_interval)))
+	if weapon_behavior_id != "weapon.melee":
+		weapon_projectile_count = maxi(3, int(resolved.get("stats", {}).get("weapon_projectile_count", 1))) if account_state.has_upgrade("spread_1") else 1
+	if hero != null:
+		_configure_held_weapon_visual(revision if authored else {})
+
+func _configure_held_weapon_visual(revision: Dictionary) -> void:
+	if hero == null:
+		return
+	if revision.is_empty():
+		hero.clear_held_weapon()
+		return
+	var assets: Dictionary = revision.get("assets", {})
+	var texture := load(str(assets.get("world_sprite", ""))) as Texture2D
+	var pivot: Dictionary = revision.get("pivot", {})
+	var grip: Array = pivot.get("grip", [0.5, 0.75])
+	hero.configure_held_weapon(texture, Vector2(float(grip[0]), float(grip[1])), str(pivot.get("facing", "right")), float(pivot.get("world_scale", 1.0)))
 
 func request_harvest() -> bool:
 	var harvested: bool = run_state.request_harvest()
@@ -510,6 +559,66 @@ func _load_account() -> void:
 	account_state = session_persistence.load_account()
 	selected_loadout_id = account_state.get_loadout_for_well(selected_well_id)
 
+func purchase_research(research_id: String, expected_rank: int, expected_cost: int = -1) -> bool:
+	if run_state.phase == RunStateScript.Phase.EXTRACTING or run_state.phase == RunStateScript.Phase.SEALING:
+		return false
+	var purchased: bool = account_state.purchase_research(research_id, expected_rank, expected_cost)
+	if purchased:
+		_save_account()
+	_update_hud()
+	return purchased
+
+func inspect_inventory_item(id: String) -> void:
+	if run_state.phase == RunStateScript.Phase.EXTRACTING or run_state.phase == RunStateScript.Phase.SEALING:
+		return
+	if account_state.inspect_item(id):
+		_save_account()
+		_update_hud()
+
+func equip_inventory_item(hero_id: String, slot: String, instance_id: String) -> bool:
+	var active_run: bool = run_state.phase == RunStateScript.Phase.EXTRACTING or run_state.phase == RunStateScript.Phase.SEALING
+	if active_run or not account_state.equip_instance(hero_id, slot, instance_id, active_run):
+		_update_hud()
+		return false
+	_save_account()
+	_update_hud()
+	return true
+
+func unequip_inventory_item(hero_id: String, slot: String) -> bool:
+	var active_run: bool = run_state.phase == RunStateScript.Phase.EXTRACTING or run_state.phase == RunStateScript.Phase.SEALING
+	if active_run or not account_state.unequip_instance(hero_id, slot, active_run):
+		_update_hud()
+		return false
+	_save_account()
+	_update_hud()
+	return true
+
+func lock_inventory_item(instance_id: String, locked: bool) -> bool:
+	var active_run: bool = run_state.phase == RunStateScript.Phase.EXTRACTING or run_state.phase == RunStateScript.Phase.SEALING
+	if not account_state.set_instance_locked(instance_id, locked, active_run):
+		_update_hud()
+		return false
+	_save_account()
+	_update_hud()
+	return true
+
+func discard_inventory_item(instance_id: String, confirmed_name: String) -> bool:
+	var active_run: bool = run_state.phase == RunStateScript.Phase.EXTRACTING or run_state.phase == RunStateScript.Phase.SEALING
+	if active_run or not account_state.discard_instance(instance_id, confirmed_name, active_run):
+		_update_hud()
+		return false
+	_save_account()
+	_update_hud()
+	return true
+
+func equip_research_choice(choice_id: String) -> bool:
+	var active_run: bool = run_state.phase == RunStateScript.Phase.EXTRACTING or run_state.phase == RunStateScript.Phase.SEALING
+	var equipped: bool = account_state.equip_research_choice(choice_id, active_run)
+	if equipped:
+		_save_account()
+		_update_hud()
+	return equipped
+
 func _save_account(snapshot: Dictionary = {}) -> bool:
 	if not persistence_enabled:
 		return true
@@ -536,7 +645,7 @@ func _capture_snapshot() -> Dictionary:
 				var target: Node = closest_live_enemy_between(projectile.position, projectile.position + projectile.velocity)
 				target_id = "enemy-%d" % target.enemy_id if target != null else "hero"
 			projectile_states.append({"id": "projectile-%d" % index, "kind": "hostile" if projectile.hostile else "friendly", "owner_id": owner_id, "target_id": target_id, "position": [projectile.position.x, projectile.position.y], "velocity": [projectile.velocity.x, projectile.velocity.y], "damage": projectile.damage, "lifetime_remaining": projectile.lifetime_remaining, "hit_target": projectile.hit_target})
-	return {"run_state": {"run_id": run_state.run_id, "well_id": run_state.selected_well_id, "hero_id": run_state.selected_hero_id, "module_id": run_state.selected_module_id, "phase": run_state.phase, "paused": true, "simulation_elapsed": run_state.simulation_elapsed, "tank_base": run_state.tank_base, "extraction_rate": run_state.extraction_rate, "pressure_time_scale": run_state.pressure_time_scale, "completed_surges": run_state.completed_surges, "multiplier": run_state.multiplier, "locked_payout": run_state.locked_payout, "sealing_remaining": run_state.sealing_remaining, "sealing_duration": run_state.sealing_duration, "hero_health": run_state.hero_health, "machine_integrity": run_state.machine_integrity, "machine_max_integrity": run_state.machine_max_integrity, "terminal_reason": run_state.terminal_reason}, "actors": actors, "projectiles": projectile_states, "player_abilities": {"dash_cooldown_remaining": dash_cooldown_remaining, "pulse_cooldown_remaining": pulse_cooldown_remaining, "dash_remaining": dash_remaining, "dash_direction": [float(dash_direction), 0.0], "dash_active": dash_remaining > 0.0, "ability_flash_remaining": 0.0}, "weapon_state": {"damage": weapon_damage, "spread_enabled": account_state.has_upgrade("spread_1"), "attack_interval": BalanceData.WEAPON_INTERVAL, "shot_accumulator": weapon_clock}, "spawner": {"spawn_timer": spawn_timer, "spawn_index": spawn_index, "spawn_position": [40.0, GROUND_Y], "config_id": "%s-%s" % [selected_well_id, selected_loadout_id], "next_id": next_enemy_id, "rng_state": spawner_rng_state}, "arena_config_id": ArenaLayoutScript.CONFIG_ID, "director": get_director_state(), "level_definition": frozen_level_definition.duplicate(true), "level_content_hash": frozen_level_content_hash, "campaign": {"act_id": campaign_state.active_act_id, "node_id": campaign_state.active_node_id, "config_id": "%s-%s" % [selected_well_id, selected_loadout_id], "wave_index": spawn_index, "boss_timer": 0.0}, "objective": {"objective_id": "", "progress": objective_progress, "required": objective_required, "credited_ids": objective_credited_ids.duplicate()}, "reward_state": {"claim_receipts": claim_receipts.duplicate(), "pending_items": account_state.pending_rewards.duplicate(true)}}
+	return {"run_state": {"run_id": run_state.run_id, "well_id": run_state.selected_well_id, "hero_id": run_state.selected_hero_id, "module_id": run_state.selected_module_id, "phase": run_state.phase, "paused": true, "simulation_elapsed": run_state.simulation_elapsed, "tank_base": run_state.tank_base, "extraction_rate": run_state.extraction_rate, "pressure_time_scale": run_state.pressure_time_scale, "completed_surges": run_state.completed_surges, "multiplier": run_state.multiplier, "locked_payout": run_state.locked_payout, "sealing_remaining": run_state.sealing_remaining, "sealing_duration": run_state.sealing_duration, "hero_health": run_state.hero_health, "machine_integrity": run_state.machine_integrity, "machine_max_integrity": run_state.machine_max_integrity, "terminal_reason": run_state.terminal_reason}, "actors": actors, "projectiles": projectile_states, "player_abilities": {"dash_cooldown_remaining": dash_cooldown_remaining, "pulse_cooldown_remaining": pulse_cooldown_remaining, "dash_remaining": dash_remaining, "dash_direction": [float(dash_direction), 0.0], "dash_active": dash_remaining > 0.0, "ability_flash_remaining": 0.0}, "weapon_state": {"damage": weapon_damage, "spread_enabled": account_state.has_upgrade("spread_1"), "attack_interval": weapon_interval, "shot_accumulator": weapon_clock, "behavior_id": weapon_behavior_id, "phase": melee_phase, "strike_delay_remaining": melee_strike_delay_remaining, "locked_facing": melee_locked_facing, "target_id": melee_target_id, "damage_committed": melee_damage_committed}, "spawner": {"spawn_timer": spawn_timer, "spawn_index": spawn_index, "spawn_position": [40.0, GROUND_Y], "config_id": "%s-%s" % [selected_well_id, selected_loadout_id], "next_id": next_enemy_id, "rng_state": spawner_rng_state}, "arena_config_id": ArenaLayoutScript.CONFIG_ID, "director": get_director_state(), "level_definition": frozen_level_definition.duplicate(true), "level_content_hash": frozen_level_content_hash, "campaign": {"act_id": campaign_state.active_act_id, "node_id": campaign_state.active_node_id, "config_id": "%s-%s" % [selected_well_id, selected_loadout_id], "wave_index": spawn_index, "boss_timer": 0.0}, "objective": {"objective_id": "", "progress": objective_progress, "required": objective_required, "credited_ids": objective_credited_ids.duplicate()}, "reward_state": {"claim_receipts": claim_receipts.duplicate(), "pending_items": account_state.pending_rewards.duplicate(true)}}
 
 func _restore_saved_snapshot() -> void:
 	if not persistence_enabled:
@@ -557,6 +666,7 @@ func _restore_saved_snapshot() -> void:
 	var state: Dictionary = snapshot["run_state"]
 	selected_well_id = str(state["well_id"])
 	selected_loadout_id = str(state["module_id"])
+	_configure_weapon_loadout(str(state.get("hero_id", account_state.get_active_hero_id())))
 	for field in state.keys():
 		if run_state.get(field) != null:
 			run_state.set(field, state[field])
@@ -622,6 +732,13 @@ func _restore_saved_snapshot() -> void:
 		if warning is Dictionary:
 			pending_entry_warnings.append(warning.duplicate(true))
 	weapon_clock = snapshot["weapon_state"]["shot_accumulator"]
+	weapon_interval = maxf(0.01, float(snapshot["weapon_state"].get("attack_interval", BalanceData.WEAPON_INTERVAL)))
+	weapon_behavior_id = str(snapshot["weapon_state"].get("behavior_id", "weapon.ranged"))
+	melee_phase = str(snapshot["weapon_state"].get("phase", ""))
+	melee_strike_delay_remaining = maxf(0.0, float(snapshot["weapon_state"].get("strike_delay_remaining", 0.0)))
+	melee_locked_facing = -1 if int(snapshot["weapon_state"].get("locked_facing", 1)) < 0 else 1
+	melee_target_id = str(snapshot["weapon_state"].get("target_id", ""))
+	melee_damage_committed = bool(snapshot["weapon_state"].get("damage_committed", false))
 	dash_cooldown_remaining = float(snapshot["player_abilities"]["dash_cooldown_remaining"])
 	pulse_cooldown_remaining = float(snapshot["player_abilities"]["pulse_cooldown_remaining"])
 	dash_remaining = float(snapshot["player_abilities"]["dash_remaining"])
@@ -747,7 +864,8 @@ func spawn_friendly_projectile(origin_x: float, target_x: float, target_enemy: N
 	projectiles.append(projectile)
 
 func spawn_friendly_volley(origin_x: float, target_x: float, target_enemy: Node = null) -> void:
-	for _shot in range(maxi(1, weapon_projectile_count)):
+	var shot_count := maxi(3, weapon_projectile_count) if account_state.has_upgrade("spread_1") else maxi(1, weapon_projectile_count)
+	for _shot in range(shot_count):
 		spawn_friendly_projectile(origin_x, target_x, target_enemy)
 
 func is_hero_on_segment(start_position: Vector2, end_position: Vector2) -> bool:
@@ -791,6 +909,7 @@ func retry() -> void:
 	pending_entry_warnings.clear()
 	spawned_kinds.clear()
 	weapon_clock = 0.0
+	_cancel_melee_swing()
 	dash_remaining = 0.0
 	dash_cooldown_remaining = 0.0
 	pulse_cooldown_remaining = 0.0
@@ -895,8 +1014,11 @@ func _simulate_projectiles(delta: float) -> void:
 
 func _simulate_weapon(delta: float) -> void:
 	weapon_clock += delta
-	while weapon_clock >= BalanceData.WEAPON_INTERVAL:
-		weapon_clock -= BalanceData.WEAPON_INTERVAL
+	if weapon_behavior_id == "weapon.melee":
+		_simulate_melee_weapon(delta)
+		return
+	while weapon_clock >= weapon_interval:
+		weapon_clock -= weapon_interval
 		var target := closest_live_enemy()
 		if target != null:
 			if hero != null and hero.visual != null:
@@ -905,6 +1027,89 @@ func _simulate_weapon(delta: float) -> void:
 				spawn_friendly_volley(hero.position.x, target.position.x, target)
 			else:
 				spawn_friendly_projectile(hero.position.x, target.position.x, target)
+
+func _simulate_melee_weapon(delta: float) -> void:
+	if run_state.phase != RunStateScript.Phase.EXTRACTING and run_state.phase != RunStateScript.Phase.SEALING:
+		_cancel_melee_swing()
+		return
+	if run_state.hero_health <= 0.0:
+		_cancel_melee_swing()
+		return
+	if melee_phase.is_empty():
+		while weapon_clock >= weapon_interval:
+			weapon_clock -= weapon_interval
+			var target := _closest_melee_target(hero.last_facing)
+			if target == null:
+				continue
+			_begin_melee_swing(target)
+			break
+	if melee_phase.is_empty():
+		return
+	melee_strike_delay_remaining = maxf(0.0, melee_strike_delay_remaining - delta)
+	if not melee_damage_committed and is_zero_approx(melee_strike_delay_remaining):
+		_commit_melee_strike()
+	if melee_strike_delay_remaining <= 0.0:
+		# The strike delay is consumed; recovery lasts until the next cadence.
+		var recovery: float = weapon_interval * (1.0 - MELEE_STRIKE_FRACTION)
+		if melee_phase == "windup":
+			melee_phase = "recovery"
+			melee_strike_delay_remaining = recovery
+		else:
+			_cancel_melee_swing()
+
+func _begin_melee_swing(target: Node) -> void:
+	melee_phase = "windup"
+	melee_strike_delay_remaining = weapon_interval * MELEE_STRIKE_FRACTION
+	melee_locked_facing = hero.last_facing
+	melee_target_id = "enemy-%d" % int(target.enemy_id)
+	melee_damage_committed = false
+	if hero != null and hero.visual != null:
+		hero.visual.play_attack()
+
+func _commit_melee_strike() -> void:
+	if melee_damage_committed:
+		return
+	melee_damage_committed = true
+	var target := _enemy_by_id(melee_target_id)
+	if target == null or target.dead or not _melee_target_in_reach(target, melee_locked_facing):
+		return
+	target.take_damage(weapon_damage)
+
+func _cancel_melee_swing() -> void:
+	melee_phase = ""
+	melee_strike_delay_remaining = 0.0
+	melee_target_id = ""
+	melee_damage_committed = false
+
+func _enemy_by_id(target_id: String) -> Node:
+	if not target_id.begins_with("enemy-"):
+		return null
+	var enemy_id := int(target_id.trim_prefix("enemy-"))
+	for enemy in enemies:
+		if is_instance_valid(enemy) and int(enemy.enemy_id) == enemy_id:
+			return enemy
+	return null
+
+func _melee_target_in_reach(target: Node, facing: int) -> bool:
+	if target == null or target.dead:
+		return false
+	var kind := "ranged" if target.enemy_kind == EnemyScript.EnemyKind.RANGED else "breaker" if target.enemy_kind == EnemyScript.EnemyKind.BREAKER else "pursuer"
+	var center := CombatGeometryScript.body_center("hero", hero.position)
+	var reach := MELEE_REACH_UNITS * SPATIAL_PIXELS_PER_UNIT
+	var reach_rect := Rect2(center.x if facing > 0 else center.x - reach, center.y - 48.0, reach, 96.0)
+	return CombatGeometryScript.hurtbox_rect(kind, target.position).intersects(reach_rect)
+
+func _closest_melee_target(facing: int) -> Node:
+	var nearest: Node = null
+	var nearest_distance := INF
+	for enemy in enemies:
+		if not is_instance_valid(enemy) or enemy.dead or not _melee_target_in_reach(enemy, facing):
+			continue
+		var distance := absf(enemy.position.x - hero.position.x)
+		if distance < nearest_distance or (is_equal_approx(distance, nearest_distance) and (nearest == null or enemy.enemy_id < nearest.enemy_id)):
+			nearest = enemy
+			nearest_distance = distance
+	return nearest
 
 func _build_controls() -> void:
 	var controls := CanvasLayer.new()

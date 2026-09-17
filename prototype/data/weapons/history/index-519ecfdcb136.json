@@ -1,0 +1,75 @@
+{
+  "schema_version": 1.0,
+  "weapons": {
+    "laser_0": {
+      "assets": {
+        "icon": "res://assets/weapons/laser_0/1/icon.png",
+        "world_sprite": "res://assets/weapons/laser_0/1/world-sprite.png"
+      },
+      "base_modifiers": [
+        {
+          "family": "designer.base.attack_damage",
+          "operation": "flat",
+          "stat": "attack_damage",
+          "value": 0.0
+        }
+      ],
+      "behavior_id": "weapon.standard",
+      "description": "Cuts even better than steel",
+      "label": "Laser sword",
+      "pivot": {
+        "coordinate_space": "normalized",
+        "facing": "right",
+        "grip": [
+          0.5,
+          0.75
+        ],
+        "origin": "top_left"
+      },
+      "revision": 1.0,
+      "schema_version": 1.0,
+      "source_hashes": {
+        "icon_sha256": "cd709271f61a458334bff37232a4367365f1886696bde3d07a94dc81f17e13c7",
+        "job_id": "job_20260913T214112",
+        "manifest_sha256": "2a84c6668923097e16956f274032e449f8fed9667865669358ba442fadadd035",
+        "world_sprite_sha256": "f11ca0bded1fb1661a4ef426b30a307716476d1165a91b689ea93ef563206626"
+      },
+      "weapon_id": "laser_0"
+    },
+    "new_weapon": {
+      "assets": {
+        "icon": "res://assets/weapons/new_weapon/1/icon.png",
+        "world_sprite": "res://assets/weapons/new_weapon/1/world-sprite.png"
+      },
+      "base_modifiers": [
+        {
+          "family": "designer.base.attack_damage",
+          "operation": "flat",
+          "stat": "attack_damage",
+          "value": 0.0
+        }
+      ],
+      "behavior_id": "weapon.standard",
+      "description": "Better than your fists",
+      "label": "Smasher",
+      "pivot": {
+        "coordinate_space": "normalized",
+        "facing": "right",
+        "grip": [
+          0.5,
+          0.75
+        ],
+        "origin": "top_left"
+      },
+      "revision": 1.0,
+      "schema_version": 1.0,
+      "source_hashes": {
+        "icon_sha256": "0de5556c9bcb131208a53d82854c75ce6cd22e70e9751af68840f1d8899b5b35",
+        "job_id": "job_20260913T210039",
+        "manifest_sha256": "2ea194f241bd3a2c7db96d7dc28190c658090142c66a6970ed21fbfaeabbea2c",
+        "world_sprite_sha256": "1b6ec09de18eec6102be77404e3b8e64eb43f2746191c279d391e6f1ee33d01b"
+      },
+      "weapon_id": "new_weapon"
+    }
+  }
+}
