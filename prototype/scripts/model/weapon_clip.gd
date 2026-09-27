@@ -1,0 +1,260 @@
+class_name WeaponClip
+extends RefCounted
+
+## A hand-drawn or generated attack animation attached to a weapon, stored on
+## a published revision as "attack_clip". Frames are packed left to right, top
+## to bottom in one sheet; every frame is already aligned so the anchor point
+## sits at the same pixel in each cell.
+##
+## Modes:
+##   hero    the frames show the whole hero swinging the weapon. While a clip
+##           attack plays it replaces the hero's attack animation and the
+##           separate held weapon is hidden. anchor = the ground point under
+##           the hero's feet.
+##   weapon  the frames show only the weapon. They replace the held weapon's
+##           picture during the attack. anchor = the grip.
+##
+## Attacks: one clip can hold a combo. Each attack is a frame range with a hit
+## frame; the hero alternates through them attack after attack and starts over
+## after a pause. With fit_hit on, each attack is sped up or slowed down so its
+## hit frame appears exactly when the game deals melee damage.
+##
+## Fields:
+##   label, mode, sheet (res://, published) / source (absolute path, drafts),
+##   frame_count, columns, cell [w, h], anchor [x, y] (pixels in a cell),
+##   body_height (hero mode: hero height in the frames, px; used to scale the
+##   clip to the hero's in-game height), scale (fine-tune multiplier),
+##   frame_ms (hold time of every frame), attacks [{start, end, hit}] (0-based,
+##   inclusive), fit_hit, project (absolute path of the importer project, drafts).
+
+const MODES := ["hero", "weapon"]
+const MODE_LABELS := {"hero": "Hero attack (whole hero + weapon)", "weapon": "Weapon frames (weapon only)"}
+const MAX_FRAMES := 64
+const MAX_ATTACKS := 4
+const DEFAULT_FRAME_MS := 83.0
+const MIN_FIT := 0.25
+const MAX_FIT := 4.0
+
+const DEFAULT := {
+	"label": "Attack clip",
+	"mode": "hero",
+	"frame_count": 1,
+	"columns": 1,
+	"cell": [1.0, 1.0],
+	"anchor": [0.0, 0.0],
+	"body_height": 0.0,
+	"scale": 1.0,
+	"frame_ms": [],
+	"attacks": [],
+	"fit_hit": true,
+}
+
+static func is_set(clip: Variant) -> bool:
+	return clip is Dictionary and not clip.is_empty() and int(clip.get("frame_count", 0)) > 0 and not sheet_path(clip).is_empty()
+
+## Fills missing values and clamps everything into range. Keeps extra keys
+## (source, sheet, project).
+static func normalize(clip: Variant) -> Dictionary:
+	var result: Dictionary = DEFAULT.duplicate(true)
+	if clip is Dictionary:
+		for key in clip:
+			result[key] = clip[key].duplicate(true) if (clip[key] is Array or clip[key] is Dictionary) else clip[key]
+	if not MODES.has(str(result.mode)):
+		result["mode"] = "hero"
+	var count := clampi(int(_num(result.frame_count, 1.0)), 1, MAX_FRAMES)
+	result["frame_count"] = count
+	result["columns"] = clampi(int(_num(result.columns, count)), 1, count)
+	result["cell"] = _pair(result.cell, Vector2(1, 1), 1.0, 4096.0)
+	result["anchor"] = _pair(result.anchor, Vector2.ZERO, -4096.0, 8192.0)
+	result["body_height"] = clampf(_num(result.body_height, 0.0), 0.0, 8192.0)
+	result["scale"] = clampf(_num(result.scale, 1.0), 0.1, 8.0)
+	result["fit_hit"] = bool(result.get("fit_hit", true))
+	result["label"] = str(result.get("label", "Attack clip")).left(40)
+	var holds: Array = []
+	var raw_holds: Variant = result.get("frame_ms", [])
+	for index in range(count):
+		var value: float = DEFAULT_FRAME_MS
+		if raw_holds is Array and index < raw_holds.size():
+			value = _num(raw_holds[index], DEFAULT_FRAME_MS)
+		holds.append(clampf(value, 16.0, 2000.0))
+	result["frame_ms"] = holds
+	result["attacks"] = attack_ranges(result)
+	return result
+
+## The clip's attacks as [{start, end, hit}], clamped to its frames. A clip
+## with none plays all frames as one attack with the hit in the middle.
+static func attack_ranges(clip: Dictionary) -> Array:
+	var count := clampi(int(_num(clip.get("frame_count", 1), 1.0)), 1, MAX_FRAMES)
+	var result: Array = []
+	var raw: Variant = clip.get("attacks", [])
+	if raw is Array:
+		for entry in raw:
+			if not entry is Dictionary or result.size() >= MAX_ATTACKS:
+				continue
+			var start := clampi(int(_num(entry.get("start", 0), 0.0)), 0, count - 1)
+			var end := clampi(int(_num(entry.get("end", count - 1), count - 1)), start, count - 1)
+			var hit := clampi(int(_num(entry.get("hit", start), start)), start, end)
+			result.append({"start": start, "end": end, "hit": hit})
+	if result.is_empty():
+		result.append({"start": 0, "end": count - 1, "hit": (count - 1) / 2})
+	return result
+
+## Builds attacks from per-frame marks: `starts` are frames that begin a new
+## attack (frame 0 always does), `hits` are hit frames.
+static func attacks_from_marks(frame_count: int, starts: Array, hits: Array) -> Array:
+	var begins: Array = [0]
+	for value in starts:
+		var frame := int(value)
+		if frame > 0 and frame < frame_count and not begins.has(frame):
+			begins.append(frame)
+	begins.sort()
+	var result: Array = []
+	for index in range(mini(begins.size(), MAX_ATTACKS)):
+		var start: int = begins[index]
+		var end: int = (int(begins[index + 1]) - 1) if index + 1 < begins.size() else frame_count - 1
+		if index == MAX_ATTACKS - 1:
+			end = frame_count - 1
+		var hit := -1
+		for value in hits:
+			if int(value) >= start and int(value) <= end:
+				hit = int(value)
+				break
+		if hit < 0:
+			hit = start + (end - start) / 2
+		result.append({"start": start, "end": end, "hit": hit})
+	return result
+
+static func validate(clip: Variant) -> Dictionary:
+	if not clip is Dictionary:
+		return {"valid": false, "error": "attack_clip must be an object"}
+	if clip.is_empty():
+		return {"valid": true}
+	var sheet := str(clip.get("sheet", ""))
+	if not sheet.begins_with("res://") or sheet.contains("..") or sheet.contains("\\"):
+		return {"valid": false, "error": "attack_clip sheet must be a repository-local res:// path"}
+	if not MODES.has(str(clip.get("mode", ""))):
+		return {"valid": false, "error": "attack_clip mode must be hero or weapon"}
+	var count: Variant = clip.get("frame_count")
+	if not _is_number(count) or int(count) < 1 or int(count) > MAX_FRAMES:
+		return {"valid": false, "error": "attack_clip frame_count must be 1-%d" % MAX_FRAMES}
+	for key in ["cell", "anchor"]:
+		var pair: Variant = clip.get(key)
+		if not pair is Array or pair.size() != 2 or not _is_number(pair[0]) or not _is_number(pair[1]):
+			return {"valid": false, "error": "attack_clip %s must be [x, y]" % key}
+	var holds: Variant = clip.get("frame_ms", [])
+	if not holds is Array or holds.size() != int(count):
+		return {"valid": false, "error": "attack_clip needs one frame_ms entry per frame"}
+	for value in holds:
+		if not _is_number(value) or float(value) < 16.0 or float(value) > 2000.0:
+			return {"valid": false, "error": "attack_clip frame_ms values must be 16-2000"}
+	var attacks: Variant = clip.get("attacks", [])
+	if not attacks is Array or attacks.size() > MAX_ATTACKS:
+		return {"valid": false, "error": "attack_clip allows up to %d attacks" % MAX_ATTACKS}
+	for entry in attacks:
+		if not entry is Dictionary:
+			return {"valid": false, "error": "attack_clip attacks must be objects"}
+		var start := int(entry.get("start", -1))
+		var end := int(entry.get("end", -1))
+		var hit := int(entry.get("hit", -1))
+		if start < 0 or end >= int(count) or start > end or hit < start or hit > end:
+			return {"valid": false, "error": "attack_clip attack frames are out of range"}
+	return {"valid": true}
+
+## When each frame of `attack_index` starts. `hit_seconds` is when the game
+## deals damage (0 for ranged). Returns {frames, starts, length, fit, hit_time}.
+static func timeline(clip: Dictionary, attack_index: int, hit_seconds: float) -> Dictionary:
+	var ranges := attack_ranges(clip)
+	var attack: Dictionary = ranges[posmod(attack_index, ranges.size())]
+	var holds: Array = clip.get("frame_ms", [])
+	var pre := 0.0
+	for frame in range(int(attack.start), int(attack.hit)):
+		pre += _hold(holds, frame)
+	var fit := 1.0
+	if bool(clip.get("fit_hit", true)) and hit_seconds > 0.0 and pre > 0.0:
+		fit = clampf(hit_seconds / pre, MIN_FIT, MAX_FIT)
+	var frames: Array = []
+	var starts: Array = []
+	var time := 0.0
+	var hit_time := 0.0
+	for frame in range(int(attack.start), int(attack.end) + 1):
+		if frame == int(attack.hit):
+			hit_time = time
+		frames.append(frame)
+		starts.append(time)
+		# Only the lead-up is stretched or squeezed; from the hit on, frames
+		# play at their own pace so the follow-through keeps its snap.
+		time += _hold(holds, frame) * (fit if frame < int(attack.hit) else 1.0)
+	return {"frames": frames, "starts": starts, "length": time, "fit": fit, "hit_time": hit_time, "attack": attack}
+
+## The frame showing `time` seconds into a timeline, or -1 once it has ended.
+static func frame_at(line: Dictionary, time: float) -> int:
+	if time >= float(line.get("length", 0.0)) or time < 0.0:
+		return -1
+	var starts: Array = line.starts
+	var frames: Array = line.frames
+	var result: int = frames[0]
+	for index in range(starts.size()):
+		if float(starts[index]) <= time + 0.000001:
+			result = frames[index]
+	return result
+
+static func frame_rect(clip: Dictionary, frame: int) -> Rect2:
+	var cell: Array = clip.get("cell", [1.0, 1.0])
+	var columns := maxi(1, int(clip.get("columns", 1)))
+	var index := clampi(frame, 0, maxi(0, int(clip.get("frame_count", 1)) - 1))
+	return Rect2(Vector2(index % columns * float(cell[0]), index / columns * float(cell[1])), Vector2(float(cell[0]), float(cell[1])))
+
+static func sheet_path(clip: Variant) -> String:
+	if not clip is Dictionary:
+		return ""
+	var source := str(clip.get("source", ""))
+	return source if not source.is_empty() else str(clip.get("sheet", ""))
+
+## Loads the clip's sheet from a res:// or absolute path (works before Godot
+## has imported a freshly written file).
+static func load_sheet(clip: Variant) -> Texture2D:
+	var path := sheet_path(clip)
+	if path.is_empty():
+		return null
+	if path.begins_with("res://") and ResourceLoader.exists(path):
+		var imported := load(path) as Texture2D
+		if imported != null:
+			return imported
+	var file_path := ProjectSettings.globalize_path(path) if path.begins_with("res://") else path
+	if not FileAccess.file_exists(file_path):
+		return null
+	var image := Image.load_from_file(file_path)
+	return ImageTexture.create_from_image(image) if image != null and not image.is_empty() else null
+
+## Game pixels per clip pixel for hero mode, given the hero's in-game height.
+static func hero_scale(clip: Dictionary, hero_visible_height: float) -> float:
+	var cell: Array = clip.get("cell", [1.0, 1.0])
+	var body := float(clip.get("body_height", 0.0))
+	if body <= 0.0:
+		body = float(cell[1])
+	return hero_visible_height / maxf(1.0, body) * float(clip.get("scale", 1.0))
+
+## Human-readable timing for one attack, e.g. "frames 1-5, hit on 4 at 0.40 s (x1.20)".
+static func describe_attack(clip: Dictionary, attack_index: int, hit_seconds: float) -> String:
+	var line := timeline(clip, attack_index, hit_seconds)
+	var attack: Dictionary = line.attack
+	var text := "frames %d-%d, hit on %d at %.2f s, ends %.2f s" % [int(attack.start) + 1, int(attack.end) + 1, int(attack.hit) + 1, float(line.hit_time), float(line.length)]
+	if not is_equal_approx(float(line.fit), 1.0):
+		text += " (lead-up played at x%.2f speed)" % (1.0 / float(line.fit))
+	return text
+
+static func _hold(holds: Array, frame: int) -> float:
+	if frame >= 0 and frame < holds.size() and _is_number(holds[frame]):
+		return float(holds[frame]) / 1000.0
+	return DEFAULT_FRAME_MS / 1000.0
+
+static func _pair(value: Variant, fallback: Vector2, low: float, high: float) -> Array:
+	if value is Array and value.size() == 2 and _is_number(value[0]) and _is_number(value[1]):
+		return [clampf(float(value[0]), low, high), clampf(float(value[1]), low, high)]
+	return [fallback.x, fallback.y]
+
+static func _num(value: Variant, fallback: float) -> float:
+	return float(value) if _is_number(value) else fallback
+
+static func _is_number(value: Variant) -> bool:
+	return (value is int or value is float) and is_finite(float(value))

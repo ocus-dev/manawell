@@ -24,6 +24,8 @@ const HeroStatResolverScript = preload("res://scripts/model/hero_stat_resolver.g
 const WeaponLootRegistrationScript = preload("res://scripts/model/weapon_loot_registration.gd")
 const LootGeneratorScript = preload("res://scripts/model/loot_generator.gd")
 const EnvironmentScript = preload("res://scripts/game/side_view_environment_visual.gd")
+const MonsterStatsScript = preload("res://scripts/model/monster_stats.gd")
+const MonsterEncyclopediaScript = preload("res://scripts/tools/monster_encyclopedia.gd")
 const LOGICAL_SIZE := Vector2(1280.0, 720.0)
 const SPATIAL_PIXELS_PER_UNIT: float = 32.0
 const MELEE_REACH_UNITS: float = 1.5
@@ -109,6 +111,7 @@ var assignment_notice: String = ""
 var ui_scale: float = 1.0
 var harvester_visual: Node
 var environment_visual: Node
+var monster_encyclopedia: CanvasLayer
 
 func _ready() -> void:
 	environment_visual = EnvironmentScript.new()
@@ -144,6 +147,7 @@ func _ready() -> void:
 	encounter_hud.campaign_node_activate.connect(activate_campaign_node)
 	_update_hud()
 	_restore_saved_snapshot()
+	_attach_monster_encyclopedia()
 	queue_redraw()
 
 func _notification(what: int) -> void:
@@ -352,6 +356,9 @@ func _configure_held_weapon_visual(revision: Dictionary) -> void:
 		return
 	if revision.is_empty():
 		hero.clear_held_weapon()
+		hero.configure_held_weapon_swing({})
+		hero.configure_held_weapon_effects([])
+		hero.configure_attack_clip({})
 		return
 	var assets: Dictionary = revision.get("assets", {})
 	var texture := load(str(assets.get("world_sprite", ""))) as Texture2D
@@ -359,6 +366,13 @@ func _configure_held_weapon_visual(revision: Dictionary) -> void:
 	var grip: Array = pivot.get("grip", [0.5, 0.75])
 	var hand_offset: Array = pivot.get("hand_offset", [0.0, 0.0])
 	hero.configure_held_weapon(texture, Vector2(float(grip[0]), float(grip[1])), str(pivot.get("facing", "right")), float(pivot.get("world_scale", 1.0)), float(pivot.get("rotation_degrees", 0.0)), Vector2(float(hand_offset[0]), float(hand_offset[1])))
+	var swing: Variant = revision.get("swing", {})
+	hero.configure_held_weapon_swing(swing if swing is Dictionary else {})
+	var effects: Variant = revision.get("effects", [])
+	# Melee damage lands MELEE_STRIKE_FRACTION into the attack; ranged shots fire at once.
+	hero.configure_held_weapon_effects(effects if effects is Array else [], weapon_interval * MELEE_STRIKE_FRACTION if weapon_behavior_id == "weapon.melee" else 0.0)
+	var clip: Variant = revision.get("attack_clip", {})
+	hero.configure_attack_clip(clip if clip is Dictionary else {}, weapon_interval * MELEE_STRIKE_FRACTION if weapon_behavior_id == "weapon.melee" else 0.0, weapon_interval)
 
 func request_harvest() -> bool:
 	var harvested: bool = run_state.request_harvest()
@@ -889,6 +903,21 @@ func apply_enemy_damage(target: int, amount: float) -> bool:
 		return false
 	return run_state.apply_damage(target, amount)
 
+func _attach_monster_encyclopedia() -> void:
+	# Developer tool: F9 in debug builds. Not added to exported release builds.
+	if not OS.is_debug_build():
+		return
+	monster_encyclopedia = MonsterEncyclopediaScript.new()
+	monster_encyclopedia.name = "MonsterEncyclopedia"
+	monster_encyclopedia.controller = self
+	add_child(monster_encyclopedia)
+
+## Pushes edited MonsterStats onto enemies already in the arena.
+func apply_monster_stats() -> void:
+	for enemy in enemies:
+		if is_instance_valid(enemy) and not enemy.dead:
+			enemy.refresh_stats()
+
 func set_experiment_paused(should_pause: bool) -> void:
 	run_state.set_paused(should_pause)
 	if pause_button != null:
@@ -950,7 +979,7 @@ func spawn_hostile_projectile(origin_x: float, target_x: float, damage: float, s
 	if source_enemy != null:
 		origin = CombatGeometryScript.muzzle_position(source_kind, source_position, facing)
 	var locked_target_y := target_y if is_finite(target_y) else CombatGeometryScript.body_center("hero", hero.position).y
-	projectile.setup(self, origin, Vector2(target_x, locked_target_y), damage, BalanceData.RANGED_PROJECTILE_SPEED, BalanceData.RANGED_PROJECTILE_LIFETIME, true, facing)
+	projectile.setup(self, origin, Vector2(target_x, locked_target_y), damage, MonsterStatsScript.get_stat("ranged", "projectile_speed"), BalanceData.RANGED_PROJECTILE_LIFETIME, true, facing)
 	projectile.source_enemy_id = source_enemy.enemy_id if source_enemy != null else 0
 	add_child(projectile)
 	projectile.z_index = 3

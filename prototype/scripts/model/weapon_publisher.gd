@@ -62,6 +62,9 @@ static func publish(draft: Dictionary, preparation_root: String, job_id: String,
     if not _copy_immutable(source_dir.path_join("square-icon.png"), stage_assets.path_join("icon.png")) or not _copy_immutable(source_dir.path_join("world-sprite.png"), stage_assets.path_join("world-sprite.png")):
         return _failure("staging.assets", "STAGING_FAILED", "could not stage prepared assets")
     revision.assets = {"icon": final_asset_dir.path_join("icon.png"), "world_sprite": final_asset_dir.path_join("world-sprite.png")}
+    var effect_files: Variant = _stage_effects(revision, stage_assets, final_asset_dir)
+    if effect_files == null:
+        return _failure("staging.effects", "STAGING_FAILED", "could not stage weapon effect sheets")
     if not _write_json(stage_data.path_join("definition.json"), revision) or not _write_json(stage_data.path_join("recipe.json"), recipe):
         return _failure("staging.data", "STAGING_FAILED", "could not stage definition and recipe")
     var staged_validation := Catalog.validate_draft_recipe(draft, revision, recipe, false)
@@ -79,6 +82,9 @@ static func publish(draft: Dictionary, preparation_root: String, job_id: String,
     var final_asset_dir_resolved := asset_root.path_join(weapon_id).path_join(str(revision_number))
     if not _mkdir(final_asset_dir_resolved) or not _copy_immutable(stage_assets.path_join("icon.png"), final_asset_dir_resolved.path_join("icon.png")) or not _copy_immutable(stage_assets.path_join("world-sprite.png"), final_asset_dir_resolved.path_join("world-sprite.png")):
         return _failure("assets", "PUBLISH_FAILED", "could not install immutable published assets")
+    for name in effect_files:
+        if not _copy_immutable(stage_assets.path_join(name), final_asset_dir_resolved.path_join(name)):
+            return _failure("assets.effects", "PUBLISH_FAILED", "could not install weapon effect sheets")
     var revision_dir := data_root.path_join(weapon_id).path_join(str(revision_number))
     if not _mkdir(revision_dir) or not _copy_immutable(stage_data.path_join("definition.json"), revision_dir.path_join("definition.json")) or not _copy_immutable(stage_data.path_join("recipe.json"), revision_dir.path_join("recipe.json")):
         return _failure("revision", "PUBLISH_FAILED", "could not preserve published revision")
@@ -88,6 +94,38 @@ static func publish(draft: Dictionary, preparation_root: String, job_id: String,
     if not _write_json(data_root.path_join(INDEX_NAME), next_index):
         return _failure("index", "COMMIT_FAILED", "could not commit publication index")
     return {"valid": true, "committed": true, "idempotent": false, "preview": preview(draft, index), "index": next_index, "diagnostics": []}
+
+## Copies each draft effect's sheet into staging as effects/<n>.png and points
+## the revision at its final published path. Returns the staged file names,
+## or null if a sheet is missing.
+static func _stage_effects(revision: Dictionary, stage_assets: String, final_asset_dir: String) -> Variant:
+    var names: Array = []
+    if not revision.get("effects") is Array:
+        return names
+    for index in range(revision.effects.size()):
+        var effect: Dictionary = revision.effects[index]
+        var source := str(effect.get("source", ""))
+        if source.is_empty() and str(effect.get("sheet", "")) != Store.PENDING_EFFECT_SHEET:
+            source = str(effect.get("sheet", ""))
+        var name := "effects/%d.png" % index
+        if source.is_empty() or not _copy_immutable(source, stage_assets.path_join(name)):
+            return null
+        effect.erase("source")
+        effect["sheet"] = final_asset_dir.path_join(name)
+        names.append(name)
+    # The attack clip's packed sheet goes in as clip.png.
+    var clip: Variant = revision.get("attack_clip")
+    if clip is Dictionary and not clip.is_empty():
+        var clip_source := str(clip.get("source", ""))
+        if clip_source.is_empty() and str(clip.get("sheet", "")) != Store.PENDING_EFFECT_SHEET:
+            clip_source = str(clip.get("sheet", ""))
+        if clip_source.is_empty() or not _copy_immutable(clip_source, stage_assets.path_join("clip.png")):
+            return null
+        clip.erase("source")
+        clip.erase("project")
+        clip["sheet"] = final_asset_dir.path_join("clip.png")
+        names.append("clip.png")
+    return names
 
 static func publish_placement_revision(weapon_id: String, pivot: Dictionary, data_root: String = DEFAULT_DATA_ROOT, asset_root: String = DEFAULT_ASSET_ROOT) -> Dictionary:
     if weapon_id.is_empty() or weapon_id.contains("/") or weapon_id.contains("\\") or weapon_id.contains("..") or weapon_id.contains(":"):
@@ -152,6 +190,46 @@ static func publish_placement_revision(weapon_id: String, pivot: Dictionary, dat
     if not _write_json(data_root.path_join(INDEX_NAME), next_index):
         return _failure("index", "COMMIT_FAILED", "could not commit placement index")
     return {"valid": true, "committed": true, "revision": next_revision, "recipe": recipe, "index": next_index, "diagnostics": []}
+
+## Takes a weapon out of the game without deleting anything: its index entry
+## moves from "weapons" to "retired". Revision folders and assets stay on disk.
+## AccountState still registers retired weapons so saves that own one keep
+## loading, but they can't drop or be granted, and tools stop listing them.
+static func retire(weapon_id: String, data_root: String = DEFAULT_DATA_ROOT) -> Dictionary:
+    var index := _load_index(data_root)
+    if not index.get("weapons", {}).has(weapon_id):
+        return _failure("weapon_id", "UNKNOWN_WEAPON", "weapon is not in the game")
+    var next_index := index.duplicate(true)
+    var retired: Dictionary = next_index.get("retired", {})
+    retired[weapon_id] = next_index.weapons[weapon_id]
+    next_index["retired"] = retired
+    next_index.weapons.erase(weapon_id)
+    return _commit_index(index, next_index, data_root)
+
+## Puts a retired weapon back in the game at the revision it had.
+static func restore_retired(weapon_id: String, data_root: String = DEFAULT_DATA_ROOT) -> Dictionary:
+    var index := _load_index(data_root)
+    if not index.get("retired", {}).has(weapon_id):
+        return _failure("weapon_id", "UNKNOWN_WEAPON", "weapon is not retired")
+    if index.get("weapons", {}).has(weapon_id):
+        return _failure("weapon_id", "COLLISION", "a weapon with this id is already in the game")
+    var next_index := index.duplicate(true)
+    next_index.weapons[weapon_id] = next_index.retired[weapon_id]
+    next_index.retired.erase(weapon_id)
+    if next_index.retired.is_empty():
+        next_index.erase("retired")
+    return _commit_index(index, next_index, data_root)
+
+static func _commit_index(index: Dictionary, next_index: Dictionary, data_root: String) -> Dictionary:
+    var validation := Catalog.validate_publication_index(next_index, false)
+    if not validation.valid:
+        return validation
+    var history := data_root.path_join("history")
+    if not _mkdir(history) or not _write_json(history.path_join("index-%s.json" % _sha256(data_root.path_join(INDEX_NAME)).left(12)), index):
+        return _failure("history", "PUBLISH_FAILED", "could not preserve the previous publication index")
+    if not _write_json(data_root.path_join(INDEX_NAME), next_index):
+        return _failure("index", "COMMIT_FAILED", "could not commit publication index")
+    return {"valid": true, "committed": true, "index": next_index, "diagnostics": []}
 
 static func rollback(weapon_id: String, revision: int, data_root: String = DEFAULT_DATA_ROOT) -> Dictionary:
     var definition_path := data_root.path_join(weapon_id).path_join(str(revision)).path_join("definition.json")

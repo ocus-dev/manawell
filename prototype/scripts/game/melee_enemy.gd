@@ -8,6 +8,7 @@ const CombatGeometryScript = preload("res://data/combat_geometry.gd")
 const RunStateScript = preload("res://scripts/model/run_state.gd")
 const VisualConfigScript = preload("res://scripts/game/side_view_visual_config.gd")
 const VisualScript = preload("res://scripts/game/side_view_actor_visual.gd")
+const MonsterStatsScript = preload("res://scripts/model/monster_stats.gd")
 
 var enemy_kind: EnemyKind = EnemyKind.PURSUER
 var enemy_id: int = 0
@@ -17,6 +18,9 @@ var max_health: float = 1.0
 var speed_pixels: float = 0.0
 var attack_damage: float = 0.0
 var attack_range_pixels: float = 0.0
+var attack_interval: float = 1.0
+var stop_range_pixels: float = 0.0
+var windup_duration: float = 0.0
 var cooldown_remaining: float = 0.0
 var windup_remaining: float = 0.0
 var locked_target_point := Vector2.ZERO
@@ -62,7 +66,7 @@ func simulate_tick(delta: float) -> void:
 	if visual != null:
 		visual.set_facing(-side)
 		var locomotion_distance := absf(position.x - (controller.hero.position.x if enemy_kind == EnemyKind.PURSUER else controller.MACHINE_X))
-		var locomotion_threshold: float = attack_range_pixels if enemy_kind != EnemyKind.RANGED else BalanceData.RANGED_STOP_RANGE * controller.SPATIAL_PIXELS_PER_UNIT
+		var locomotion_threshold: float = attack_range_pixels if enemy_kind != EnemyKind.RANGED else stop_range_pixels
 		visual.set_locomotion(locomotion_distance > locomotion_threshold)
 	queue_redraw()
 
@@ -94,7 +98,7 @@ func _simulate_melee(_delta: float) -> void:
 			controller.apply_enemy_damage(RunStateScript.DamageTarget.HERO if enemy_kind == EnemyKind.PURSUER else RunStateScript.DamageTarget.MACHINE, attack_damage)
 			if visual != null:
 				visual.play_attack()
-			cooldown_remaining = BalanceData.MELEE_ATTACK_INTERVAL
+			cooldown_remaining = attack_interval
 
 func _simulate_ranged(delta: float) -> void:
 	var distance := absf(controller.hero.position.x - position.x)
@@ -103,31 +107,44 @@ func _simulate_ranged(delta: float) -> void:
 		if is_zero_approx(windup_remaining):
 			locked_target_point = CombatGeometryScript.body_center("hero", controller.hero.position)
 			controller.spawn_hostile_projectile(position.x, locked_target_point.x, attack_damage, self, locked_target_point.y)
+			# attack_interval is shot-to-shot time, so the wind-up counts toward it.
+			cooldown_remaining = maxf(0.0, attack_interval - windup_duration)
 		return
-	if distance > BalanceData.RANGED_STOP_RANGE * controller.SPATIAL_PIXELS_PER_UNIT:
+	if distance > stop_range_pixels:
 		position.x += signf(controller.hero.position.x - position.x) * speed_pixels * controller.FIXED_STEP
 	elif cooldown_remaining <= 0.0:
-		windup_remaining = BalanceData.RANGED_WINDUP
-		warning_remaining = BalanceData.RANGED_WINDUP
+		windup_remaining = windup_duration
+		warning_remaining = windup_duration
 		if visual != null:
 			visual.play_attack()
 
+func monster_id() -> String:
+	return MonsterStatsScript.id_for_kind(enemy_kind)
+
+## Stats come from MonsterStats (data/monster_stats.json over data/balance.gd).
 func _apply_stats() -> void:
-	if enemy_kind == EnemyKind.PURSUER:
-		max_health = BalanceData.PURSUER_HEALTH
-		speed_pixels = BalanceData.PURSUER_SPEED * controller.SPATIAL_PIXELS_PER_UNIT
-		attack_damage = BalanceData.PURSUER_DAMAGE * damage_multiplier
-		attack_range_pixels = BalanceData.PURSUER_RANGE * controller.SPATIAL_PIXELS_PER_UNIT
-	elif enemy_kind == EnemyKind.BREAKER:
-		max_health = BalanceData.BREAKER_HEALTH
-		speed_pixels = BalanceData.BREAKER_SPEED * controller.SPATIAL_PIXELS_PER_UNIT
-		attack_damage = BalanceData.BREAKER_DAMAGE * damage_multiplier
-		attack_range_pixels = BalanceData.BREAKER_RANGE * controller.SPATIAL_PIXELS_PER_UNIT
+	var id := monster_id()
+	var pixels_per_unit: float = controller.SPATIAL_PIXELS_PER_UNIT if controller != null else 32.0
+	max_health = MonsterStatsScript.get_stat(id, "health")
+	speed_pixels = MonsterStatsScript.get_stat(id, "move_speed") * pixels_per_unit
+	attack_damage = MonsterStatsScript.get_stat(id, "damage") * damage_multiplier
+	attack_interval = MonsterStatsScript.get_stat(id, "attack_interval")
+	if enemy_kind == EnemyKind.RANGED:
+		stop_range_pixels = MonsterStatsScript.get_stat(id, "stop_range") * pixels_per_unit
+		windup_duration = MonsterStatsScript.get_stat(id, "windup")
 	else:
-		max_health = BalanceData.RANGED_HEALTH
-		speed_pixels = BalanceData.RANGED_SPEED * controller.SPATIAL_PIXELS_PER_UNIT
-		attack_damage = BalanceData.RANGED_DAMAGE * damage_multiplier
+		attack_range_pixels = MonsterStatsScript.get_stat(id, "attack_range") * pixels_per_unit
 	health = max_health
+
+## Re-reads stats after a live edit, keeping the enemy's current health ratio.
+func refresh_stats() -> void:
+	if dead:
+		return
+	var health_ratio := clampf(health / max_health, 0.0, 1.0) if max_health > 0.0 else 1.0
+	_apply_stats()
+	health = maxf(0.001, max_health * health_ratio)
+	cooldown_remaining = minf(cooldown_remaining, attack_interval)
+	queue_redraw()
 
 func capture_snapshot_state() -> Dictionary:
 	return {"side": side, "enemy_id": enemy_id, "damage_multiplier": damage_multiplier, "locked_target_point": [locked_target_point.x, locked_target_point.y], "warning_remaining": warning_remaining, "warning_visible": warning_visible, "damage_feedback_remaining": damage_feedback_remaining, "damage_feedback_amount": damage_feedback_amount}

@@ -60,8 +60,10 @@ func _register_published_weapons() -> void:
 	index_file.close()
 	if not index_value is Dictionary:
 		return
-	for weapon_id in index_value.get("weapons", {}).keys():
-		var revision: Dictionary = index_value.weapons[weapon_id]
+	var retired: Dictionary = index_value.get("retired", {}) if index_value.get("retired", {}) is Dictionary else {}
+	for weapon_id in index_value.get("weapons", {}).keys() + retired.keys():
+		var is_retired: bool = retired.has(weapon_id) and not index_value.get("weapons", {}).has(weapon_id)
+		var revision: Dictionary = retired[weapon_id] if is_retired else index_value.weapons[weapon_id]
 		var revision_check := WeaponCatalogScript.validate_revision(revision, false)
 		if not revision_check.valid:
 			continue
@@ -77,6 +79,8 @@ func _register_published_weapons() -> void:
 			"slot": "weapon",
 			"implicits": revision.get("base_modifiers", []).duplicate(true),
 		}
+		if revision.get("base_stats") is Dictionary:
+			base["base_stats"] = revision.base_stats.duplicate(true)
 		ItemDefinitionsScript.register_runtime_base(str(weapon_id), base)
 		ItemCatalogScript.register_published_weapon(str(weapon_id), {
 			"label": base.label,
@@ -84,7 +88,10 @@ func _register_published_weapons() -> void:
 			"description": str(revision.get("description", "")),
 			"icon": str(revision.get("assets", {}).get("icon", "")),
 		})
-		published_weapons[str(weapon_id)] = {"revision": revision.duplicate(true), "recipe": recipe}
+		# Retired weapons (removed in the Weapon Lab) stay registered so saves that
+		# already own one still load, but they can't be granted or dropped.
+		if not is_retired:
+			published_weapons[str(weapon_id)] = {"revision": revision.duplicate(true), "recipe": recipe}
 
 func _read_json_file(path: String) -> Dictionary:
 	var file := FileAccess.open(path, FileAccess.READ)

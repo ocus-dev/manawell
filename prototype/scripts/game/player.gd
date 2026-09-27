@@ -4,6 +4,10 @@ extends Node2D
 const BalanceData = preload("res://data/balance.gd")
 const ArenaLayoutScript = preload("res://data/arena_layout.gd")
 const VisualScript = preload("res://scripts/game/side_view_actor_visual.gd")
+const WeaponSwingScript = preload("res://scripts/model/weapon_swing.gd")
+const WeaponEffectsScript = preload("res://scripts/model/weapon_effects.gd")
+const WeaponEffectScript = preload("res://scripts/game/weapon_effect.gd")
+const WeaponClipScript = preload("res://scripts/model/weapon_clip.gd")
 const LEFT_BOUND: float = ArenaLayoutScript.LEFT_BOUND
 const RIGHT_BOUND: float = ArenaLayoutScript.RIGHT_BOUND
 const FEET_OFFSET: float = ArenaLayoutScript.HERO_FEET_OFFSET
@@ -38,6 +42,32 @@ var held_weapon_hand_offset := Vector2.ZERO
 var held_weapon_attack_active := false
 var held_weapon_attack_rotation_offset_degrees := 0.0
 var held_weapon_attack_elapsed := 0.0
+## Per-weapon swing (WeaponSwing values). Empty means the original built-in swing.
+var held_weapon_swing: Dictionary = {}
+var held_weapon_attack_offset := Vector2.ZERO
+## Flipbook effects (WeaponEffects entries) fired during the attack swing.
+var held_weapon_effects: Array = []
+var held_weapon_effect_textures: Array = []
+## Seconds after the attack starts when melee damage lands (0 for ranged).
+var held_weapon_hit_seconds := 0.0
+## Where effects that don't follow the weapon are placed; defaults to our parent.
+var effect_world_parent: Node
+var effects_spawned := 0
+var _effect_queue: Array = []
+## Weapon attack clip (WeaponClip). Hero mode is played by the visual; weapon
+## mode swaps the held weapon's picture for the clip's frames during attacks.
+var held_weapon_clip: Dictionary = {}
+var held_weapon_clip_texture: Texture2D
+var held_weapon_clip_atlas: AtlasTexture
+var held_weapon_clip_line: Dictionary = {}
+var held_weapon_clip_elapsed := 0.0
+var held_weapon_clip_since_start := INF
+var held_weapon_clip_index := 0
+var held_weapon_clip_combo_window := 1.0
+var held_weapon_clip_playing := false
+var held_weapon_clip_frame := -1
+var _base_weapon_texture: Texture2D
+var _base_weapon_grip := Vector2(0.5, 0.75)
 
 func _ready() -> void:
 	visual = VisualScript.new()
@@ -47,7 +77,7 @@ func _ready() -> void:
 	configure_hero(hero_id)
 	visual.set_facing(last_facing)
 	visual.attack_started.connect(_start_held_weapon_attack_presentation)
-	visual.attack_finished.connect(_finish_held_weapon_attack_presentation)
+	visual.attack_finished.connect(_on_attack_clip_finished)
 	weapon_socket = Node2D.new()
 	weapon_socket.name = "WeaponSocket"
 	weapon_socket.z_index = 2
@@ -74,16 +104,197 @@ func configure_held_weapon(texture: Texture2D, grip: Vector2 = Vector2(0.5, 0.75
 	held_weapon_attack_active = false
 	held_weapon_attack_rotation_offset_degrees = 0.0
 	held_weapon_attack_elapsed = 0.0
+	_stop_weapon_clip()
 	held_weapon.texture = texture
 	held_weapon.visible = texture != null
+	_base_weapon_texture = texture
+	_base_weapon_grip = held_weapon_grip
 	_update_held_weapon_transform()
 
 func _process(delta: float) -> void:
+	_advance_attack_clips(delta)
 	if not held_weapon_attack_active or held_weapon == null or held_weapon.texture == null:
 		return
-	held_weapon_attack_elapsed = minf(HELD_WEAPON_ATTACK_PRESENTATION_DURATION, held_weapon_attack_elapsed + maxf(0.0, delta))
-	held_weapon_attack_rotation_offset_degrees = _held_weapon_attack_pose_degrees(held_weapon_attack_elapsed / HELD_WEAPON_ATTACK_PRESENTATION_DURATION)
+	var duration := held_weapon_swing_duration()
+	held_weapon_attack_elapsed = minf(duration, held_weapon_attack_elapsed + maxf(0.0, delta))
+	_apply_held_weapon_swing_pose(held_weapon_attack_elapsed / duration)
 	_update_held_weapon_transform()
+	_fire_due_effects()
+	# A custom swing runs its own length, even past the end of the baked clip.
+	if not held_weapon_swing.is_empty() and held_weapon_attack_elapsed >= duration:
+		_finish_held_weapon_attack_presentation()
+
+## Sets the weapon's swing (WeaponSwing values); {} restores the built-in swing.
+## Sets the weapon's flipbook effects and when melee damage lands.
+func configure_held_weapon_effects(effects: Array, hit_seconds: float = 0.0) -> void:
+	held_weapon_effects.clear()
+	held_weapon_effect_textures.clear()
+	held_weapon_hit_seconds = maxf(0.0, hit_seconds)
+	for effect in effects:
+		if not effect is Dictionary:
+			continue
+		var normalized: Dictionary = WeaponEffectsScript.normalize(effect)
+		var texture: Texture2D = WeaponEffectsScript.load_sheet(WeaponEffectsScript.sheet_path(effect))
+		if texture == null:
+			continue
+		held_weapon_effects.append(normalized)
+		held_weapon_effect_textures.append(texture)
+
+func _queue_effects() -> void:
+	_effect_queue.clear()
+	var swing: Dictionary = held_weapon_swing if not held_weapon_swing.is_empty() else WeaponSwingScript.normalize(WeaponSwingScript.DEFAULT)
+	for index in range(held_weapon_effects.size()):
+		_effect_queue.append({"index": index, "time": WeaponEffectsScript.trigger_seconds(held_weapon_effects[index], swing, held_weapon_swing_duration(), held_weapon_hit_seconds)})
+
+func _fire_due_effects() -> void:
+	for entry in _effect_queue.duplicate():
+		if float(entry.time) <= held_weapon_attack_elapsed + 0.0001:
+			_effect_queue.erase(entry)
+			spawn_weapon_effect(int(entry.index))
+
+## Plays effect `index` now at its anchor on the held weapon.
+func spawn_weapon_effect(index: int) -> Node2D:
+	if index < 0 or index >= held_weapon_effects.size() or held_weapon == null or held_weapon.texture == null:
+		return null
+	var effect: Dictionary = held_weapon_effects[index]
+	var node: Node2D = WeaponEffectScript.new()
+	node.name = "WeaponEffect"
+	var size := Vector2(held_weapon.texture.get_size())
+	var anchor: Array = effect.anchor
+	var anchor_local := Vector2((float(anchor[0]) - 0.5) * size.x, (float(anchor[1]) - 0.5) * size.y)
+	var facing := -1.0 if last_facing < 0 else 1.0
+	var offset: Array = effect.offset
+	var world_offset := Vector2(float(offset[0]) * facing, float(offset[1]))
+	var weapon_scale := held_weapon.scale
+	if bool(effect.follow):
+		var inverse := Vector2(1.0 / maxf(0.0001, absf(weapon_scale.x)), 1.0 / maxf(0.0001, absf(weapon_scale.y)))
+		node.setup(effect, held_weapon_effect_textures[index], inverse)
+		node.position = anchor_local + held_weapon.global_transform.basis_xform_inv(world_offset)
+		node.rotation = deg_to_rad(float(effect.rotation)) if bool(effect.align) else -held_weapon.rotation
+		node.z_index = 1
+		held_weapon.add_child(node)
+	else:
+		node.setup(effect, held_weapon_effect_textures[index])
+		var parent: Node = effect_world_parent if is_instance_valid(effect_world_parent) else get_parent()
+		if parent == null:
+			parent = self
+		parent.add_child(node)
+		node.global_position = held_weapon.to_global(anchor_local) + world_offset
+		node.global_rotation = (held_weapon.global_rotation if bool(effect.align) else 0.0) + deg_to_rad(float(effect.rotation)) * facing
+		node.scale = Vector2(facing, 1.0)
+		node.z_index = 6
+	effects_spawned += 1
+	return node
+
+# ---------- attack clip ----------
+
+## Sets the weapon's attack clip ({} for none). `hit_seconds`: when the game
+## deals damage (0 for ranged); `attack_interval`: time between attacks.
+func configure_attack_clip(clip: Dictionary, hit_seconds: float = 0.0, attack_interval: float = 1.0) -> void:
+	_stop_weapon_clip()
+	held_weapon_clip = {}
+	held_weapon_clip_texture = null
+	var texture: Texture2D = WeaponClipScript.load_sheet(clip) if WeaponClipScript.is_set(clip) else null
+	var normalized: Dictionary = WeaponClipScript.normalize(clip) if texture != null else {}
+	var longest := 0.0
+	if not normalized.is_empty():
+		for index in range(WeaponClipScript.attack_ranges(normalized).size()):
+			longest = maxf(longest, float(WeaponClipScript.timeline(normalized, index, hit_seconds).length))
+	var combo_window := maxf(attack_interval * 1.6, longest + 0.5)
+	if visual != null:
+		if not normalized.is_empty() and str(normalized.mode) == "hero":
+			visual.set_attack_clip(normalized, texture, hit_seconds, combo_window)
+		else:
+			visual.clear_attack_clip()
+	if not normalized.is_empty() and str(normalized.mode) == "weapon":
+		held_weapon_clip = normalized
+		held_weapon_clip_texture = texture
+		held_weapon_clip_atlas = AtlasTexture.new()
+		held_weapon_clip_atlas.atlas = texture
+		held_weapon_clip_combo_window = combo_window
+		held_weapon_clip_index = 0
+		held_weapon_clip_since_start = INF
+	held_weapon_clip_hit_seconds = maxf(0.0, hit_seconds)
+	_update_weapon_visibility()
+
+var held_weapon_clip_hit_seconds := 0.0
+
+func has_attack_clip() -> bool:
+	return not held_weapon_clip.is_empty() or (visual != null and visual.has_attack_clip())
+
+func _start_weapon_clip() -> void:
+	if held_weapon_clip.is_empty() or _base_weapon_texture == null:
+		return
+	if held_weapon_clip_since_start > held_weapon_clip_combo_window:
+		held_weapon_clip_index = 0
+	held_weapon_clip_line = WeaponClipScript.timeline(held_weapon_clip, held_weapon_clip_index, held_weapon_clip_hit_seconds)
+	held_weapon_clip_index = (held_weapon_clip_index + 1) % WeaponClipScript.attack_ranges(held_weapon_clip).size()
+	held_weapon_clip_elapsed = 0.0
+	held_weapon_clip_since_start = 0.0
+	held_weapon_clip_playing = true
+	var cell: Array = held_weapon_clip.cell
+	var anchor: Array = held_weapon_clip.anchor
+	held_weapon_grip = Vector2(clampf(float(anchor[0]) / float(cell[0]), 0.0, 1.0), clampf(float(anchor[1]) / float(cell[1]), 0.0, 1.0))
+	held_weapon.texture = held_weapon_clip_atlas
+	_show_weapon_clip_frame(WeaponClipScript.frame_at(held_weapon_clip_line, 0.0))
+
+func _show_weapon_clip_frame(frame: int) -> void:
+	held_weapon_clip_frame = frame
+	if frame >= 0:
+		held_weapon_clip_atlas.region = WeaponClipScript.frame_rect(held_weapon_clip, frame)
+
+func _stop_weapon_clip() -> void:
+	if not held_weapon_clip_playing:
+		return
+	held_weapon_clip_playing = false
+	held_weapon_clip_frame = -1
+	held_weapon_grip = _base_weapon_grip
+	if held_weapon != null:
+		held_weapon.texture = _base_weapon_texture
+	_update_held_weapon_transform()
+
+func _advance_attack_clips(delta: float) -> void:
+	held_weapon_clip_since_start += maxf(0.0, delta)
+	if held_weapon_clip_playing:
+		held_weapon_clip_elapsed += maxf(0.0, delta)
+		var frame := WeaponClipScript.frame_at(held_weapon_clip_line, held_weapon_clip_elapsed)
+		if frame < 0:
+			_stop_weapon_clip()
+		else:
+			_show_weapon_clip_frame(frame)
+			_update_held_weapon_transform()
+	_update_weapon_visibility()
+
+## A hero-mode clip draws the weapon itself, so the held weapon's picture is
+## hidden while one plays (its effects still show).
+func _update_weapon_visibility() -> void:
+	if held_weapon == null:
+		return
+	var hidden: bool = visual != null and visual.clip_hides_weapon()
+	held_weapon.self_modulate.a = 0.0 if hidden else 1.0
+
+func configure_held_weapon_swing(swing: Dictionary) -> void:
+	held_weapon_swing = WeaponSwingScript.normalize(swing) if not swing.is_empty() else {}
+
+func held_weapon_swing_duration() -> float:
+	if held_weapon_swing.is_empty():
+		return HELD_WEAPON_ATTACK_PRESENTATION_DURATION
+	return maxf(0.01, float(held_weapon_swing.get("duration", HELD_WEAPON_ATTACK_PRESENTATION_DURATION)))
+
+func _apply_held_weapon_swing_pose(progress: float) -> void:
+	if held_weapon_swing.is_empty():
+		held_weapon_attack_rotation_offset_degrees = _held_weapon_attack_pose_degrees(progress)
+		held_weapon_attack_offset = Vector2.ZERO
+		return
+	var pose: Dictionary = WeaponSwingScript.sample(held_weapon_swing, progress)
+	held_weapon_attack_rotation_offset_degrees = float(pose.angle) * -float(last_facing)
+	var offset: Vector2 = pose.offset
+	held_weapon_attack_offset = Vector2(offset.x * (-1.0 if last_facing < 0 else 1.0), offset.y)
+
+func _on_attack_clip_finished() -> void:
+	# The built-in swing follows the baked clip; custom swings end on their own.
+	if held_weapon_swing.is_empty():
+		_finish_held_weapon_attack_presentation()
 
 func _held_weapon_attack_pose_degrees(progress: float) -> float:
 	var t := clampf(progress, 0.0, 1.0)
@@ -97,6 +308,8 @@ func _held_weapon_attack_pose_degrees(progress: float) -> float:
 	return swing * -float(last_facing)
 
 func clear_held_weapon() -> void:
+	_stop_weapon_clip()
+	_base_weapon_texture = null
 	held_weapon.texture = null
 	held_weapon.visible = false
 
@@ -117,7 +330,7 @@ func _update_held_weapon_transform() -> void:
 		var scaled_pivot := Vector2(pivot.x * render_scale * art_facing_sign, pivot.y * render_scale)
 		# Rotate the center offset with the art so the authored grip remains
 		# anchored to the socket at every angle.
-		held_weapon.position = scaled_pivot.rotated(held_weapon.rotation) + held_weapon_hand_offset_local()
+		held_weapon.position = scaled_pivot.rotated(held_weapon.rotation) + held_weapon_hand_offset_local() + (held_weapon_attack_offset if held_weapon_attack_active else Vector2.ZERO)
 
 func held_weapon_base_position() -> Vector2:
 	if held_weapon == null or held_weapon.texture == null:
@@ -138,7 +351,8 @@ func _held_weapon_render_scale() -> float:
 		return 0.0
 	var source_size := Vector2(held_weapon.texture.get_size())
 	var source_max_dimension := maxf(1.0, maxf(source_size.x, source_size.y))
-	return held_weapon_scale * HELD_WEAPON_GAME_REFERENCE_MAX_DIMENSION / source_max_dimension
+	var clip_factor := float(held_weapon_clip.get("scale", 1.0)) if held_weapon_clip_playing else 1.0
+	return held_weapon_scale * HELD_WEAPON_GAME_REFERENCE_MAX_DIMENSION / source_max_dimension * clip_factor
 
 func held_weapon_grip_world_position() -> Vector2:
 	if weapon_socket == null or held_weapon == null or held_weapon.texture == null:
@@ -186,26 +400,37 @@ func hero_world_rect() -> Rect2:
 func _start_held_weapon_attack_presentation() -> void:
 	if held_weapon == null or held_weapon.texture == null:
 		return
+	_start_weapon_clip()
+	_update_weapon_visibility()
 	held_weapon_attack_active = true
 	# Start partway into the wind-up so the presentation is visible on the
 	# same frame as the baked attack clip's attack_started signal.
 	held_weapon_attack_elapsed = 0.05
 	# The pose changes over the baked clip while authored calibration remains
 	# untouched.
-	held_weapon_attack_rotation_offset_degrees = _held_weapon_attack_pose_degrees(held_weapon_attack_elapsed / HELD_WEAPON_ATTACK_PRESENTATION_DURATION)
+	if not held_weapon_swing.is_empty():
+		held_weapon_attack_elapsed = 0.0
+	_apply_held_weapon_swing_pose(held_weapon_attack_elapsed / held_weapon_swing_duration())
 	held_weapon.visible = true
+	_queue_effects()
 	_update_held_weapon_transform()
+	_fire_due_effects()
 
 func _finish_held_weapon_attack_presentation() -> void:
 	held_weapon_attack_active = false
 	held_weapon_attack_rotation_offset_degrees = 0.0
 	held_weapon_attack_elapsed = 0.0
+	held_weapon_attack_offset = Vector2.ZERO
 	_update_held_weapon_transform()
 	if held_weapon != null:
 		held_weapon.visible = held_weapon.texture != null
 
 func interrupt_held_weapon_attack() -> void:
 	_finish_held_weapon_attack_presentation()
+	_stop_weapon_clip()
+	if visual != null and visual.has_attack_clip():
+		visual.stop_attack_clip(false)
+	_update_weapon_visibility()
 
 func simulate_tick(delta: float, signed_input: float, jump_pressed: bool = false, jump_held: bool = true, drop_requested: bool = false) -> void:
 	simulate_motion(delta, signed_input, 0, false, jump_pressed, jump_held, drop_requested)

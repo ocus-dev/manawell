@@ -31,6 +31,10 @@ static func resolve(ranks: Dictionary, instances: Dictionary, hero_kit: Dictiona
             baseline[key] = float(hero_baseline[key])
     var standard_weapon: Dictionary = ResearchResolverScript.resolve_weapon(ranks, "weapon.standard")
     var selected_weapon: Dictionary = ResearchResolverScript.resolve_weapon(ranks, weapon_mode_id)
+    var weapon_base := weapon_base_stats(instances, hero_kit)
+    if not weapon_base.is_empty():
+        standard_weapon = _with_weapon_base(standard_weapon, weapon_base)
+        selected_weapon = _with_weapon_base(selected_weapon, weapon_base)
     var sources := _empty_sources()
     var totals := _equipment_totals(instances, hero_kit, sources)
     var stats := baseline.duplicate()
@@ -64,6 +68,32 @@ static func resolve(ranks: Dictionary, instances: Dictionary, hero_kit: Dictiona
     harvest["cycle_amount"] = float(harvest.cycle_amount) * (1.0 + float(stats.mining_bonus))
     harvest["mean_output_per_second"] = float(harvest.cycle_amount) / float(harvest.cycle_interval)
     return {"stats": stats, "harvest": harvest, "sources": sources, "research": {"standard_weapon": standard_weapon, "selected_weapon": selected_weapon}, "equipped_instance_ids": _kit_ids(hero_kit)}
+
+## Per-weapon base stats ({"attack_damage", "attacks_per_second"}) of the
+## equipped weapon, or {} when it uses the global Balance baseline. Comes from
+## the instance ("base_stats", used by dev-tool previews) or from the weapon's
+## registered runtime base (published revisions that define base_stats).
+static func weapon_base_stats(instances: Dictionary, hero_kit: Dictionary) -> Dictionary:
+    var instance: Dictionary = instances.get(str(hero_kit.get("weapon", "")), {})
+    if instance.is_empty():
+        return {}
+    var stats: Variant = instance.get("base_stats", null)
+    if not stats is Dictionary:
+        stats = ItemDefinitionsScript.base_for(str(instance.get("base_id", ""))).get("base_stats", null)
+    return stats if stats is Dictionary else {}
+
+## Replaces the Balance baseline inside a research weapon profile with the
+## weapon's own base: research damage ranks still add on top of the new base
+## damage, and research/mode rate multipliers still scale the new base rate.
+static func _with_weapon_base(profile: Dictionary, base: Dictionary) -> Dictionary:
+    var result := profile.duplicate()
+    var mode_damage := float(profile.get("mode_damage_multiplier", 1.0))
+    if base.has("attack_damage"):
+        result["damage"] = float(profile.damage) + (float(base.attack_damage) - BalanceData.WEAPON_DAMAGE) * mode_damage
+    if base.has("attacks_per_second"):
+        result["attacks_per_second"] = float(profile.attacks_per_second) * float(base.attacks_per_second) * BalanceData.WEAPON_INTERVAL
+        result["attack_interval"] = 1.0 / float(result.attacks_per_second)
+    return result
 
 static func compare_slot(result_input: Dictionary, slot: String, replacement_instance_id: String) -> Dictionary:
     var instances: Dictionary = result_input.get("instances", {}).duplicate(true)

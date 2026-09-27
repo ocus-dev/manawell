@@ -3,6 +3,9 @@ extends RefCounted
 
 const ItemDefinitionsScript = preload("res://scripts/model/item_definitions.gd")
 const ItemCatalogScript = preload("res://scripts/model/item_catalog.gd")
+const WeaponSwingScript = preload("res://scripts/model/weapon_swing.gd")
+const WeaponEffectsScript = preload("res://scripts/model/weapon_effects.gd")
+const WeaponClipScript = preload("res://scripts/model/weapon_clip.gd")
 
 const SCHEMA_VERSION := 1
 const MIN_ITEM_LEVEL := 1
@@ -12,6 +15,8 @@ const MAX_DESCRIPTION_LENGTH := 2000
 const MAX_AFFIXES := 3
 const SUPPORTED_BEHAVIOR_IDS := ["weapon.standard", "weapon.melee", "weapon.fan", "weapon.lance"]
 const ASSET_KEYS := ["icon", "world_sprite"]
+## Optional per-weapon base stats on a revision (replace the Balance baseline).
+const BASE_STAT_LIMITS := {"attack_damage": [0.1, 1000.0], "attacks_per_second": [0.05, 20.0]}
 const IMAGE_COORDINATE_CONVENTION := "pixel origin is top-left; pivot is normalized [0,1] with x right and y down"
 
 static func legacy_catalog() -> Dictionary:
@@ -150,7 +155,34 @@ static func validate_revision(revision: Variant, check_assets: bool = false) -> 
     result = _validate_assets(revision.assets, "revision.assets", check_assets)
     if not result.valid:
         return result
+    if revision.has("base_stats"):
+        result = validate_base_stats(revision.base_stats)
+        if not result.valid:
+            return result
+    if revision.has("effects"):
+        var effects_check: Dictionary = WeaponEffectsScript.validate(revision.effects)
+        if not effects_check.valid:
+            return _failure("revision.effects", "INVALID_EFFECTS", str(effects_check.error))
+    if revision.has("attack_clip"):
+        var clip_check: Dictionary = WeaponClipScript.validate(revision.attack_clip)
+        if not clip_check.valid:
+            return _failure("revision.attack_clip", "INVALID_ATTACK_CLIP", str(clip_check.error))
+    if revision.has("swing"):
+        var swing_check: Dictionary = WeaponSwingScript.validate(revision.swing)
+        if not swing_check.valid:
+            return _failure("revision.swing", "INVALID_SWING", str(swing_check.error))
     return _validate_pivot(revision.pivot)
+
+static func validate_base_stats(stats: Variant) -> Dictionary:
+    if not stats is Dictionary:
+        return _failure("revision.base_stats", "BASE_STATS_OBJECT", "base_stats must be an object")
+    for key in stats:
+        if not BASE_STAT_LIMITS.has(key):
+            return _failure("revision.base_stats.%s" % key, "UNKNOWN_BASE_STAT", "unsupported base stat")
+        var limits: Array = BASE_STAT_LIMITS[key]
+        if not _finite_number(stats[key]) or float(stats[key]) < float(limits[0]) or float(stats[key]) > float(limits[1]):
+            return _failure("revision.base_stats.%s" % key, "INVALID_BASE_STAT", "%s must be in [%s,%s]" % [key, str(limits[0]), str(limits[1])])
+    return _success()
 
 static func validate_recipe(recipe: Dictionary, revision: Dictionary = {}) -> Dictionary:
     var result := _object_check(recipe, "recipe")
