@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "job_id": "job_20260913T205409",
+  "kind": "weapon-concept-preparation",
+  "source": "C:\\Users\\TTOCS\\Documents\\ChatGPT\\Telos Game\\art\\ui-items\\Weapons\\common_batton.png",
+  "settings": {
+    "cutout": "transparent",
+    "mask": null,
+    "crop": null,
+    "world_height": 256,
+    "icon_size": 256,
+    "pivot": [
+      0.5,
+      1.0
+    ],
+    "source_sha256": "e0c4b0fcd3db64f34b161e9522edafde30df7c26a6267fc6f8cd4061f4f82e12",
+    "mask_sha256": null
+  },
+  "settings_hash": "f97191fcf5cf43befd524f36f5b2740a8303d2c7785730861d8df8b74fd30696",
+  "status": "complete",
+  "stages": {
+    "snapshot": {
+      "status": "complete",
+      "outputs": {
+        "original.png": "e0c4b0fcd3db64f34b161e9522edafde30df7c26a6267fc6f8cd4061f4f82e12"
+      }
+    },
+    "cutout": {
+      "status": "complete",
+      "outputs": {
+        "cropped-source.png": "5e92b9343f7f9f2d30fae853fac9d2d5f7a2f7bd51a68d64f3a417adbf7b486c",
+        "rgba-master.png": "5e92b9343f7f9f2d30fae853fac9d2d5f7a2f7bd51a68d64f3a417adbf7b486c"
+      }
+    },
+    "prepare": {
+      "status": "complete",
+      "outputs": {
+        "world-sprite.png": "1b6ec09de18eec6102be77404e3b8e64eb43f2746191c279d391e6f1ee33d01b",
+        "square-icon.png": "0de5556c9bcb131208a53d82854c75ce6cd22e70e9751af68840f1d8899b5b35",
+        "grip-calibration.json": "5197b7855123926a132d9f538215db914ea00c640ac6c98bbc681137e70b0628"
+      }
+    },
+    "review": {
+      "status": "complete",
+      "outputs": {
+        "review-light.png": "4bed7efa278a405cc3ec004e3c1539589eac97b6ebdedb34e16a3953bf8ef65f",
+        "review-dark.png": "4bed7efa278a405cc3ec004e3c1539589eac97b6ebdedb34e16a3953bf8ef65f",
+        "review-actual-size.png": "1b6ec09de18eec6102be77404e3b8e64eb43f2746191c279d391e6f1ee33d01b"
+      }
+    }
+  },
+  "outputs": {
+    "original.png": "e0c4b0fcd3db64f34b161e9522edafde30df7c26a6267fc6f8cd4061f4f82e12",
+    "cropped-source.png": "5e92b9343f7f9f2d30fae853fac9d2d5f7a2f7bd51a68d64f3a417adbf7b486c",
+    "rgba-master.png": "5e92b9343f7f9f2d30fae853fac9d2d5f7a2f7bd51a68d64f3a417adbf7b486c",
+    "world-sprite.png": "1b6ec09de18eec6102be77404e3b8e64eb43f2746191c279d391e6f1ee33d01b",
+    "square-icon.png": "0de5556c9bcb131208a53d82854c75ce6cd22e70e9751af68840f1d8899b5b35",
+    "grip-calibration.json": "5197b7855123926a132d9f538215db914ea00c640ac6c98bbc681137e70b0628",
+    "review-light.png": "4bed7efa278a405cc3ec004e3c1539589eac97b6ebdedb34e16a3953bf8ef65f",
+    "review-dark.png": "4bed7efa278a405cc3ec004e3c1539589eac97b6ebdedb34e16a3953bf8ef65f",
+    "review-actual-size.png": "1b6ec09de18eec6102be77404e3b8e64eb43f2746191c279d391e6f1ee33d01b"
+  },
+  "gpu_work": {
+    "submitted": false,
+    "prompt_id": null,
+    "reconciliation": "not-required"
+  }
+}

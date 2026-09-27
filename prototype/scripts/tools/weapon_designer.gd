@@ -6,7 +6,10 @@ const Publisher = preload("res://scripts/model/weapon_publisher.gd")
 const Catalog = preload("res://scripts/model/weapon_catalog.gd")
 const Definitions = preload("res://scripts/model/item_definitions.gd")
 const Resolver = preload("res://scripts/model/hero_stat_resolver.gd")
+const LootRegistration = preload("res://scripts/model/weapon_loot_registration.gd")
 const TestProfile = preload("res://scripts/tools/weapon_test_profile.gd")
+const PlacementEditor = preload("res://scripts/tools/weapon_placement_editor.gd")
+const GameplayScene: PackedScene = preload("res://scenes/main.tscn")
 const ThemeScript = preload("res://scripts/ui/industrial_theme.gd")
 const SOURCE_FOLDER_RELATIVE := "art/ui-items/Weapons"
 
@@ -27,7 +30,19 @@ var published_world: TextureRect
 var published_detail: RichTextLabel
 var published_status: Label
 var test_profile_status: Label
+var loot_registration_status: Label
+var loot_enabled: CheckButton
+var loot_weight: SpinBox
+var loot_min_level: SpinBox
+var loot_max_level: SpinBox
+var loot_registration_weapon_id := ""
+var loot_registration_dirty := false
+var loading_loot_registration := false
 var test_profile: RefCounted
+var playtest_controller: Node
+var playtest_return_layer: CanvasLayer
+var placement_editor: Control
+var designer_tabs: TabContainer
 var source_path: OptionButton
 var description_edit: TextEdit
 var add_button: Button
@@ -48,6 +63,7 @@ func _ready() -> void:
 
 func _build() -> void:
 	var tabs := TabContainer.new()
+	designer_tabs = tabs
 	tabs.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(tabs)
 	var page := MarginContainer.new()
@@ -228,15 +244,54 @@ func _build_published_tab(tabs: TabContainer) -> void:
 	published_detail = RichTextLabel.new()
 	published_detail.bbcode_enabled = true
 	published_detail.fit_content = false
-	published_detail.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	published_detail.custom_minimum_size.y = 220
+	published_detail.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	published_detail.custom_minimum_size.y = 150
 	detail_column.add_child(published_detail)
+	detail_column.add_child(_heading("PRODUCTION LOOT REGISTRATION", 13))
+	loot_enabled = CheckButton.new()
+	loot_enabled.name = "EnableFoundryLoot"
+	loot_enabled.text = "Enable in foundry_physical_v1"
+	loot_enabled.toggled.connect(func(_enabled: bool): _mark_loot_registration_dirty())
+	detail_column.add_child(loot_enabled)
+	var registration_fields := HBoxContainer.new()
+	registration_fields.add_theme_constant_override("separation", 8)
+	detail_column.add_child(registration_fields)
+	loot_weight = _registration_spin(1.0, 0.1, 1000.0, 0.1, "Loot weight")
+	loot_weight.value_changed.connect(func(_value: float): _mark_loot_registration_dirty())
+	registration_fields.add_child(_registration_field("Weight", loot_weight))
+	loot_min_level = _registration_spin(1.0, 1.0, 3.0, 1.0, "Eligible item level min")
+	loot_min_level.value_changed.connect(func(_value: float): _mark_loot_registration_dirty())
+	registration_fields.add_child(_registration_field("Min level", loot_min_level))
+	loot_max_level = _registration_spin(3.0, 1.0, 3.0, 1.0, "Eligible item level max")
+	loot_max_level.value_changed.connect(func(_value: float): _mark_loot_registration_dirty())
+	registration_fields.add_child(_registration_field("Max level", loot_max_level))
+	var action_row := HBoxContainer.new()
+	action_row.add_theme_constant_override("separation", 8)
+	detail_column.add_child(action_row)
+	var save_registration := Button.new()
+	save_registration.name = "SaveLootRegistration"
+	save_registration.text = "Save Loot Registration"
+	save_registration.tooltip_text = "Persists the explicit opt-in loot registration without touching the player save."
+	save_registration.pressed.connect(_save_loot_registration)
+	save_registration.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	action_row.add_child(save_registration)
+	loot_registration_status = _label("Publication alone does not enable drops.", 11)
+	loot_registration_status.modulate = Color("9ab0bc")
+	detail_column.add_child(loot_registration_status)
 	var acquire := Button.new()
 	acquire.name = "AcquireTestWeapon"
 	acquire.text = "Acquire in test profile"
 	acquire.tooltip_text = "Creates a disposable instance without changing the player's save."
 	acquire.pressed.connect(_acquire_selected_for_test)
-	detail_column.add_child(acquire)
+	acquire.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	action_row.add_child(acquire)
+	var playtest := Button.new()
+	playtest.name = "PlaytestSelectedWeapon"
+	playtest.text = "Playtest selected weapon"
+	playtest.tooltip_text = "Launches a disposable encounter with this weapon equipped; the live save is never opened or changed."
+	playtest.pressed.connect(_launch_selected_playtest)
+	playtest.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	action_row.add_child(playtest)
 	test_profile_status = _label("Test acquisitions are isolated from the player profile.", 11)
 	test_profile_status.modulate = Color("9ab0bc")
 	detail_column.add_child(test_profile_status)
@@ -403,6 +458,71 @@ func _select_published_weapon(index: int) -> void:
 	var pivot: Dictionary = entry.get("pivot", {})
 	lines.append("Grip: %.2f, %.2f · Facing: %s" % [float(pivot.get("grip", [0.5, 0.75])[0]), float(pivot.get("grip", [0.5, 0.75])[1]), str(pivot.get("facing", "right"))])
 	published_detail.text = "\n".join(lines)
+	# The job poll rebuilds this list every second. Preserve an in-progress edit when
+	# that refresh re-selects the same weapon instead of restoring the disk value.
+	if weapon_id != loot_registration_weapon_id or not loot_registration_dirty:
+		_load_loot_registration(weapon_id)
+
+func _load_loot_registration(weapon_id: String) -> void:
+	var registration := LootRegistration.registration_for(weapon_id)
+	loading_loot_registration = true
+	loot_enabled.button_pressed = bool(registration.get("enabled", false))
+	loot_weight.value = float(registration.get("weight", 1.0))
+	loot_min_level.value = float(registration.get("min_item_level", 1))
+	loot_max_level.value = float(registration.get("max_item_level", 3))
+	loading_loot_registration = false
+	loot_registration_weapon_id = weapon_id
+	loot_registration_dirty = false
+	loot_registration_status.text = "Drops ENABLED · weight %.1f · levels %d-%d" % [loot_weight.value, int(loot_min_level.value), int(loot_max_level.value)] if loot_enabled.button_pressed else "Publication alone does not enable drops."
+	loot_registration_status.modulate = Color("75d5a5") if loot_enabled.button_pressed else Color("9ab0bc")
+
+func _mark_loot_registration_dirty() -> void:
+	if loading_loot_registration or loot_registration_weapon_id.is_empty():
+		return
+	loot_registration_dirty = true
+	loot_registration_status.text = "Unsaved loot registration changes."
+	loot_registration_status.modulate = Color("e5bd73")
+
+func _registration_spin(value: float, minimum: float, maximum: float, step: float, label_text: String) -> SpinBox:
+	var spin := _spin_box(value, minimum, maximum, step)
+	spin.name = label_text.replace(" ", "")
+	spin.tooltip_text = label_text
+	return spin
+
+func _registration_field(label_text: String, control: Control) -> Control:
+	var field := VBoxContainer.new()
+	field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var label := Label.new()
+	label.text = label_text
+	field.add_child(label)
+	control.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	field.add_child(control)
+	return field
+
+func _spin_box(value: float, minimum: float, maximum: float, step: float) -> SpinBox:
+	var spin := SpinBox.new()
+	spin.min_value = minimum
+	spin.max_value = maximum
+	spin.step = step
+	spin.value = value
+	spin.allow_greater = false
+	spin.allow_lesser = false
+	return spin
+
+func _save_loot_registration() -> void:
+	var weapon_id := _playtest_weapon_id()
+	if weapon_id.is_empty():
+		loot_registration_status.text = "Select a published weapon first."
+		return
+	var result := LootRegistration.update_weapon(weapon_id, _published_entry(weapon_id), loot_enabled.button_pressed, float(loot_weight.value), int(loot_min_level.value), int(loot_max_level.value))
+	if not result.get("valid", false):
+		loot_registration_status.text = "Registration rejected: %s" % str(result.get("error", "invalid registration"))
+		loot_registration_status.modulate = Color("f09a9a")
+		return
+	loot_registration_weapon_id = weapon_id
+	loot_registration_dirty = false
+	loot_registration_status.text = "Registration saved · %s · revision %d" % ["enabled" if loot_enabled.button_pressed else "disabled", int(result.document.get("registration_revision", 0))]
+	loot_registration_status.modulate = Color("75d5a5")
 
 func _acquire_selected_for_test() -> void:
 	if published_list == null or published_list.get_selected_items().is_empty():
@@ -417,6 +537,91 @@ func _acquire_selected_for_test() -> void:
 		return
 	test_profile_status.text = "Test profile acquired %s\n%s" % [weapon_id, str(result.get("instance_id", ""))]
 	test_profile_status.add_theme_color_override("font_color", Color("75d5a5"))
+
+func _launch_selected_playtest() -> void:
+	if published_list == null or published_list.get_selected_items().is_empty():
+		test_profile_status.text = "Select a published weapon first."
+		return
+	if is_instance_valid(playtest_controller):
+		test_profile_status.text = "Close the current playtest before launching another."
+		return
+	var index := published_list.get_selected_items()[0]
+	var weapon_id := str(published_list.get_item_metadata(index))
+	test_profile = TestProfile.new()
+	var result: Dictionary = test_profile.acquire_and_equip(weapon_id)
+	if not result.get("valid", false):
+		test_profile_status.text = "Playtest setup failed: %s" % str(result.get("error", "unknown error"))
+		test_profile_status.add_theme_color_override("font_color", Color("f09a9a"))
+		return
+	var controller: Node = GameplayScene.instantiate()
+	controller.name = "WeaponPlaytest"
+	controller.set("persistence_enabled", false)
+	controller.set("account_state", test_profile.account)
+	designer_tabs.visible = false
+	add_child(controller)
+	playtest_controller = controller
+	if not bool(controller.call("start_run")):
+		_close_playtest()
+		test_profile_status.text = "Playtest could not start."
+		test_profile_status.add_theme_color_override("font_color", Color("f09a9a"))
+		return
+	var return_layer := CanvasLayer.new()
+	return_layer.name = "PlaytestReturnLayer"
+	return_layer.layer = 100
+	var close_button := Button.new()
+	close_button.name = "ClosePlaytest"
+	close_button.text = "Close playtest"
+	close_button.tooltip_text = "Return to the weapon designer."
+	close_button.position = Vector2(18.0, 18.0)
+	close_button.pressed.connect(_close_playtest)
+	return_layer.add_child(close_button)
+	add_child(return_layer)
+	playtest_return_layer = return_layer
+	placement_editor = PlacementEditor.new()
+	placement_editor.name = "WeaponPlacementEditor"
+	placement_editor.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	placement_editor.save_requested.connect(_save_playtest_placement)
+	return_layer.add_child(placement_editor)
+	placement_editor.configure(controller, weapon_id, _published_entry(weapon_id))
+	test_profile_status.text = "Playtesting %s in an isolated profile." % weapon_id
+	test_profile_status.add_theme_color_override("font_color", Color("75d5a5"))
+
+func _close_playtest() -> void:
+	if is_instance_valid(playtest_controller):
+		playtest_controller.queue_free()
+	playtest_controller = null
+	if is_instance_valid(playtest_return_layer):
+		playtest_return_layer.queue_free()
+	playtest_return_layer = null
+	if designer_tabs != null:
+		designer_tabs.visible = true
+	test_profile = TestProfile.new()
+	placement_editor = null
+
+func _save_playtest_placement(pivot: Dictionary) -> void:
+	if not is_instance_valid(playtest_controller) or not is_instance_valid(placement_editor):
+		return
+	var weapon_id := _playtest_weapon_id()
+	var result: Dictionary = Publisher.publish_placement_revision(weapon_id, pivot)
+	if not result.get("valid", false):
+		placement_editor.set_status("Placement rejected: %s" % str(result.get("error", "invalid placement")), true)
+		return
+	var refreshed_profile: RefCounted = TestProfile.new()
+	var acquisition: Dictionary = refreshed_profile.acquire_and_equip(weapon_id)
+	if not acquisition.get("valid", false):
+		placement_editor.set_status("Saved revision, but isolated reload failed: %s" % str(acquisition.get("error", "unknown error")), true)
+		return
+	test_profile = refreshed_profile
+	playtest_controller.set("account_state", test_profile.account)
+	playtest_controller.call("_configure_weapon_loadout", "hero_1")
+	placement_editor.set_placement(result.get("revision", {}))
+	placement_editor.set_status("Saved immutable revision %d; playtest reloaded it." % int(result.get("revision", {}).get("revision", 0)))
+	_refresh()
+
+func _playtest_weapon_id() -> String:
+	if published_list != null and not published_list.get_selected_items().is_empty():
+		return str(published_list.get_item_metadata(published_list.get_selected_items()[0]))
+	return ""
 
 func _format_modifier_value(modifier: Dictionary) -> String:
 	var value := float(modifier.get("value", 0.0))

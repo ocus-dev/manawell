@@ -4,7 +4,7 @@ const Generator = preload("res://scripts/model/loot_generator.gd")
 const Definitions = preload("res://scripts/model/item_definitions.gd")
 
 func _input() -> Dictionary:
-    return {"eligible": true, "occurrence_kind": "boss", "drop_bonus": 0.50, "item_level": 3, "inventory_count": 0, "inventory_capacity": 100, "run_id": "run-05", "enemy_id": 7, "node_id": "act_01_node_09"}
+    return {"eligible": true, "occurrence_kind": "boss", "drop_bonus": 0.50, "item_level": 3, "inventory_count": 0, "inventory_capacity": 100, "run_id": "run-05", "enemy_id": 7, "node_id": "act_01_node_08"}
 
 func _init() -> void:
     var input := _input()
@@ -40,7 +40,7 @@ func _init() -> void:
     var seen_families := {}
     var generated_count := 0
     for index in 1000:
-        var result := Generator.generate({"eligible": true, "occurrence_kind": "boss", "drop_bonus": 0.50, "item_level": 3, "run_id": "simulation", "enemy_id": index + 1, "node_id": "act_01_node_09"}, state)
+        var result := Generator.generate({"eligible": true, "occurrence_kind": "boss", "drop_bonus": 0.50, "item_level": 3, "run_id": "simulation", "enemy_id": index + 1, "node_id": "act_01_node_08"}, state)
         if not result.valid:
             push_error("invalid roll at index %d state %d: %s" % [index, state, str(result)])
             quit(1)

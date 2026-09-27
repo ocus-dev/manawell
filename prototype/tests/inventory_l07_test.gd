@@ -60,7 +60,7 @@ func _run() -> void:
 
 func _generated_instance(seed: int) -> Dictionary:
 	var state := seed
-	var input := {"eligible": true, "occurrence_kind": "boss", "drop_bonus": 0.50, "item_level": 3, "inventory_count": 0, "inventory_capacity": 100, "run_id": "l07", "enemy_id": 1, "node_id": "act_01_node_09"}
+	var input := {"eligible": true, "occurrence_kind": "boss", "drop_bonus": 0.50, "item_level": 3, "inventory_count": 0, "inventory_capacity": 100, "run_id": "l07", "enemy_id": 1, "node_id": "act_01_node_08"}
 	for attempt in range(1000):
 		var result := Generator.generate(input, state)
 		if result.valid and result.generated:

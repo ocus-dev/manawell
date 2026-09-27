@@ -13,7 +13,7 @@ func _run() -> void:
     assert(controller.account_state.is_well_unlocked("well_1"))
     assert(controller.account_state.is_well_unlocked("well_2"))
     assert(controller.account_state.is_well_unlocked("well_3"))
-    assert(controller.campaign_state.node_status("act_01", "act_01_node_09")["status"] == "available")
+    assert(controller.campaign_state.node_status("act_01", "act_01_node_08")["status"] == "available")
     controller.execute_loot_command("drop_rate 100")
     assert(controller.development_drop_percent == 100)
     controller.execute_loot_command("drop_rate 101")

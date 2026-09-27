@@ -1,0 +1,6 @@
+{"event": "stage_started", "progress": 0.04999999999999999, "stage": "snapshot", "time": "2026-09-14T04:54:47.129190+00:00"}
+{"event": "stage_complete", "outputs": ["original.png"], "progress": 0.15, "stage": "snapshot", "time": "2026-09-14T04:54:47.135191+00:00"}
+{"event": "stage_started", "progress": 0.35, "stage": "cutout", "time": "2026-09-14T04:54:47.136194+00:00"}
+{"event": "blocked", "message": "ComfyUI cutout requires a configured graph and server; resume after reconciliation.", "time": "2026-09-14T04:55:14.660439+00:00"}
+{"event": "stage_started", "progress": 0.35, "stage": "cutout", "time": "2026-09-14T04:56:07.515117+00:00"}
+{"event": "blocked", "message": "ComfyUI cutout requires a configured graph and server; resume after reconciliation.", "time": "2026-09-14T04:56:07.524220+00:00"}

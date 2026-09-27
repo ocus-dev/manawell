@@ -16,7 +16,7 @@ func _init() -> void:
     quit(0)
 
 func _input(state: int, enemy_id: int = 7) -> Dictionary:
-    return {"eligible": true, "occurrence_kind": "boss", "drop_bonus": 0.50, "item_level": 3, "inventory_count": 0, "inventory_capacity": 100, "run_id": "run-l06", "enemy_id": enemy_id, "node_id": "act_01_node_09"}
+    return {"eligible": true, "occurrence_kind": "boss", "drop_bonus": 0.50, "item_level": 3, "inventory_count": 0, "inventory_capacity": 100, "run_id": "run-l06", "enemy_id": enemy_id, "node_id": "act_01_node_08"}
 
 func _test_account_transaction() -> void:
     var state := 1
@@ -80,7 +80,7 @@ func _test_deferred_controller_death() -> void:
     assert(controller.start_run())
     controller.loot_enabled = true
     controller.loot_item_level = 3
-    controller.campaign_node_id = "act_01_node_09"
+    controller.campaign_node_id = "act_01_node_08"
     var enemy: Node = controller.spawn_enemy(0, 1)
     controller.boss_enemy = enemy
     var state := 1

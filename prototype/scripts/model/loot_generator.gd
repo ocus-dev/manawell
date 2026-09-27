@@ -22,13 +22,13 @@ static func generate(input: Dictionary, rng_state: int) -> Dictionary:
     var table_result: Dictionary = _validate_tables()
     if not table_result.valid:
         return {"valid": false, "error": table_result.error, "rng_state": initial_state}
-    var input_result: Dictionary = _validate_input(input)
-    if not input_result.valid:
-        return {"valid": false, "error": input_result.error, "rng_state": initial_state}
     if not bool(input.get("eligible", true)):
         return _no_roll("ineligible", initial_state)
     if int(input.get("inventory_count", 0)) >= int(input.get("inventory_capacity", 100)):
         return _no_roll("capacity", initial_state)
+    var input_result: Dictionary = _validate_input(input)
+    if not input_result.valid:
+        return {"valid": false, "error": input_result.error, "rng_state": initial_state}
 
     var state: int = initial_state
     var occurrence_draw: Array = _draw_bounded(state, 10000)
@@ -44,6 +44,17 @@ static func generate(input: Dictionary, rng_state: int) -> Dictionary:
     state = int(rarity_draw[0])
     var rarity_roll: int = int(rarity_draw[1])
     var rarity: String = _rarity_for_roll(rarity_roll)
+    var published_pool: Array = input.get("published_pool", [])
+    if not published_pool.is_empty():
+        var published_choice := _published_choice(published_pool, int(input.get("item_level", 1)), state)
+        state = int(published_choice.get("rng_state", state))
+        if published_choice.get("entry", null) is Dictionary:
+            var authored_result := _generate_published_instance(published_choice.entry, input, state)
+            if authored_result.valid:
+                authored_result["occurrence_roll"] = occurrence_roll
+                authored_result["occurrence_threshold"] = occurrence_threshold
+                authored_result["rarity_roll"] = rarity_roll
+                return authored_result
     var base_draw: Array = _draw_bounded(state, BASE_IDS.size())
     state = int(base_draw[0])
     var base_index: int = int(base_draw[1])
@@ -163,7 +174,65 @@ static func _validate_input(input: Dictionary) -> Dictionary:
         return {"valid": false, "error": "occurrence kind is invalid"}
     if str(input.get("run_id", "")).is_empty() or int(input.get("enemy_id", 0)) <= 0 or str(input.get("node_id", "")).is_empty():
         return {"valid": false, "error": "monster provenance is incomplete"}
+    if input.has("published_pool") and not input.published_pool is Array:
+        return {"valid": false, "error": "published loot pool must be an array"}
     return {"valid": true}
+
+static func _published_choice(pool: Array, item_level: int, state: int) -> Dictionary:
+    var choices: Array[Dictionary] = []
+    for base_id in BASE_IDS:
+        choices.append({"legacy": true, "weight": 100, "base_id": base_id})
+    for entry in pool:
+        if not entry is Dictionary or str(entry.get("weapon_id", "")).is_empty():
+            continue
+        if item_level < int(entry.get("min_item_level", entry.get("item_level", 1))) or item_level > int(entry.get("max_item_level", entry.get("item_level", 3))):
+            continue
+        var recipe: Dictionary = entry.get("recipe", {})
+        var definition: Dictionary = entry.get("definition", {})
+        if recipe.is_empty() or definition.is_empty():
+            continue
+        var weight_units := maxi(1, int(round(float(entry.get("weight", 1.0)) * 100.0)))
+        choices.append({"legacy": false, "weight": weight_units, "entry": entry})
+    var total := 0
+    for choice in choices:
+        total += int(choice.weight)
+    if total <= 0:
+        return {"rng_state": state}
+    var draw := _draw_bounded(state, total)
+    var remaining := int(draw[1])
+    for choice in choices:
+        remaining -= int(choice.weight)
+        if remaining < 0:
+            return {"rng_state": int(draw[0]), "entry": choice.get("entry", {}) if not bool(choice.legacy) else {}}
+    return {"rng_state": int(draw[0])}
+
+static func _generate_published_instance(entry: Dictionary, input: Dictionary, state: int) -> Dictionary:
+    var weapon_id := str(entry.get("weapon_id", ""))
+    var definition: Dictionary = entry.get("definition", {})
+    var recipe: Dictionary = entry.get("recipe", {})
+    var base := {"id": weapon_id, "label": str(definition.get("label", weapon_id)), "slot": "weapon", "implicits": definition.get("base_modifiers", []).duplicate(true)}
+    var catalog := ItemDefinitionsScript.runtime_bases()
+    catalog[weapon_id] = base
+    var instance := {
+        "schema_version": 1,
+        "instance_id": "loot:%s:%d:%s" % [str(input.get("run_id", "")), int(input.get("enemy_id", 0)), weapon_id],
+        "base_id": weapon_id,
+        "weapon_id": weapon_id,
+        "revision": int(entry.get("revision", definition.get("revision", 0))),
+        "recipe_id": str(recipe.get("recipe_id", "")),
+        "rarity": str(recipe.get("rarity", "common")),
+        "item_level": int(recipe.get("item_level", input.get("item_level", 1))),
+        "implicit_modifiers": base.implicits.duplicate(true),
+        "explicit_modifiers": recipe.get("explicit_modifiers", []).duplicate(true),
+        "generation_version": GENERATION_VERSION,
+        "provenance": {"kind": "monster", "run_id": str(input.get("run_id", "")), "enemy_id": int(input.get("enemy_id", 0)), "node_id": str(input.get("node_id", ""))},
+        "inspected": false,
+        "locked": false,
+    }
+    var validation := ItemDefinitionsScript.new().validate_instance(instance, catalog, ItemDefinitionsScript.PRODUCTION_AFFIXES)
+    if not validation.valid:
+        return {"valid": false, "error": validation.error, "rng_state": state}
+    return {"valid": true, "generated": true, "instance": instance, "rng_state": state}
 
 static func _validate_tables() -> Dictionary:
     var definitions := ItemDefinitionsScript.new()

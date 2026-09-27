@@ -77,7 +77,7 @@ func _test_boss() -> void:
 	var controller := _controller()
 	for index in range(1, 9):
 		controller.campaign_state.completed_nodes["act_01/act_01_node_%02d" % index] = true
-	_check(controller.start_campaign_node("act_01", "act_01_node_09"), "boss node did not start")
+	_check(controller.start_campaign_node("act_01", "act_01_node_08"), "boss node did not start")
 	_check(controller.boss_enemy != null, "boss did not spawn")
 	var boss: Node = controller.boss_enemy
 	var roll := _find_drop(controller.run_state.run_id, boss.enemy_id, controller.campaign_node_id, "boss", float(controller.resolved_stats.get("drop_bonus", 0.0)))

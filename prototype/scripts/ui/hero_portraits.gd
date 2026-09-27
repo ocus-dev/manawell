@@ -13,6 +13,6 @@ static func apply(label: Label, hero_id: String) -> void:
 		portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		label.add_child(portrait)
 		portrait.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	portrait.texture = HERO_ONE if hero_id == "hero_1" else null
+	portrait.texture = load("res://assets/portraits/hero_2.png") as Texture2D if hero_id == "hero_2" and ResourceLoader.exists("res://assets/portraits/hero_2.png") else HERO_ONE if hero_id == "hero_1" or hero_id == "hero_2" else null
 	portrait.visible = portrait.texture != null
 	label.self_modulate.a = 0.0 if portrait.visible else 1.0

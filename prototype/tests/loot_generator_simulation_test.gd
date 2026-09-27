@@ -28,7 +28,7 @@ func _run_scenario(kind: String, drop_bonus: float, initial_state: int) -> Dicti
             "inventory_capacity": 100,
             "run_id": "l05-simulation",
             "enemy_id": index + 1,
-            "node_id": "act_01_node_09",
+            "node_id": "act_01_node_08",
         }, state)
         if not result.valid:
             push_error("invalid result at %d: %s" % [index, str(result)])

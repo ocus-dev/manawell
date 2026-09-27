@@ -74,7 +74,10 @@ func take_damage(amount: float) -> bool:
 	damage_feedback_remaining = 0.65
 	if health <= 0.0:
 		dead = true
-		queue_free()
+		if controller != null and controller.has_method("enqueue_enemy_death"):
+			controller.enqueue_enemy_death(self)
+		else:
+			queue_free()
 		return true
 	return true
 

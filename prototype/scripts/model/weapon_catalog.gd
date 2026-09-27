@@ -239,6 +239,12 @@ static func _validate_pivot(pivot: Variant) -> Dictionary:
         return _failure("revision.pivot.facing", "INVALID_FACING", "facing must be right or left")
     if pivot.has("world_scale") and (not _finite_number(pivot.world_scale) or float(pivot.world_scale) < 0.1 or float(pivot.world_scale) > 4.0):
         return _failure("revision.pivot.world_scale", "INVALID_WORLD_SCALE", "world scale must be finite and in [0.1,4.0]")
+    if pivot.has("rotation_degrees") and (not _finite_number(pivot.rotation_degrees) or float(pivot.rotation_degrees) < -180.0 or float(pivot.rotation_degrees) > 180.0):
+        return _failure("revision.pivot.rotation_degrees", "INVALID_ROTATION", "rotation must be finite and in [-180,180]")
+    if pivot.has("hand_offset"):
+        var hand_offset: Variant = pivot.get("hand_offset")
+        if not hand_offset is Array or hand_offset.size() != 2 or not _finite_number(hand_offset[0]) or not _finite_number(hand_offset[1]) or float(hand_offset[0]) < -256.0 or float(hand_offset[0]) > 256.0 or float(hand_offset[1]) < -256.0 or float(hand_offset[1]) > 256.0:
+            return _failure("revision.pivot.hand_offset", "INVALID_HAND_OFFSET", "hand offset must contain finite pixel values in [-256,256]")
     return _success()
 
 static func _validate_modifiers(modifiers: Variant, path: String) -> Dictionary:

@@ -1,0 +1,249 @@
+{
+  "prompt": [
+    38,
+    "59c72078-b669-4c6f-8fc0-fba9c2fa1491",
+    {
+      "1": {
+        "class_type": "PrimitiveStringMultiline",
+        "inputs": {
+          "value": "A physically grounded retro-industrial future. Heavy manufactured steel, ceramic armor, rubber seals, smoked glass and canvas. Broad geometric primary masses, functional joints and hydraulics, quiet armor plates with detail clustered at mechanisms. Visible maintenance, chipped paint and purposeful wear. Electromechanical technology, physical switches and phosphor instruments. Roughly 70 percent primary forms, 20 percent secondary structure, 10 percent surface detail. Structural neutrals dominate with small functional saturated accents."
+        }
+      },
+      "2": {
+        "class_type": "PrimitiveStringMultiline",
+        "inputs": {
+          "value": "A hand-painted late-1980s to early-1990s Japanese science-fiction OVA animation frame. Painted gouache backgrounds, selective precise ink lines, hard cel shadow shapes in three value groups, graphic painted metal highlights, restrained gradients and subtle analog grain. Tactile illustrated material weight and clear silhouettes. One coherent finished scene, no collage, no captions or watermark. Avoid glossy CGI, photographic rendering, holograms and indiscriminate tiny panel detail."
+        }
+      },
+      "3": {
+        "class_type": "PrimitiveStringMultiline",
+        "inputs": {
+          "value": "One piloted humanoid industrial support mech bust portrait, facing slightly RIGHT. Tight square crop from upper chest to just above its compact low recessed head: deep red angular chest plates, squared red shoulder-mounted backpack housing, asymmetrical layered shoulder armor, and one small cyan horizontal visor. No humanoid face, pilot, weapon, hands, text, badge, border, scenery, duplicate or watermark."
+        }
+      },
+      "4": {
+        "class_type": "PrimitiveStringMultiline",
+        "inputs": {
+          "value": "Square game character portrait, close bust with the head and broad shoulders filling most of the frame. Level eye-height camera, slight rightward three-quarter view only; no full body, no extreme perspective. One isolated subject on a dark desaturated navy industrial gradient background. Crisp readable silhouette at 48 pixels, no text, labels, UI, border, watermark or duplicate subject."
+        }
+      },
+      "5": {
+        "class_type": "PrimitiveStringMultiline",
+        "inputs": {
+          "value": "Muted crimson and oxide-red painted armor, charcoal mechanical seams and round shoulder joint, small vivid cyan visor. Dark desaturated navy industrial gradient behind the silhouette, crisp painted cel-animation linework."
+        }
+      },
+      "6": {
+        "class_type": "StringConcatenate",
+        "inputs": {
+          "string_a": [
+            "1",
+            0
+          ],
+          "string_b": [
+            "2",
+            0
+          ],
+          "delimiter": "\n\n"
+        }
+      },
+      "7": {
+        "class_type": "StringConcatenate",
+        "inputs": {
+          "string_a": [
+            "6",
+            0
+          ],
+          "string_b": [
+            "3",
+            0
+          ],
+          "delimiter": "\n\n"
+        }
+      },
+      "8": {
+        "class_type": "StringConcatenate",
+        "inputs": {
+          "string_a": [
+            "7",
+            0
+          ],
+          "string_b": [
+            "4",
+            0
+          ],
+          "delimiter": "\n\n"
+        }
+      },
+      "9": {
+        "class_type": "StringConcatenate",
+        "inputs": {
+          "string_a": [
+            "8",
+            0
+          ],
+          "string_b": [
+            "5",
+            0
+          ],
+          "delimiter": "\n\n"
+        }
+      },
+      "10": {
+        "class_type": "UNETLoader",
+        "inputs": {
+          "unet_name": "krea2_turbo_fp8_scaled.safetensors",
+          "weight_dtype": "default"
+        }
+      },
+      "11": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "qwen3vl_4b_fp8_scaled.safetensors",
+          "type": "krea2",
+          "device": "default"
+        }
+      },
+      "12": {
+        "class_type": "VAELoader",
+        "inputs": {
+          "vae_name": "qwen_image_vae.safetensors"
+        }
+      },
+      "13": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "11",
+            0
+          ],
+          "text": [
+            "9",
+            0
+          ]
+        }
+      },
+      "14": {
+        "class_type": "ConditioningZeroOut",
+        "inputs": {
+          "conditioning": [
+            "13",
+            0
+          ]
+        }
+      },
+      "15": {
+        "class_type": "EmptyLatentImage",
+        "inputs": {
+          "width": 1024,
+          "height": 1024,
+          "batch_size": 1
+        }
+      },
+      "16": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "10",
+            0
+          ],
+          "positive": [
+            "13",
+            0
+          ],
+          "negative": [
+            "14",
+            0
+          ],
+          "latent_image": [
+            "15",
+            0
+          ],
+          "seed": 9072029,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "euler",
+          "scheduler": "simple",
+          "denoise": 1.0
+        }
+      },
+      "17": {
+        "class_type": "VAEDecode",
+        "inputs": {
+          "samples": [
+            "16",
+            0
+          ],
+          "vae": [
+            "12",
+            0
+          ]
+        }
+      },
+      "18": {
+        "class_type": "SaveImage",
+        "inputs": {
+          "images": [
+            "17",
+            0
+          ],
+          "filename_prefix": "Telos/SideView/hero_02_portrait"
+        }
+      }
+    },
+    {
+      "telos_job": "8e2edb9abcf94685bc505803abc74844",
+      "create_time": 1789943018175
+    },
+    [
+      "18"
+    ]
+  ],
+  "outputs": {
+    "18": {
+      "images": [
+        {
+          "filename": "hero_02_portrait_00001_.png",
+          "subfolder": "Telos\\SideView",
+          "type": "output"
+        }
+      ]
+    }
+  },
+  "status": {
+    "status_str": "success",
+    "completed": true,
+    "messages": [
+      [
+        "execution_start",
+        {
+          "prompt_id": "59c72078-b669-4c6f-8fc0-fba9c2fa1491",
+          "timestamp": 1789943018177
+        }
+      ],
+      [
+        "execution_cached",
+        {
+          "nodes": [],
+          "prompt_id": "59c72078-b669-4c6f-8fc0-fba9c2fa1491",
+          "timestamp": 1789943018179
+        }
+      ],
+      [
+        "execution_success",
+        {
+          "prompt_id": "59c72078-b669-4c6f-8fc0-fba9c2fa1491",
+          "timestamp": 1789943032298
+        }
+      ]
+    ]
+  },
+  "meta": {
+    "18": {
+      "node_id": "18",
+      "display_node": "18",
+      "parent_node": null,
+      "real_node_id": "18"
+    }
+  }
+}

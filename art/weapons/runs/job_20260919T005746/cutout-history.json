@@ -1,0 +1,110 @@
+{
+  "prompt": [
+    21,
+    "500a0fa4-d81e-4df7-8d3d-9aacf4537dc2",
+    {
+      "1": {
+        "class_type": "LoadImage",
+        "inputs": {
+          "image": "telos-weapon-job_20260919T005746.png"
+        }
+      },
+      "2": {
+        "class_type": "Trellis2RemoveBackground",
+        "inputs": {
+          "image": [
+            "1",
+            0
+          ],
+          "low_vram": true
+        }
+      },
+      "3": {
+        "class_type": "InvertMask",
+        "inputs": {
+          "mask": [
+            "2",
+            1
+          ]
+        }
+      },
+      "4": {
+        "class_type": "JoinImageWithAlpha",
+        "inputs": {
+          "image": [
+            "1",
+            0
+          ],
+          "alpha": [
+            "3",
+            0
+          ]
+        }
+      },
+      "5": {
+        "class_type": "SaveImage",
+        "inputs": {
+          "images": [
+            "4",
+            0
+          ],
+          "filename_prefix": "Telos/Weapons/job_20260919T005746/cutout"
+        }
+      }
+    },
+    {
+      "telos_job": "weapon:job_20260919T005746",
+      "create_time": 1789804668718
+    },
+    [
+      "5"
+    ]
+  ],
+  "outputs": {
+    "5": {
+      "images": [
+        {
+          "filename": "cutout_00001_.png",
+          "subfolder": "Telos\\Weapons\\job_20260919T005746",
+          "type": "output"
+        }
+      ]
+    }
+  },
+  "status": {
+    "status_str": "success",
+    "completed": true,
+    "messages": [
+      [
+        "execution_start",
+        {
+          "prompt_id": "500a0fa4-d81e-4df7-8d3d-9aacf4537dc2",
+          "timestamp": 1789804673177
+        }
+      ],
+      [
+        "execution_cached",
+        {
+          "nodes": [],
+          "prompt_id": "500a0fa4-d81e-4df7-8d3d-9aacf4537dc2",
+          "timestamp": 1789804673194
+        }
+      ],
+      [
+        "execution_success",
+        {
+          "prompt_id": "500a0fa4-d81e-4df7-8d3d-9aacf4537dc2",
+          "timestamp": 1789804676494
+        }
+      ]
+    ]
+  },
+  "meta": {
+    "5": {
+      "node_id": "5",
+      "display_node": "5",
+      "parent_node": null,
+      "real_node_id": "5"
+    }
+  }
+}

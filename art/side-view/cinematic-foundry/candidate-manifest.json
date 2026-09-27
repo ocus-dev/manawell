@@ -1,0 +1,44 @@
+{
+  "candidates": [
+    {
+      "path": "art/side-view/cinematic-foundry/assets/01_environment_backdrop_00007_upgraded.png",
+      "sha256": "a482d2100b082b89f360b7bdd78c396ad3b15a08a752f6e7fe3a9283bc8c140f",
+      "approval": "unreviewed",
+      "source_workflow": null,
+      "seed": null,
+      "crop": null,
+      "ground_line": null,
+      "note": "Existing candidate; generation provenance not supplied. Not integrated."
+    },
+    {
+      "path": "art/side-view/cinematic-foundry/assets/02_environment_backdrop_upgraded.png",
+      "sha256": "fccdae8d7a19318e51b437da112bd67db7c7a5b47a75024fe77f4ddcd104ed8a",
+      "approval": "unreviewed",
+      "source_workflow": null,
+      "seed": null,
+      "crop": null,
+      "ground_line": null,
+      "note": "Existing candidate; generation provenance not supplied. Not integrated."
+    },
+    {
+      "path": "art/side-view/cinematic-foundry/assets/07_environment_backdrop_00007_.png",
+      "sha256": "31727e1c37bba639151cd8ed70bdf305eb9433de39772c3724be84b839af8fe1",
+      "approval": "unreviewed",
+      "source_workflow": null,
+      "seed": null,
+      "crop": null,
+      "ground_line": null,
+      "note": "Existing candidate; generation provenance not supplied. Not integrated."
+    },
+    {
+      "path": "art/side-view/cinematic-foundry/assets/07_environment_backdrop_00007_upscaled",
+      "sha256": "595fdd2db34383862f89e079098f17097867f45490f512cb7831bae80c3b0d17",
+      "approval": "unreviewed",
+      "source_workflow": null,
+      "seed": null,
+      "crop": null,
+      "ground_line": null,
+      "note": "Existing candidate; generation provenance not supplied. Not integrated."
+    }
+  ]
+}

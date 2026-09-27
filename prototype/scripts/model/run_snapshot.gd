@@ -24,8 +24,10 @@ static func encode(snapshot: Dictionary) -> Dictionary:
 			"weapon_state": normalized["weapon_state"],
 			"spawner": normalized["spawner"],
 			"arena_config_id": normalized["arena_config_id"],
-			"level_definition": normalized["level_definition"],
-			"level_content_hash": normalized["level_content_hash"],
+		"level_definition": normalized["level_definition"],
+		"level_content_hash": normalized["level_content_hash"],
+		"loot_registration": normalized["loot_registration"],
+		"loot_state": normalized["loot_state"],
 			"campaign": normalized["campaign"],
 			"objective": normalized["objective"],
 			"reward_state": normalized["reward_state"],
@@ -85,6 +87,10 @@ static func _with_defaults(snapshot: Dictionary) -> Dictionary:
 		normalized["level_definition"] = {}
 	if not normalized.has("level_content_hash"):
 		normalized["level_content_hash"] = ""
+	if not normalized.has("loot_registration"):
+		normalized["loot_registration"] = {}
+	if not normalized.has("loot_state"):
+		normalized["loot_state"] = {"enabled": false, "item_level": 1, "rng_state": 1, "acquired_item_ids": []}
 	if not normalized.has("campaign"):
 		normalized["campaign"] = {}
 	if not normalized.has("objective"):
@@ -268,7 +274,7 @@ static func _validate_spawner(spawner: Dictionary) -> Dictionary:
 	return {"valid": true}
 
 static func _validate_frozen_state(snapshot: Dictionary) -> Dictionary:
-	if not snapshot["level_definition"] is Dictionary or not _valid_string(snapshot["level_content_hash"]):
+	if not snapshot["level_definition"] is Dictionary or not _valid_string(snapshot["level_content_hash"]) or not snapshot.get("loot_registration", {}) is Dictionary or not snapshot.get("loot_state", {}) is Dictionary:
 		return {"valid": false, "error": "frozen level definition is invalid"}
 	var definition: Dictionary = snapshot["level_definition"]
 	var content_hash := str(snapshot["level_content_hash"])

@@ -1,0 +1,41 @@
+{
+  "assets": {
+    "icon": "res://assets/weapons/156/3/icon.png",
+    "world_sprite": "res://assets/weapons/156/3/world-sprite.png"
+  },
+  "base_modifiers": [
+    {
+      "family": "designer.base.attack_damage",
+      "operation": "flat",
+      "stat": "attack_damage",
+      "value": 1.0
+    }
+  ],
+  "behavior_id": "weapon.melee",
+  "description": "Draft weapon description.",
+  "label": "1264",
+  "pivot": {
+    "coordinate_space": "normalized",
+    "facing": "right",
+    "grip": [
+      0.5,
+      0.75
+    ],
+    "hand_offset": [
+      18.0,
+      -41.0
+    ],
+    "origin": "top_left",
+    "rotation_degrees": -28.0,
+    "world_scale": 0.75
+  },
+  "revision": 3,
+  "schema_version": 1.0,
+  "source_hashes": {
+    "icon_sha256": "850b655baae9c5eaf2235c6973fa563302dbce9015f91671abf36b2501006ce5",
+    "job_id": "job_20260919T011901",
+    "manifest_sha256": "280ddfbe7cabcb9c5d9561727d94e3324e461ae74e2076e1c6822534a8a1e420",
+    "world_sprite_sha256": "f7db6764e8bdc2d6d41622618faad3d731461a6d731b5bf17740eea8a8961e9a"
+  },
+  "weapon_id": "156"
+}

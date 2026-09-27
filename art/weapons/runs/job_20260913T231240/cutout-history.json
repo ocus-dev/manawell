@@ -1,0 +1,110 @@
+{
+  "prompt": [
+    3,
+    "b1ff6170-8a38-4fb0-a150-4f62d39138f1",
+    {
+      "1": {
+        "class_type": "LoadImage",
+        "inputs": {
+          "image": "telos-weapon-job_20260913T231240.png"
+        }
+      },
+      "2": {
+        "class_type": "Trellis2RemoveBackground",
+        "inputs": {
+          "image": [
+            "1",
+            0
+          ],
+          "low_vram": true
+        }
+      },
+      "3": {
+        "class_type": "InvertMask",
+        "inputs": {
+          "mask": [
+            "2",
+            1
+          ]
+        }
+      },
+      "4": {
+        "class_type": "JoinImageWithAlpha",
+        "inputs": {
+          "image": [
+            "1",
+            0
+          ],
+          "alpha": [
+            "3",
+            0
+          ]
+        }
+      },
+      "5": {
+        "class_type": "SaveImage",
+        "inputs": {
+          "images": [
+            "4",
+            0
+          ],
+          "filename_prefix": "Telos/Weapons/job_20260913T231240/cutout"
+        }
+      }
+    },
+    {
+      "telos_job": "weapon:job_20260913T231240",
+      "create_time": 1789366361838
+    },
+    [
+      "5"
+    ]
+  ],
+  "outputs": {
+    "5": {
+      "images": [
+        {
+          "filename": "cutout_00001_.png",
+          "subfolder": "Telos\\Weapons\\job_20260913T231240",
+          "type": "output"
+        }
+      ]
+    }
+  },
+  "status": {
+    "status_str": "success",
+    "completed": true,
+    "messages": [
+      [
+        "execution_start",
+        {
+          "prompt_id": "b1ff6170-8a38-4fb0-a150-4f62d39138f1",
+          "timestamp": 1789366361839
+        }
+      ],
+      [
+        "execution_cached",
+        {
+          "nodes": [],
+          "prompt_id": "b1ff6170-8a38-4fb0-a150-4f62d39138f1",
+          "timestamp": 1789366361857
+        }
+      ],
+      [
+        "execution_success",
+        {
+          "prompt_id": "b1ff6170-8a38-4fb0-a150-4f62d39138f1",
+          "timestamp": 1789366363737
+        }
+      ]
+    ]
+  },
+  "meta": {
+    "5": {
+      "node_id": "5",
+      "display_node": "5",
+      "parent_node": null,
+      "real_node_id": "5"
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "registration_revision": 1,
+  "schema_version": 1.0,
+  "tables": {
+    "foundry_physical_v1": {
+      "weapons": {
+        "156": {
+          "enabled": true,
+          "max_item_level": 3,
+          "min_item_level": 1,
+          "recipe_id": "156.common.r2.r3",
+          "revision": 3,
+          "weapon_id": "156",
+          "weight": 1.0
+        }
+      }
+    }
+  }
+}

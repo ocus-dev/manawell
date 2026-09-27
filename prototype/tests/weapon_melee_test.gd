@@ -20,6 +20,20 @@ func _run() -> void:
 	assert(controller.weapon_behavior_id == "weapon.melee")
 	assert(controller.hero.held_weapon.texture != null)
 	assert(controller.hero.held_weapon.visible)
+	var right_grip: Vector2 = controller.hero.held_weapon_grip_world_position()
+	var right_socket: Vector2 = controller.hero.weapon_socket.global_position
+	var right_bounds: Rect2 = controller.hero.held_weapon_world_rect()
+	assert(right_grip.distance_to(right_socket) < 0.01, "right-facing grip stays attached to the socket")
+	assert(maxf(right_bounds.size.x, right_bounds.size.y) <= 96.01 and right_bounds.size.x < 100.0, "held art uses bounded gameplay scale instead of raw texture pixels")
+	var long_weapon_texture: Texture2D = load("res://assets/weapons/batton of beating/1/world-sprite.png")
+	controller.hero.configure_held_weapon(long_weapon_texture, Vector2(0.5, 0.75), "right", 1.0)
+	var long_bounds: Rect2 = controller.hero.held_weapon_world_rect()
+	assert(maxf(long_bounds.size.x, long_bounds.size.y) <= 96.01, "long prepared weapons stay within the gameplay size bound")
+	assert(controller.hero.held_weapon_grip_world_position().distance_to(controller.hero.weapon_socket.global_position) < 0.01, "long weapon grip stays attached")
+	controller.hero.configure_held_weapon(long_weapon_texture, Vector2(0.5, 0.75), "left", 1.0)
+	assert(controller.hero.held_weapon.scale.x < 0.0, "authored left-facing art is preserved")
+	assert(controller.hero.held_weapon_grip_world_position().distance_to(controller.hero.weapon_socket.global_position) < 0.01, "authored facing preserves grip alignment")
+	controller.hero.configure_held_weapon(long_weapon_texture, Vector2(0.5, 0.75), "right", 1.0)
 	if "--capture-layout" in OS.get_cmdline_user_args() and DisplayServer.get_name() != "headless":
 		RenderingServer.force_draw()
 		root.get_texture().get_image().save_png("res://../work/weapon-flow/w06-equipped-melee.png")
@@ -56,14 +70,39 @@ func _run() -> void:
 	controller.melee_damage_committed = true
 	controller._commit_melee_strike()
 	assert(is_equal_approx(front.health, health_after_strike), "a resumed committed swing cannot deal duplicate damage")
+	var idle_weapon_position: Vector2 = controller.hero.held_weapon.position
+	var idle_weapon_rotation: float = controller.hero.held_weapon.rotation
+	var idle_weapon_scale: Vector2 = controller.hero.held_weapon.scale
+	controller.hero.visual._on_attack_animation_finished()
 	controller.hero.visual.play_attack()
-	assert(not controller.hero.held_weapon.visible, "baked-weapon attack clip hides held art")
+	assert(controller.hero.held_weapon.visible, "held art stays visible during baked-weapon attack clip")
+	var windup_rotation: float = controller.hero.held_weapon.rotation
+	controller.hero._process(0.08)
+	var swing_rotation: float = controller.hero.held_weapon.rotation
+	controller.hero._process(0.08)
+	var recover_rotation: float = controller.hero.held_weapon.rotation
+	assert(not is_equal_approx(windup_rotation, swing_rotation), "attack presentation advances through the swing")
+	assert(not is_equal_approx(swing_rotation, recover_rotation), "attack presentation has a recover phase")
+	assert(controller.hero.held_weapon_grip_world_position().distance_to(controller.hero.weapon_socket.global_position) < 0.01, "attack pose preserves authored grip alignment")
 	controller.hero.visual._on_attack_animation_finished()
 	assert(controller.hero.held_weapon.visible)
+	assert(is_equal_approx(controller.hero.held_weapon.rotation, idle_weapon_rotation), "attack finish restores authored rotation")
+	assert(controller.hero.held_weapon.position == idle_weapon_position, "attack finish restores authored position")
+	assert(controller.hero.held_weapon.scale == idle_weapon_scale, "attack finish restores authored scale")
+	controller.hero.visual.play_attack()
+	assert(controller.hero.held_weapon.visible)
+	controller.hero.interrupt_held_weapon_attack()
+	assert(is_equal_approx(controller.hero.held_weapon.rotation, idle_weapon_rotation), "interruption restores authored rotation")
+	assert(controller.hero.held_weapon.position == idle_weapon_position, "interruption restores authored position")
 	controller.hero.last_facing = -1
 	controller.hero.simulate_motion(0.0, 0.0, 0, false)
 	assert(controller.hero.weapon_socket.position.x < 0.0)
 	assert(controller.hero.held_weapon.scale.x < 0.0)
+	var left_grip: Vector2 = controller.hero.held_weapon_grip_world_position()
+	var left_socket: Vector2 = controller.hero.weapon_socket.global_position
+	var left_bounds: Rect2 = controller.hero.held_weapon_world_rect()
+	assert(left_grip.distance_to(left_socket) < 0.01, "left-facing grip stays attached to the socket")
+	assert(left_bounds.size == long_bounds.size, "facing mirrors long held art without changing its bounds")
 	controller.hero.last_facing = 1
 	controller.hero.simulate_motion(0.0, 0.0, 0, false)
 	var behind: Node = controller.spawn_enemy(EnemyScript.EnemyKind.PURSUER, 1)

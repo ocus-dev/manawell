@@ -1,0 +1,9 @@
+{"event": "stage_started", "progress": 0.04999999999999999, "stage": "snapshot", "time": "2026-09-14T04:41:12.555195+00:00"}
+{"event": "stage_complete", "outputs": ["original.png"], "progress": 0.15, "stage": "snapshot", "time": "2026-09-14T04:41:12.559226+00:00"}
+{"event": "stage_started", "progress": 0.35, "stage": "cutout", "time": "2026-09-14T04:41:12.560224+00:00"}
+{"event": "stage_complete", "outputs": ["cropped-source.png", "rgba-master.png"], "progress": 0.45, "stage": "cutout", "time": "2026-09-14T04:41:12.635005+00:00"}
+{"event": "stage_started", "progress": 0.65, "stage": "prepare", "time": "2026-09-14T04:41:12.637004+00:00"}
+{"event": "stage_complete", "outputs": ["world-sprite.png", "square-icon.png", "grip-calibration.json"], "progress": 0.75, "stage": "prepare", "time": "2026-09-14T04:41:12.730960+00:00"}
+{"event": "stage_started", "progress": 0.9, "stage": "review", "time": "2026-09-14T04:41:12.731959+00:00"}
+{"event": "stage_complete", "outputs": ["review-light.png", "review-dark.png", "review-actual-size.png"], "progress": 1.0, "stage": "review", "time": "2026-09-14T04:41:12.767119+00:00"}
+{"event": "job_complete", "gpu_work": false, "progress": 1.0, "time": "2026-09-14T04:41:12.776118+00:00"}

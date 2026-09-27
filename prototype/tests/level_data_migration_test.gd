@@ -12,7 +12,7 @@ func _init() -> void:
 	var catalog: RefCounted = CampaignCatalogScript.new()
 	assert(catalog.is_valid())
 	var act: Dictionary = catalog.get_act("act_01")
-	assert(act["nodes"].size() == 9)
+	assert(act["nodes"].size() == 8)
 	for legacy_node in CampaignDefinitionsScript.ACTS[0]["nodes"]:
 		var node: Dictionary = catalog.get_node("act_01", legacy_node["id"])
 		assert(node["display_name"] == legacy_node["display_name"])
@@ -36,7 +36,7 @@ func _init() -> void:
 			if actual != expected:
 				push_error("wave parity mismatch for %s: actual=%s expected=%s" % [legacy_node["id"], str(actual), str(expected)])
 				quit(1)
-	var boss_level: Dictionary = catalog.get_node("act_01", "act_01_node_09")["level_data"]
+	var boss_level: Dictionary = catalog.get_node("act_01", "act_01_node_08")["level_data"]
 	assert(boss_level["boss"] == {"health": 240.0, "attack_interval": 3.0, "attack_damage": 18.0})
 
 	var content: RefCounted = ContentCatalogScript.new()
@@ -70,7 +70,7 @@ func _init() -> void:
 	quit(0)
 
 func _node_for_well(well_id: String) -> String:
-	return {"well_1": "act_01_node_02", "well_2": "act_01_node_05", "well_3": "act_01_node_08"}[well_id]
+	return {"well_1": "act_01_node_02", "well_2": "act_01_node_04", "well_3": "act_01_node_07"}[well_id]
 
 func _write_small_fixture() -> void:
 	var root := "user://ld02-two-node"

@@ -21,6 +21,8 @@ const SnapshotScript = preload("res://scripts/model/run_snapshot.gd")
 const CampaignStateScript = preload("res://scripts/model/campaign_state.gd")
 const CampaignCatalogScript = preload("res://scripts/model/campaign_catalog.gd")
 const HeroStatResolverScript = preload("res://scripts/model/hero_stat_resolver.gd")
+const WeaponLootRegistrationScript = preload("res://scripts/model/weapon_loot_registration.gd")
+const LootGeneratorScript = preload("res://scripts/model/loot_generator.gd")
 const EnvironmentScript = preload("res://scripts/game/side_view_environment_visual.gd")
 const LOGICAL_SIZE := Vector2(1280.0, 720.0)
 const SPATIAL_PIXELS_PER_UNIT: float = 32.0
@@ -49,6 +51,13 @@ var objective_credited_ids: Array[String] = []
 var claim_receipts: Array[String] = []
 var frozen_level_definition: Dictionary = {}
 var frozen_level_content_hash: String = ""
+var frozen_loot_registration: Dictionary = {}
+var loot_enabled := false
+var loot_item_level := 1
+var loot_rng_state := 1
+var loot_acquired_item_ids: Array[String] = []
+var pending_enemy_deaths: Array[Dictionary] = []
+var development_drop_percent := -1.0
 var weapon_clock: float = 0.0
 var dash_remaining: float = 0.0
 var dash_cooldown_remaining: float = 0.0
@@ -235,6 +244,7 @@ func _simulation_step(delta: float) -> void:
 	pulse_cooldown_remaining = maxf(0.0, pulse_cooldown_remaining - delta)
 	_advance_spawning(delta)
 	_simulate_enemies(delta)
+	_process_enemy_deaths()
 	_simulate_projectiles(delta)
 	_simulate_weapon(delta)
 	var tank_before_advance: float = run_state.tank_base
@@ -294,7 +304,10 @@ func start_run() -> bool:
 	var machine_max: float = BalanceData.MACHINE_INTEGRITY * float(modifiers["machine_integrity_multiplier"])
 	if not run_state.start(run_id, selected_well_id, hero_id, selected_loadout_id, extraction_rate, BalanceData.SEALING_DURATION, BalanceData.HERO_HEALTH, machine_max, float(modifiers["pressure_time_scale"])):
 		return false
+	if hero != null:
+		hero.configure_hero(hero_id)
 	_freeze_level_definition(well_data)
+	_initialize_loot(run_id)
 	spawner_rng_state = 1
 	objective_progress = 0
 	objective_required = 0
@@ -344,7 +357,8 @@ func _configure_held_weapon_visual(revision: Dictionary) -> void:
 	var texture := load(str(assets.get("world_sprite", ""))) as Texture2D
 	var pivot: Dictionary = revision.get("pivot", {})
 	var grip: Array = pivot.get("grip", [0.5, 0.75])
-	hero.configure_held_weapon(texture, Vector2(float(grip[0]), float(grip[1])), str(pivot.get("facing", "right")), float(pivot.get("world_scale", 1.0)))
+	var hand_offset: Array = pivot.get("hand_offset", [0.0, 0.0])
+	hero.configure_held_weapon(texture, Vector2(float(grip[0]), float(grip[1])), str(pivot.get("facing", "right")), float(pivot.get("world_scale", 1.0)), float(pivot.get("rotation_degrees", 0.0)), Vector2(float(hand_offset[0]), float(hand_offset[1])))
 
 func request_harvest() -> bool:
 	var harvested: bool = run_state.request_harvest()
@@ -381,6 +395,7 @@ func start_campaign_node(act_id: String, node_id: String) -> bool:
 		return false
 	frozen_level_definition = node.get("level_data", {}).duplicate(true)
 	frozen_level_content_hash = SnapshotScript.content_hash_for(frozen_level_definition)
+	_freeze_loot_registration_from_definition()
 	_apply_level_backdrop()
 	return true
 
@@ -645,7 +660,7 @@ func _capture_snapshot() -> Dictionary:
 				var target: Node = closest_live_enemy_between(projectile.position, projectile.position + projectile.velocity)
 				target_id = "enemy-%d" % target.enemy_id if target != null else "hero"
 			projectile_states.append({"id": "projectile-%d" % index, "kind": "hostile" if projectile.hostile else "friendly", "owner_id": owner_id, "target_id": target_id, "position": [projectile.position.x, projectile.position.y], "velocity": [projectile.velocity.x, projectile.velocity.y], "damage": projectile.damage, "lifetime_remaining": projectile.lifetime_remaining, "hit_target": projectile.hit_target})
-	return {"run_state": {"run_id": run_state.run_id, "well_id": run_state.selected_well_id, "hero_id": run_state.selected_hero_id, "module_id": run_state.selected_module_id, "phase": run_state.phase, "paused": true, "simulation_elapsed": run_state.simulation_elapsed, "tank_base": run_state.tank_base, "extraction_rate": run_state.extraction_rate, "pressure_time_scale": run_state.pressure_time_scale, "completed_surges": run_state.completed_surges, "multiplier": run_state.multiplier, "locked_payout": run_state.locked_payout, "sealing_remaining": run_state.sealing_remaining, "sealing_duration": run_state.sealing_duration, "hero_health": run_state.hero_health, "machine_integrity": run_state.machine_integrity, "machine_max_integrity": run_state.machine_max_integrity, "terminal_reason": run_state.terminal_reason}, "actors": actors, "projectiles": projectile_states, "player_abilities": {"dash_cooldown_remaining": dash_cooldown_remaining, "pulse_cooldown_remaining": pulse_cooldown_remaining, "dash_remaining": dash_remaining, "dash_direction": [float(dash_direction), 0.0], "dash_active": dash_remaining > 0.0, "ability_flash_remaining": 0.0}, "weapon_state": {"damage": weapon_damage, "spread_enabled": account_state.has_upgrade("spread_1"), "attack_interval": weapon_interval, "shot_accumulator": weapon_clock, "behavior_id": weapon_behavior_id, "phase": melee_phase, "strike_delay_remaining": melee_strike_delay_remaining, "locked_facing": melee_locked_facing, "target_id": melee_target_id, "damage_committed": melee_damage_committed}, "spawner": {"spawn_timer": spawn_timer, "spawn_index": spawn_index, "spawn_position": [40.0, GROUND_Y], "config_id": "%s-%s" % [selected_well_id, selected_loadout_id], "next_id": next_enemy_id, "rng_state": spawner_rng_state}, "arena_config_id": ArenaLayoutScript.CONFIG_ID, "director": get_director_state(), "level_definition": frozen_level_definition.duplicate(true), "level_content_hash": frozen_level_content_hash, "campaign": {"act_id": campaign_state.active_act_id, "node_id": campaign_state.active_node_id, "config_id": "%s-%s" % [selected_well_id, selected_loadout_id], "wave_index": spawn_index, "boss_timer": 0.0}, "objective": {"objective_id": "", "progress": objective_progress, "required": objective_required, "credited_ids": objective_credited_ids.duplicate()}, "reward_state": {"claim_receipts": claim_receipts.duplicate(), "pending_items": account_state.pending_rewards.duplicate(true)}}
+	return {"run_state": {"run_id": run_state.run_id, "well_id": run_state.selected_well_id, "hero_id": run_state.selected_hero_id, "module_id": run_state.selected_module_id, "phase": run_state.phase, "paused": true, "simulation_elapsed": run_state.simulation_elapsed, "tank_base": run_state.tank_base, "extraction_rate": run_state.extraction_rate, "pressure_time_scale": run_state.pressure_time_scale, "completed_surges": run_state.completed_surges, "multiplier": run_state.multiplier, "locked_payout": run_state.locked_payout, "sealing_remaining": run_state.sealing_remaining, "sealing_duration": run_state.sealing_duration, "hero_health": run_state.hero_health, "machine_integrity": run_state.machine_integrity, "machine_max_integrity": run_state.machine_max_integrity, "terminal_reason": run_state.terminal_reason}, "actors": actors, "projectiles": projectile_states, "player_abilities": {"dash_cooldown_remaining": dash_cooldown_remaining, "pulse_cooldown_remaining": pulse_cooldown_remaining, "dash_remaining": dash_remaining, "dash_direction": [float(dash_direction), 0.0], "dash_active": dash_remaining > 0.0, "ability_flash_remaining": 0.0}, "weapon_state": {"damage": weapon_damage, "spread_enabled": account_state.has_upgrade("spread_1"), "attack_interval": weapon_interval, "shot_accumulator": weapon_clock, "behavior_id": weapon_behavior_id, "phase": melee_phase, "strike_delay_remaining": melee_strike_delay_remaining, "locked_facing": melee_locked_facing, "target_id": melee_target_id, "damage_committed": melee_damage_committed}, "spawner": {"spawn_timer": spawn_timer, "spawn_index": spawn_index, "spawn_position": [40.0, GROUND_Y], "config_id": "%s-%s" % [selected_well_id, selected_loadout_id], "next_id": next_enemy_id, "rng_state": spawner_rng_state}, "arena_config_id": ArenaLayoutScript.CONFIG_ID, "director": get_director_state(), "level_definition": frozen_level_definition.duplicate(true), "level_content_hash": frozen_level_content_hash, "loot_registration": frozen_loot_registration.duplicate(true), "loot_state": {"enabled": loot_enabled, "item_level": loot_item_level, "rng_state": loot_rng_state, "acquired_item_ids": loot_acquired_item_ids.duplicate()}, "campaign": {"act_id": campaign_state.active_act_id, "node_id": campaign_state.active_node_id, "config_id": "%s-%s" % [selected_well_id, selected_loadout_id], "wave_index": spawn_index, "boss_timer": 0.0}, "objective": {"objective_id": "", "progress": objective_progress, "required": objective_required, "credited_ids": objective_credited_ids.duplicate()}, "reward_state": {"claim_receipts": claim_receipts.duplicate(), "pending_items": account_state.pending_rewards.duplicate(true)}}
 
 func _restore_saved_snapshot() -> void:
 	if not persistence_enabled:
@@ -666,6 +681,7 @@ func _restore_saved_snapshot() -> void:
 	var state: Dictionary = snapshot["run_state"]
 	selected_well_id = str(state["well_id"])
 	selected_loadout_id = str(state["module_id"])
+	hero.configure_hero(str(state.get("hero_id", account_state.get_active_hero_id())))
 	_configure_weapon_loadout(str(state.get("hero_id", account_state.get_active_hero_id())))
 	for field in state.keys():
 		if run_state.get(field) != null:
@@ -714,6 +730,13 @@ func _restore_saved_snapshot() -> void:
 	spawner_rng_state = int(snapshot["spawner"]["rng_state"])
 	frozen_level_definition = snapshot["level_definition"].duplicate(true)
 	frozen_level_content_hash = str(snapshot["level_content_hash"])
+	frozen_loot_registration = snapshot.get("loot_registration", {}).duplicate(true)
+	var saved_loot: Dictionary = snapshot.get("loot_state", {})
+	loot_enabled = bool(saved_loot.get("enabled", false))
+	loot_item_level = clampi(int(saved_loot.get("item_level", 1)), 1, 3)
+	loot_rng_state = int(saved_loot.get("rng_state", 1))
+	loot_acquired_item_ids.assign(saved_loot.get("acquired_item_ids", []))
+	pending_enemy_deaths.clear()
 	_apply_level_backdrop()
 	var campaign: Dictionary = snapshot["campaign"]
 	if campaign.has("act_id") and campaign["act_id"] is String:
@@ -755,7 +778,91 @@ func _freeze_level_definition(well_data: Dictionary) -> void:
 	if frozen_level_definition.is_empty():
 		frozen_level_definition = {"well": well_data.duplicate(true)}
 	frozen_level_content_hash = SnapshotScript.content_hash_for(frozen_level_definition)
+	_freeze_loot_registration_from_definition()
 	_apply_level_backdrop()
+
+func _freeze_loot_registration_from_definition() -> void:
+	var loot: Dictionary = frozen_level_definition.get("rewards", {}).get("loot", {})
+	var item_level := int(loot.get("item_level", 1))
+	frozen_loot_registration = WeaponLootRegistrationScript.snapshot_for(WeaponLootRegistrationScript.TABLE_ID, clampi(item_level, 1, 3))
+
+func _initialize_loot(run_id: String) -> void:
+	var loot: Dictionary = frozen_level_definition.get("rewards", {}).get("loot", {})
+	loot_enabled = not loot.is_empty()
+	loot_item_level = clampi(int(loot.get("item_level", 1)), 1, 3)
+	loot_rng_state = LootGeneratorScript.seed_for("%s|%s" % [run_id, frozen_level_content_hash])
+	loot_acquired_item_ids.clear()
+	pending_enemy_deaths.clear()
+
+func enqueue_enemy_death(enemy: Node) -> void:
+	if enemy == null or not is_instance_valid(enemy):
+		return
+	for event in pending_enemy_deaths:
+		if int(event.get("enemy_id", 0)) == int(enemy.enemy_id):
+			return
+	pending_enemy_deaths.append({"enemy_id": int(enemy.enemy_id), "enemy": enemy})
+
+func _process_enemy_deaths() -> void:
+	if pending_enemy_deaths.is_empty():
+		return
+	pending_enemy_deaths.sort_custom(func(left: Dictionary, right: Dictionary): return int(left.enemy_id) < int(right.enemy_id))
+	for event in pending_enemy_deaths:
+		var enemy: Node = event.get("enemy")
+		if loot_enabled and enemy != null and is_instance_valid(enemy):
+			_roll_enemy_reward(enemy)
+		if enemy != null and is_instance_valid(enemy):
+			enemy.queue_free()
+	pending_enemy_deaths.clear()
+
+func _roll_enemy_reward(enemy: Node) -> void:
+	var source_node_id := str(frozen_level_definition.get("id", campaign_state.active_node_id))
+	if source_node_id.is_empty():
+		source_node_id = selected_well_id
+	var roll_input := {
+		"eligible": true,
+		"occurrence_kind": "boss" if str(frozen_level_definition.get("type", "")) == "boss" else "ordinary",
+		"drop_bonus": 0.0,
+		"item_level": loot_item_level,
+		"inventory_count": account_state.item_instances.size(),
+		"inventory_capacity": AccountStateScript.INVENTORY_CAPACITY,
+		"run_id": run_state.run_id,
+		"enemy_id": int(enemy.enemy_id),
+		"node_id": source_node_id,
+		"published_pool": frozen_loot_registration.get("pool", []).duplicate(true),
+	}
+	if OS.is_debug_build() and development_drop_percent >= 0.0:
+		roll_input["development_drop_percent"] = development_drop_percent
+	var result: Dictionary = LootGeneratorScript.generate(roll_input, loot_rng_state)
+	if not result.get("valid", false):
+		push_warning("Loot generation failed: %s" % str(result.get("error", "unknown error")))
+		return
+	loot_rng_state = int(result.get("rng_state", loot_rng_state))
+	if not result.get("generated", false):
+		return
+	var instance: Dictionary = result.get("instance", {})
+	if account_state.add_monster_instance(instance):
+		loot_acquired_item_ids.append(str(instance.get("instance_id", "")))
+		var visual := preload("res://scripts/game/loot_drop_visual.gd").new()
+		visual.setup(self, enemy.position, instance)
+		add_child(visual)
+
+func execute_loot_command(value: String) -> String:
+	if not OS.is_debug_build():
+		return "Loot commands are available in development builds only."
+	var words := value.strip_edges().to_lower().split(" ", false)
+	if words.size() != 2 or words[0] != "drop_rate":
+		return "Use: drop_rate <0–100> or drop_rate reset"
+	if words[1] == "reset":
+		development_drop_percent = -1.0
+		return "Normal drop rates restored."
+	if not words[1].is_valid_float():
+		return "Enter a percentage from 0 to 100."
+	var percent := words[1].to_float()
+	if not is_finite(percent) or percent < 0.0 or percent > 100.0:
+		return "Enter a percentage from 0 to 100."
+	development_drop_percent = percent
+	loot_enabled = true
+	return "Drop chance: %s%% for eligible enemies." % str(percent)
 
 func _apply_level_backdrop() -> void:
 	if environment_visual == null:
@@ -1080,6 +1187,8 @@ func _cancel_melee_swing() -> void:
 	melee_strike_delay_remaining = 0.0
 	melee_target_id = ""
 	melee_damage_committed = false
+	if hero != null:
+		hero.interrupt_held_weapon_attack()
 
 func _enemy_by_id(target_id: String) -> Node:
 	if not target_id.begins_with("enemy-"):

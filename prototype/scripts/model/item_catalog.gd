@@ -5,14 +5,14 @@ const ITEMS := {
     "core.heavy_breech": {"label": "Heavy Breech", "category": "weapon", "glyph": "HB", "description": "A reinforced weapon chamber recovered from the foundry approach."},
     "module.high_volume": {"label": "High-volume Cylinder", "category": "harvester", "glyph": "HC", "description": "A heavy displacement cylinder salvaged from the intake works."},
     "chassis.bulwark": {"label": "Bulwark Plating", "category": "hero", "glyph": "BP", "description": "Layered protective plating with reinforced mounting brackets."},
-    "core.cycler": {"label": "Cycle Driver", "category": "weapon", "glyph": "CD", "description": "A compact autoloader drive recovered at Cinder Crossing."},
+    "core.cycler": {"label": "Cycle Driver", "category": "weapon", "glyph": "CD", "description": "A compact autoloader drive recovered in the Broken Foundry."},
     "module.fast_cycle": {"label": "Fast-cycle Rotor", "category": "harvester", "glyph": "FR", "description": "A lightweight rotor from the pressure pumping station."},
     "chassis.runner": {"label": "Runner Frame", "category": "hero", "glyph": "RF", "description": "An articulated chassis assembly found in the rail graveyard."},
     "core.accelerator": {"label": "Long Accelerator", "category": "weapon", "glyph": "LA", "description": "A linear accelerator barrel recovered beyond the furnace rampart."},
     "module.bracing": {"label": "Anchor Bracing", "category": "harvester", "glyph": "AB", "description": "Heavy stabilizer braces salvaged from the Crown Well."},
     "chassis.jump_servos": {"label": "Jump Servos", "category": "hero", "glyph": "JS", "description": "A matched pair of high-load servos recovered from the act guardian."},
 }
-const REWARDS := ["core.heavy_breech", "module.high_volume", "chassis.bulwark", "core.cycler", "module.fast_cycle", "chassis.runner", "core.accelerator", "module.bracing", "chassis.jump_servos"]
+const REWARDS := ["core.heavy_breech", "module.high_volume", "chassis.bulwark", "module.fast_cycle", "chassis.runner", "core.accelerator", "module.bracing", "chassis.jump_servos"]
 static var PUBLISHED_ITEMS: Dictionary = {}
 
 static func register_published_weapon(weapon_id: String, definition: Dictionary) -> void:
@@ -39,7 +39,10 @@ static func reward_for(act_id: String, node_id: String) -> String:
 static func source_for(id: String) -> String:
     if PUBLISHED_ITEMS.has(id):
         return "Designer publication"
-    return "Act 1 · Level %d first clear" % (REWARDS.find(id) + 1)
+    var reward_index := REWARDS.find(id)
+    if reward_index < 0:
+        return "Legacy collection item"
+    return "Act 1 · Level %d first clear" % (reward_index + 1)
 
 static func has_item(id: String) -> bool:
     return ITEMS.has(id) or PUBLISHED_ITEMS.has(id)

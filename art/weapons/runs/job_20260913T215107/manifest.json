@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "job_id": "job_20260913T215107",
+  "kind": "weapon-concept-preparation",
+  "source": "C:\\Users\\TTOCS\\Documents\\ChatGPT\\Telos Game\\art\\ui-items\\Weapons\\common_batton.png",
+  "settings": {
+    "cutout": "comfy",
+    "mask": null,
+    "crop": null,
+    "world_height": 256,
+    "icon_size": 256,
+    "pivot": [
+      0.5,
+      1.0
+    ],
+    "source_sha256": "e0c4b0fcd3db64f34b161e9522edafde30df7c26a6267fc6f8cd4061f4f82e12",
+    "mask_sha256": null
+  },
+  "settings_hash": "8388b9ffce6bfa635039fea8d8319af6cd90080f795cc3f53fd4d84af5f053a3",
+  "status": "blocked",
+  "stages": {
+    "snapshot": {
+      "status": "complete",
+      "outputs": {
+        "original.png": "e0c4b0fcd3db64f34b161e9522edafde30df7c26a6267fc6f8cd4061f4f82e12"
+      }
+    },
+    "cutout": {
+      "status": "pending",
+      "outputs": {}
+    }
+  },
+  "outputs": {},
+  "gpu_work": {
+    "submitted": false,
+    "prompt_id": null,
+    "reconciliation": "not-required"
+  },
+  "error": "HTTPConnectionPool(host='127.0.0.1', port=8188): Max retries exceeded with url: /upload/image (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000283A7E514D0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))"
+}

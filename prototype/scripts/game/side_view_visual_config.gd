@@ -66,13 +66,74 @@ const ASSETS := {
 }
 
 static func asset_for(asset_id: String) -> Dictionary:
-    if not ASSETS.has(asset_id):
-        return {}
-    return ASSETS[asset_id]
+	if asset_id == "hero_2":
+		# Hero 2 ships in stages: the static cutout can be played immediately,
+		# while its locomotion/attack clips arrive later. Prefer the distinct
+		# static asset whenever it exists; only fall back to hero 1 when no
+		# hero-2 art has been installed at all.
+		if _hero_2_static_available():
+			return _hero_2_static_asset()
+		if _hero_2_animation_assets_available():
+			return _hero_2_animation_asset()
+		return ASSETS["hero"]
+	if not ASSETS.has(asset_id):
+		return {}
+	return ASSETS[asset_id]
+
+static func _hero_2_static_available() -> bool:
+	return ResourceLoader.exists("res://assets/side-view/hero_2.png")
+
+static func _hero_2_animation_assets_available() -> bool:
+	for path in [
+		"res://assets/side-view/hero_2.png",
+		"res://assets/side-view/animations/hero_2_idle/animation.tres",
+		"res://assets/side-view/animations/hero_2_walk/animation.tres",
+		"res://assets/side-view/animations/hero_2_attack/animation.tres",
+	]:
+		if not ResourceLoader.exists(path):
+			return false
+	return true
+
+static func _hero_2_animation_asset() -> Dictionary:
+	return {
+		"texture": load("res://assets/side-view/hero_2.png"),
+		"idle_frames": load("res://assets/side-view/animations/hero_2_idle/animation.tres"),
+		"walk_frames": load("res://assets/side-view/animations/hero_2_walk/animation.tres"),
+		"attack_frames": load("res://assets/side-view/animations/hero_2_attack/animation.tres"),
+		"animation_folder": "hero_2",
+		"animation_reference_height": 416.0,
+		"animation_source_anchor": Vector2(288.0, 496.0),
+		"visible_bounds": Rect2(4.0, 4.0, 585.0, 919.0),
+		"ground_anchor": Vector2(296.0, 922.0),
+		"initial_visible_height": 80.0,
+	}
+
+static func _hero_2_static_asset() -> Dictionary:
+	var texture := load("res://assets/side-view/hero_2.png") as Texture2D
+	var size := texture.get_size()
+	var bounds := Rect2(Vector2.ZERO, size)
+	var image := texture.get_image()
+	if image != null:
+		var used := image.get_used_rect()
+		if used.size.x > 0.0 and used.size.y > 0.0:
+			bounds = Rect2(used)
+	var anchor := Vector2(bounds.position.x + bounds.size.x * 0.5, bounds.end.y)
+	return {
+		"texture": texture,
+		"idle_frames": null,
+		"walk_frames": null,
+		"attack_frames": null,
+		"animation_folder": "hero_2",
+		"animation_reference_height": bounds.size.y,
+		"animation_source_anchor": anchor,
+		"visible_bounds": bounds,
+		"ground_anchor": anchor,
+		"initial_visible_height": 80.0,
+	}
 
 static func enemy_asset(enemy_kind: int) -> String:
-    if enemy_kind == 1:
-        return "breaker"
-    if enemy_kind == 2:
-        return "ranged"
-    return "pursuer"
+	if enemy_kind == 1:
+		return "breaker"
+	if enemy_kind == 2:
+		return "ranged"
+	return "pursuer"

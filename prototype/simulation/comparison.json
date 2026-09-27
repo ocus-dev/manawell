@@ -61,12 +61,7 @@
     {
       "overrides": {
         "stage_overrides": {
-          "act_01_node_04": {
-            "damage_multiplier": 1.1,
-            "waves": 3,
-            "hp_multiplier": 4.0
-          },
-          "act_01_node_09": {
+          "act_01_node_08": {
             "hp_multiplier": 12.0,
             "damage_multiplier": 1.2
           },
@@ -75,12 +70,12 @@
             "waves": 2,
             "hp_multiplier": 2.0
           },
-          "act_01_node_07": {
+          "act_01_node_06": {
             "damage_multiplier": 1.2,
             "waves": 3,
             "hp_multiplier": 6.0
           },
-          "act_01_node_06": {
+          "act_01_node_05": {
             "damage_multiplier": 1.15,
             "waves": 3,
             "hp_multiplier": 5.0
@@ -117,12 +112,7 @@
           4
         ],
         "stage_overrides": {
-          "act_01_node_04": {
-            "damage_multiplier": 1.1,
-            "waves": 3,
-            "hp_multiplier": 4.0
-          },
-          "act_01_node_09": {
+          "act_01_node_08": {
             "hp_multiplier": 12.0,
             "damage_multiplier": 1.2
           },
@@ -131,12 +121,12 @@
             "waves": 2,
             "hp_multiplier": 2.0
           },
-          "act_01_node_07": {
+          "act_01_node_06": {
             "damage_multiplier": 1.2,
             "waves": 3,
             "hp_multiplier": 6.0
           },
-          "act_01_node_06": {
+          "act_01_node_05": {
             "damage_multiplier": 1.15,
             "waves": 3,
             "hp_multiplier": 5.0
@@ -200,12 +190,7 @@
         ],
         "post_surge_four_increment": 0.25,
         "stage_overrides": {
-          "act_01_node_04": {
-            "damage_multiplier": 1.1,
-            "waves": 3,
-            "hp_multiplier": 4.0
-          },
-          "act_01_node_09": {
+          "act_01_node_08": {
             "hp_multiplier": 12.0,
             "damage_multiplier": 1.2
           },
@@ -214,12 +199,12 @@
             "waves": 2,
             "hp_multiplier": 2.0
           },
-          "act_01_node_07": {
+          "act_01_node_06": {
             "damage_multiplier": 1.2,
             "waves": 3,
             "hp_multiplier": 6.0
           },
-          "act_01_node_06": {
+          "act_01_node_05": {
             "damage_multiplier": 1.15,
             "waves": 3,
             "hp_multiplier": 5.0

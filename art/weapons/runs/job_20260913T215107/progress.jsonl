@@ -1,0 +1,4 @@
+{"event": "stage_started", "progress": 0.04999999999999999, "stage": "snapshot", "time": "2026-09-14T04:51:08.519954+00:00"}
+{"event": "stage_complete", "outputs": ["original.png"], "progress": 0.15, "stage": "snapshot", "time": "2026-09-14T04:51:08.526954+00:00"}
+{"event": "stage_started", "progress": 0.35, "stage": "cutout", "time": "2026-09-14T04:51:08.527954+00:00"}
+{"event": "blocked", "message": "HTTPConnectionPool(host='127.0.0.1', port=8188): Max retries exceeded with url: /upload/image (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000283A7E514D0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))", "time": "2026-09-14T04:51:10.551966+00:00"}

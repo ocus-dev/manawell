@@ -26,6 +26,15 @@ func acquire(weapon_id: String) -> Dictionary:
 	var instance_id := added[0]
 	return {"valid": true, "instance_id": instance_id, "instance": account.item_instances[instance_id].duplicate(true)}
 
+func acquire_and_equip(weapon_id: String, hero_id: String = "hero_1") -> Dictionary:
+	var acquired := acquire(weapon_id)
+	if not acquired.get("valid", false):
+		return acquired
+	if not equip(hero_id, str(acquired.get("instance_id", ""))):
+		return {"valid": false, "error": account.inventory_command_error}
+	acquired["hero_id"] = hero_id
+	return acquired
+
 func equip(hero_id: String, instance_id: String) -> bool:
 	return account.equip_instance(hero_id, "weapon", instance_id)
 

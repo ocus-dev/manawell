@@ -1,0 +1,6 @@
+{
+  "reason": "ComfyUI service restart after power loss; prompt_id was absent from /history and /queue on 2026-09-19.",
+  "original_prompt_id": "32e6c6b5-dc29-46e1-8fd0-7d8be3a417cc",
+  "original_token": "a78a58bcb87d427bbf2d1c32cb12b977",
+  "replacement_run": "../hero-1-unarmed-idle-02"
+}

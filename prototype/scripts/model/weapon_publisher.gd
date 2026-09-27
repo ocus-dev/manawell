@@ -89,6 +89,70 @@ static func publish(draft: Dictionary, preparation_root: String, job_id: String,
         return _failure("index", "COMMIT_FAILED", "could not commit publication index")
     return {"valid": true, "committed": true, "idempotent": false, "preview": preview(draft, index), "index": next_index, "diagnostics": []}
 
+static func publish_placement_revision(weapon_id: String, pivot: Dictionary, data_root: String = DEFAULT_DATA_ROOT, asset_root: String = DEFAULT_ASSET_ROOT) -> Dictionary:
+    if weapon_id.is_empty() or weapon_id.contains("/") or weapon_id.contains("\\") or weapon_id.contains("..") or weapon_id.contains(":"):
+        return _failure("weapon_id", "UNSAFE_ID", "weapon ID must be a safe catalog name")
+    var index := _load_index(data_root)
+    var current: Dictionary = index.get("weapons", {}).get(weapon_id, {})
+    if current.is_empty():
+        return _failure("weapon_id", "UNKNOWN_WEAPON", "published weapon does not exist")
+    var current_revision := int(current.get("revision", 0))
+    if current_revision < 1:
+        return _failure("revision", "INVALID_REVISION", "published weapon revision is invalid")
+    var current_data_dir := data_root.path_join(weapon_id).path_join(str(current_revision))
+    var recipe := _read_json(current_data_dir.path_join("recipe.json"))
+    if recipe.is_empty():
+        return _failure("recipe", "MISSING_RECIPE", "current weapon recipe is not preserved")
+    var next_revision := current.duplicate(true)
+    next_revision["revision"] = current_revision + 1
+    next_revision["pivot"] = pivot.duplicate(true)
+    var revision_validation := Catalog.validate_revision(next_revision, false)
+    if not revision_validation.valid:
+        return revision_validation
+    recipe["revision"] = current_revision + 1
+    recipe["recipe_id"] = "%s.r%d" % [str(recipe.get("recipe_id", weapon_id)), current_revision + 1]
+    recipe["weapon_id"] = weapon_id
+    var recipe_validation := Catalog.validate_recipe(recipe, next_revision)
+    if not recipe_validation.valid:
+        return recipe_validation
+
+    var transaction_id := "%s-placement-%d" % [weapon_id, Time.get_unix_time_from_system()]
+    var staging := data_root.path_join(".staging").path_join(transaction_id)
+    var stage_assets := staging.path_join("assets")
+    var stage_data := staging.path_join("data")
+    if not _mkdir(stage_assets) or not _mkdir(stage_data):
+        return _failure("staging", "STAGING_FAILED", "could not create placement staging directory")
+    var current_assets: Dictionary = current.get("assets", {})
+    if not _copy_immutable(str(current_assets.get("icon", "")), stage_assets.path_join("icon.png")) or not _copy_immutable(str(current_assets.get("world_sprite", "")), stage_assets.path_join("world-sprite.png")):
+        return _failure("staging.assets", "STAGING_FAILED", "could not preserve current published assets")
+    var final_asset_dir := asset_root.path_join(weapon_id).path_join(str(current_revision + 1))
+    next_revision["assets"] = {"icon": final_asset_dir.path_join("icon.png"), "world_sprite": final_asset_dir.path_join("world-sprite.png")}
+    if not _write_json(stage_data.path_join("definition.json"), next_revision) or not _write_json(stage_data.path_join("recipe.json"), recipe):
+        return _failure("staging.data", "STAGING_FAILED", "could not stage placement revision")
+    revision_validation = Catalog.validate_revision(next_revision, false)
+    if not revision_validation.valid:
+        return revision_validation
+    recipe_validation = Catalog.validate_recipe(recipe, next_revision)
+    if not recipe_validation.valid:
+        return recipe_validation
+    var next_index := index.duplicate(true)
+    next_index.schema_version = SCHEMA_VERSION
+    next_index.weapons[weapon_id] = next_revision
+    var index_validation := Catalog.validate_publication_index(next_index, false)
+    if not index_validation.valid:
+        return index_validation
+    if not _mkdir(final_asset_dir) or not _copy_immutable(stage_assets.path_join("icon.png"), final_asset_dir.path_join("icon.png")) or not _copy_immutable(stage_assets.path_join("world-sprite.png"), final_asset_dir.path_join("world-sprite.png")):
+        return _failure("assets", "PUBLISH_FAILED", "could not install placement assets")
+    var revision_dir := data_root.path_join(weapon_id).path_join(str(current_revision + 1))
+    if not _mkdir(revision_dir) or not _copy_immutable(stage_data.path_join("definition.json"), revision_dir.path_join("definition.json")) or not _copy_immutable(stage_data.path_join("recipe.json"), revision_dir.path_join("recipe.json")):
+        return _failure("revision", "PUBLISH_FAILED", "could not preserve placement revision")
+    var history := data_root.path_join("history")
+    if not _mkdir(history) or not _write_json(history.path_join("index-%s.json" % _sha256(data_root.path_join(INDEX_NAME)).left(12)), index):
+        return _failure("history", "PUBLISH_FAILED", "could not preserve the previous publication index")
+    if not _write_json(data_root.path_join(INDEX_NAME), next_index):
+        return _failure("index", "COMMIT_FAILED", "could not commit placement index")
+    return {"valid": true, "committed": true, "revision": next_revision, "recipe": recipe, "index": next_index, "diagnostics": []}
+
 static func rollback(weapon_id: String, revision: int, data_root: String = DEFAULT_DATA_ROOT) -> Dictionary:
     var definition_path := data_root.path_join(weapon_id).path_join(str(revision)).path_join("definition.json")
     var definition := _read_json(definition_path)

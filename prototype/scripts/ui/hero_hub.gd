@@ -116,7 +116,9 @@ func _open_operations() -> void:
 	get_tree().change_scene_to_file(OPERATIONS_SCENE)
 
 func _portrait_for(hero_id: String) -> Texture2D:
-	return HERO_ONE if hero_id == "hero_1" else null
+	if hero_id == "hero_2" and ResourceLoader.exists("res://assets/portraits/hero_2.png"):
+		return load("res://assets/portraits/hero_2.png") as Texture2D
+	return HERO_ONE if hero_id == "hero_1" or hero_id == "hero_2" else null
 
 func _hero_label(hero_id: String) -> String:
 	return str(catalog.get_hero(hero_id).get("label", hero_id))

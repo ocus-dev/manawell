@@ -1,0 +1,189 @@
+{
+  "1": {
+    "class_type": "PrimitiveStringMultiline",
+    "inputs": {
+      "value": "A physically grounded retro-industrial foundry service deck built from reinforced concrete, heavy rubber edge seals and blackened steel plates. Functional wear and repair history, broad quiet forms, no decorative clutter."
+    }
+  },
+  "2": {
+    "class_type": "PrimitiveStringMultiline",
+    "inputs": {
+      "value": "Cinematic industrial science-fiction game artwork with tactile, realistically shaded materials and restrained painterly character. Weathered painted steel, brushed metal, heavy concrete, rubber seals and chipped maintenance markings. Clear large silhouettes, fine detail concentrated around functional mechanisms. Directional daylight, cool atmospheric fill, convincing material highlights and deep structural crevices. Preserve readability at gameplay scale."
+    }
+  },
+  "3": {
+    "class_type": "PrimitiveStringMultiline",
+    "inputs": {
+      "value": "Derive only the playable industrial service deck from the approved master reference. Shallow visible top surface, weathered steel and restrained damp highlights. Preserve horizontal support geometry; no actors, background architecture or baked actor shadows. Transparent space outside the deck."
+    }
+  },
+  "4": {
+    "class_type": "PrimitiveStringMultiline",
+    "inputs": {
+      "value": "Level side-on 16:9 game composition. The playable deck meets the existing support line at y=540 in a 1280x720 view. Keep the enlarged drill area at the far left (center x=160) clear, and preserve the right-side enemy entry. No actors, HUD or lettering. Match the approved master camera and lighting."
+    }
+  },
+  "5": {
+    "class_type": "PrimitiveStringMultiline",
+    "inputs": {
+      "value": "Warm directional sunlight from the upper left, cool blue-grey skylight in shadow, restrained amber maintenance lights. Bright metallic edge highlights, soft atmospheric distance and dark contact crevices. Subtle damp patches and broken reflections on the deck. Preserve detail in shadows; avoid uniform darkness, excessive bloom and bright clutter behind characters."
+    }
+  },
+  "6": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": [
+        "1",
+        0
+      ],
+      "string_b": [
+        "2",
+        0
+      ],
+      "delimiter": "\n\n"
+    }
+  },
+  "7": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": [
+        "6",
+        0
+      ],
+      "string_b": [
+        "3",
+        0
+      ],
+      "delimiter": "\n\n"
+    }
+  },
+  "8": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": [
+        "7",
+        0
+      ],
+      "string_b": [
+        "4",
+        0
+      ],
+      "delimiter": "\n\n"
+    }
+  },
+  "9": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": [
+        "8",
+        0
+      ],
+      "string_b": [
+        "5",
+        0
+      ],
+      "delimiter": "\n\n"
+    }
+  },
+  "10": {
+    "class_type": "UNETLoader",
+    "inputs": {
+      "unet_name": "krea2_turbo_fp8_scaled.safetensors",
+      "weight_dtype": "default"
+    }
+  },
+  "11": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+      "clip_name": "qwen3vl_4b_fp8_scaled.safetensors",
+      "type": "krea2",
+      "device": "default"
+    }
+  },
+  "12": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "qwen_image_vae.safetensors"
+    }
+  },
+  "13": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": [
+        "11",
+        0
+      ],
+      "text": [
+        "9",
+        0
+      ]
+    }
+  },
+  "14": {
+    "class_type": "ConditioningZeroOut",
+    "inputs": {
+      "conditioning": [
+        "13",
+        0
+      ]
+    }
+  },
+  "15": {
+    "class_type": "EmptyLatentImage",
+    "inputs": {
+      "width": 1536,
+      "height": 512,
+      "batch_size": 1
+    }
+  },
+  "16": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": [
+        "10",
+        0
+      ],
+      "positive": [
+        "13",
+        0
+      ],
+      "negative": [
+        "14",
+        0
+      ],
+      "latent_image": [
+        "15",
+        0
+      ],
+      "seed": 9072108,
+      "steps": 8,
+      "cfg": 1.0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1.0
+    }
+  },
+  "17": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "16",
+        0
+      ],
+      "vae": [
+        "12",
+        0
+      ]
+    }
+  },
+  "18": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "17",
+        0
+      ],
+      "filename_prefix": "Telos/CinematicFoundry/08_environment_lane"
+    }
+  }
+}

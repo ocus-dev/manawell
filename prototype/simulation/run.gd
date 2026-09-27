@@ -229,7 +229,7 @@ static func html_report(result: Dictionary) -> String:
 				active += player.active_income
 				passive += player.passive_income
 				for run in player.runs:
-					if not run.censored and run.node in ["act_01_node_02", "act_01_node_05", "act_01_node_08"]:
+					if not run.censored and run.node in ["act_01_node_02", "act_01_node_04", "act_01_node_07"]:
 						payouts.append(run.payout)
 						rates.append(float(run.payout) * 60.0 / maxf(0.001, run.duration))
 		html += "<p>%d failed runs / %d attempts (includes unfinished attempts). Passive share of earned mana: %.1f%%.</p>" % [failures, attempts, 100.0 * passive / maxf(1.0, passive + active)]

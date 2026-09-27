@@ -1,0 +1,479 @@
+{
+  "union_crop": [
+    116,
+    76,
+    478,
+    508
+  ],
+  "ground_anchor": [
+    172.0,
+    419.0
+  ],
+  "recommended_scale": 0.1927710843373494,
+  "cell_size": [
+    362,
+    432
+  ],
+  "loop_premultiplied_rgb_difference": 0.007005754858255386,
+  "frame_metrics": [
+    {
+      "frame": 0,
+      "bbox": [
+        83,
+        4,
+        262,
+        420
+      ],
+      "alpha_area": 47025.8828125,
+      "alpha_change_from_previous": 0.0
+    },
+    {
+      "frame": 1,
+      "bbox": [
+        83,
+        4,
+        278,
+        417
+      ],
+      "alpha_area": 47263.17578125,
+      "alpha_change_from_previous": 0.03167930990457535
+    },
+    {
+      "frame": 2,
+      "bbox": [
+        69,
+        4,
+        290,
+        414
+      ],
+      "alpha_area": 48701.890625,
+      "alpha_change_from_previous": 0.06117912009358406
+    },
+    {
+      "frame": 3,
+      "bbox": [
+        52,
+        5,
+        313,
+        411
+      ],
+      "alpha_area": 48524.6171875,
+      "alpha_change_from_previous": 0.06756435334682465
+    },
+    {
+      "frame": 4,
+      "bbox": [
+        34,
+        7,
+        336,
+        409
+      ],
+      "alpha_area": 48893.9296875,
+      "alpha_change_from_previous": 0.07096263021230698
+    },
+    {
+      "frame": 5,
+      "bbox": [
+        20,
+        9,
+        349,
+        408
+      ],
+      "alpha_area": 49380.05078125,
+      "alpha_change_from_previous": 0.060124173760414124
+    },
+    {
+      "frame": 6,
+      "bbox": [
+        8,
+        11,
+        358,
+        408
+      ],
+      "alpha_area": 49781.83984375,
+      "alpha_change_from_previous": 0.05893902853131294
+    },
+    {
+      "frame": 7,
+      "bbox": [
+        4,
+        13,
+        347,
+        411
+      ],
+      "alpha_area": 49755.84375,
+      "alpha_change_from_previous": 0.038930416107177734
+    },
+    {
+      "frame": 8,
+      "bbox": [
+        17,
+        12,
+        329,
+        410
+      ],
+      "alpha_area": 49485.0390625,
+      "alpha_change_from_previous": 0.05652356147766113
+    },
+    {
+      "frame": 9,
+      "bbox": [
+        36,
+        9,
+        307,
+        408
+      ],
+      "alpha_area": 48583.78515625,
+      "alpha_change_from_previous": 0.07114733755588531
+    },
+    {
+      "frame": 10,
+      "bbox": [
+        58,
+        6,
+        284,
+        405
+      ],
+      "alpha_area": 46518.2578125,
+      "alpha_change_from_previous": 0.08018051832914352
+    },
+    {
+      "frame": 11,
+      "bbox": [
+        80,
+        4,
+        262,
+        402
+      ],
+      "alpha_area": 44620.734375,
+      "alpha_change_from_previous": 0.07013948261737823
+    },
+    {
+      "frame": 12,
+      "bbox": [
+        84,
+        4,
+        265,
+        401
+      ],
+      "alpha_area": 41255.15234375,
+      "alpha_change_from_previous": 0.05440298840403557
+    },
+    {
+      "frame": 13,
+      "bbox": [
+        84,
+        4,
+        280,
+        402
+      ],
+      "alpha_area": 41514.85546875,
+      "alpha_change_from_previous": 0.04085659235715866
+    },
+    {
+      "frame": 14,
+      "bbox": [
+        82,
+        5,
+        295,
+        400
+      ],
+      "alpha_area": 47867.17578125,
+      "alpha_change_from_previous": 0.05945904552936554
+    },
+    {
+      "frame": 15,
+      "bbox": [
+        74,
+        8,
+        307,
+        400
+      ],
+      "alpha_area": 51516.9609375,
+      "alpha_change_from_previous": 0.07041766494512558
+    },
+    {
+      "frame": 16,
+      "bbox": [
+        62,
+        10,
+        313,
+        414
+      ],
+      "alpha_area": 52553.7890625,
+      "alpha_change_from_previous": 0.054920345544815063
+    },
+    {
+      "frame": 17,
+      "bbox": [
+        50,
+        12,
+        318,
+        417
+      ],
+      "alpha_area": 53124.65625,
+      "alpha_change_from_previous": 0.05639266222715378
+    },
+    {
+      "frame": 18,
+      "bbox": [
+        45,
+        14,
+        314,
+        428
+      ],
+      "alpha_area": 53570.09765625,
+      "alpha_change_from_previous": 0.046284135431051254
+    },
+    {
+      "frame": 19,
+      "bbox": [
+        57,
+        12,
+        307,
+        426
+      ],
+      "alpha_area": 51514.09375,
+      "alpha_change_from_previous": 0.060175854712724686
+    },
+    {
+      "frame": 20,
+      "bbox": [
+        78,
+        9,
+        296,
+        423
+      ],
+      "alpha_area": 49268.765625,
+      "alpha_change_from_previous": 0.0795016959309578
+    },
+    {
+      "frame": 21,
+      "bbox": [
+        82,
+        7,
+        284,
+        420
+      ],
+      "alpha_area": 45886.2109375,
+      "alpha_change_from_previous": 0.07433918118476868
+    },
+    {
+      "frame": 22,
+      "bbox": [
+        82,
+        5,
+        290,
+        418
+      ],
+      "alpha_area": 43743.0625,
+      "alpha_change_from_previous": 0.05350194126367569
+    },
+    {
+      "frame": 23,
+      "bbox": [
+        82,
+        4,
+        300,
+        415
+      ],
+      "alpha_area": 46716.28515625,
+      "alpha_change_from_previous": 0.054040081799030304
+    },
+    {
+      "frame": 24,
+      "bbox": [
+        76,
+        4,
+        295,
+        412
+      ],
+      "alpha_area": 48459.984375,
+      "alpha_change_from_previous": 0.053944360464811325
+    },
+    {
+      "frame": 25,
+      "bbox": [
+        58,
+        5,
+        307,
+        410
+      ],
+      "alpha_area": 48509.5546875,
+      "alpha_change_from_previous": 0.07281269133090973
+    },
+    {
+      "frame": 26,
+      "bbox": [
+        40,
+        7,
+        331,
+        408
+      ],
+      "alpha_area": 48578.140625,
+      "alpha_change_from_previous": 0.07014824450016022
+    },
+    {
+      "frame": 27,
+      "bbox": [
+        26,
+        9,
+        346,
+        407
+      ],
+      "alpha_area": 49240.328125,
+      "alpha_change_from_previous": 0.055026136338710785
+    },
+    {
+      "frame": 28,
+      "bbox": [
+        14,
+        11,
+        356,
+        408
+      ],
+      "alpha_area": 49553.359375,
+      "alpha_change_from_previous": 0.05472865328192711
+    },
+    {
+      "frame": 29,
+      "bbox": [
+        5,
+        13,
+        354,
+        407
+      ],
+      "alpha_area": 49730.9296875,
+      "alpha_change_from_previous": 0.04453647509217262
+    },
+    {
+      "frame": 30,
+      "bbox": [
+        13,
+        12,
+        340,
+        411
+      ],
+      "alpha_area": 50058.9921875,
+      "alpha_change_from_previous": 0.05316167697310448
+    },
+    {
+      "frame": 31,
+      "bbox": [
+        33,
+        10,
+        316,
+        407
+      ],
+      "alpha_area": 49024.75390625,
+      "alpha_change_from_previous": 0.07333900779485703
+    },
+    {
+      "frame": 32,
+      "bbox": [
+        52,
+        6,
+        295,
+        406
+      ],
+      "alpha_area": 47636.5,
+      "alpha_change_from_previous": 0.07423067837953568
+    },
+    {
+      "frame": 33,
+      "bbox": [
+        71,
+        5,
+        275,
+        416
+      ],
+      "alpha_area": 47421.3984375,
+      "alpha_change_from_previous": 0.07369102537631989
+    },
+    {
+      "frame": 34,
+      "bbox": [
+        83,
+        4,
+        262,
+        420
+      ],
+      "alpha_area": 47014.7578125,
+      "alpha_change_from_previous": 0.0509379617869854
+    },
+    {
+      "frame": 35,
+      "bbox": [
+        83,
+        4,
+        262,
+        420
+      ],
+      "alpha_area": 47002.7421875,
+      "alpha_change_from_previous": 0.0007833155686967075
+    },
+    {
+      "frame": 36,
+      "bbox": [
+        83,
+        4,
+        262,
+        420
+      ],
+      "alpha_area": 47020.5703125,
+      "alpha_change_from_previous": 0.0003417429979890585
+    }
+  ],
+  "review_required": true,
+  "note": "Metrics flag candidates for review, not proof of good motion. No automatic temporal mask smoothing or loop crossfade.",
+  "reference_height": 415.0,
+  "scale_basis": "shared_reference",
+  "source_indices": [
+    0,
+    2,
+    4,
+    6,
+    8,
+    10,
+    12,
+    14,
+    16,
+    18,
+    20,
+    22,
+    24,
+    26,
+    28,
+    30,
+    32,
+    34,
+    36,
+    38,
+    40,
+    42,
+    44,
+    46,
+    48,
+    50,
+    52,
+    54,
+    56,
+    58,
+    60,
+    62,
+    64,
+    66,
+    68,
+    70,
+    72
+  ],
+  "source_fps": 24.0,
+  "playback_fps": 12.0,
+  "motion": "walk",
+  "loop_requested": true,
+  "damage_event": null,
+  "last_frame_duration_multiplier": 0.4999999999999982,
+  "warnings": [
+    "Frame 14: alpha area changed >15%; inspect motion or mask flicker"
+  ]
+}

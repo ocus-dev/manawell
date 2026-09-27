@@ -1,0 +1,193 @@
+{
+  "schema_version": 1.0,
+  "weapons": {
+    "batton of beating": {
+      "assets": {
+        "icon": "res://assets/weapons/batton of beating/1/icon.png",
+        "world_sprite": "res://assets/weapons/batton of beating/1/world-sprite.png"
+      },
+      "base_modifiers": [
+        {
+          "family": "designer.base.attack_damage",
+          "operation": "flat",
+          "stat": "attack_damage",
+          "value": 0.0
+        }
+      ],
+      "behavior_id": "weapon.standard",
+      "description": "Really hurts",
+      "label": "beat stick",
+      "pivot": {
+        "coordinate_space": "normalized",
+        "facing": "right",
+        "grip": [
+          0.5,
+          0.75
+        ],
+        "origin": "top_left",
+        "world_scale": 1.0
+      },
+      "revision": 1.0,
+      "schema_version": 1.0,
+      "source_hashes": {
+        "icon_sha256": "889de072fda580bc2b452d6777bd269af83dda09aa9a3e92c908a17c0cca587b",
+        "job_id": "job_20260913T231240",
+        "manifest_sha256": "f9d3efa4bc91e9a14f232c0662f30fdf891cdcdbc2ac0d3d308c58df75147dbd",
+        "world_sprite_sha256": "744e0c66e55920955200b297518fd347588b338453a484ff4cbbda94f1af15ca"
+      },
+      "weapon_id": "batton of beating"
+    },
+    "laser_0": {
+      "assets": {
+        "icon": "res://assets/weapons/laser_0/1/icon.png",
+        "world_sprite": "res://assets/weapons/laser_0/1/world-sprite.png"
+      },
+      "base_modifiers": [
+        {
+          "family": "designer.base.attack_damage",
+          "operation": "flat",
+          "stat": "attack_damage",
+          "value": 0.0
+        }
+      ],
+      "behavior_id": "weapon.standard",
+      "description": "Cuts even better than steel",
+      "label": "Laser sword",
+      "pivot": {
+        "coordinate_space": "normalized",
+        "facing": "right",
+        "grip": [
+          0.5,
+          0.75
+        ],
+        "origin": "top_left"
+      },
+      "revision": 1.0,
+      "schema_version": 1.0,
+      "source_hashes": {
+        "icon_sha256": "cd709271f61a458334bff37232a4367365f1886696bde3d07a94dc81f17e13c7",
+        "job_id": "job_20260913T214112",
+        "manifest_sha256": "2a84c6668923097e16956f274032e449f8fed9667865669358ba442fadadd035",
+        "world_sprite_sha256": "f11ca0bded1fb1661a4ef426b30a307716476d1165a91b689ea93ef563206626"
+      },
+      "weapon_id": "laser_0"
+    },
+    "light blade": {
+      "assets": {
+        "icon": "res://assets/weapons/light blade/1/icon.png",
+        "world_sprite": "res://assets/weapons/light blade/1/world-sprite.png"
+      },
+      "base_modifiers": [
+        {
+          "family": "designer.base.attack_damage",
+          "operation": "flat",
+          "stat": "attack_damage",
+          "value": 1.0
+        },
+        {
+          "family": "designer.base.attacks_per_second",
+          "operation": "increased",
+          "stat": "attacks_per_second",
+          "value": 1.0
+        },
+        {
+          "family": "designer.base.projectile_speed",
+          "operation": "increased",
+          "stat": "projectile_speed",
+          "value": 1.0
+        }
+      ],
+      "behavior_id": "weapon.standard",
+      "description": "A cold edge, bright as it is sharp",
+      "label": "Light blade",
+      "pivot": {
+        "coordinate_space": "normalized",
+        "facing": "right",
+        "grip": [
+          0.5,
+          0.75
+        ],
+        "origin": "top_left"
+      },
+      "revision": 1.0,
+      "schema_version": 1.0,
+      "source_hashes": {
+        "icon_sha256": "cd709271f61a458334bff37232a4367365f1886696bde3d07a94dc81f17e13c7",
+        "job_id": "job_20260913T213648",
+        "manifest_sha256": "d52c8719164340c337f252986e76c22db5a24ba000bb284901264ba8cbcbad5a",
+        "world_sprite_sha256": "f11ca0bded1fb1661a4ef426b30a307716476d1165a91b689ea93ef563206626"
+      },
+      "weapon_id": "light blade"
+    },
+    "luck_baton": {
+      "assets": {
+        "icon": "res://assets/weapons/luck_baton/1/icon.png",
+        "world_sprite": "res://assets/weapons/luck_baton/1/world-sprite.png"
+      },
+      "base_modifiers": [
+        {
+          "family": "designer.base.attack_damage",
+          "operation": "flat",
+          "stat": "attack_damage",
+          "value": 0.0
+        }
+      ],
+      "behavior_id": "weapon.standard",
+      "description": "Knock the change out of them",
+      "label": "Lucky beating stick",
+      "pivot": {
+        "coordinate_space": "normalized",
+        "facing": "right",
+        "grip": [
+          0.5,
+          0.75
+        ],
+        "origin": "top_left"
+      },
+      "revision": 1.0,
+      "schema_version": 1.0,
+      "source_hashes": {
+        "icon_sha256": "889de072fda580bc2b452d6777bd269af83dda09aa9a3e92c908a17c0cca587b",
+        "job_id": "job_20260913T222543",
+        "manifest_sha256": "f99e2fa7dd35845efbbaa407ba06404388d5cc6ac6d1be5d66e3bf99816461c2",
+        "world_sprite_sha256": "744e0c66e55920955200b297518fd347588b338453a484ff4cbbda94f1af15ca"
+      },
+      "weapon_id": "luck_baton"
+    },
+    "new_weapon": {
+      "assets": {
+        "icon": "res://assets/weapons/new_weapon/1/icon.png",
+        "world_sprite": "res://assets/weapons/new_weapon/1/world-sprite.png"
+      },
+      "base_modifiers": [
+        {
+          "family": "designer.base.attack_damage",
+          "operation": "flat",
+          "stat": "attack_damage",
+          "value": 0.0
+        }
+      ],
+      "behavior_id": "weapon.standard",
+      "description": "Better than your fists",
+      "label": "Smasher",
+      "pivot": {
+        "coordinate_space": "normalized",
+        "facing": "right",
+        "grip": [
+          0.5,
+          0.75
+        ],
+        "origin": "top_left"
+      },
+      "revision": 1.0,
+      "schema_version": 1.0,
+      "source_hashes": {
+        "icon_sha256": "0de5556c9bcb131208a53d82854c75ce6cd22e70e9751af68840f1d8899b5b35",
+        "job_id": "job_20260913T210039",
+        "manifest_sha256": "2ea194f241bd3a2c7db96d7dc28190c658090142c66a6970ed21fbfaeabbea2c",
+        "world_sprite_sha256": "1b6ec09de18eec6102be77404e3b8e64eb43f2746191c279d391e6f1ee33d01b"
+      },
+      "weapon_id": "new_weapon"
+    }
+  }
+}

@@ -15,9 +15,9 @@ func _init() -> void:
 	var catalog: RefCounted = CampaignCatalogScript.new()
 	assert(catalog.is_valid())
 	var act: Dictionary = catalog.get_act("act_01")
-	assert(act["nodes"].size() == 9)
+	assert(act["nodes"].size() == 8)
 	assert(_count_type(act, "well") == 3)
-	assert(_count_type(act, "monster") == 5)
+	assert(_count_type(act, "monster") == 4)
 	assert(_count_type(act, "boss") == 1)
 	var campaign: RefCounted = CampaignStateScript.new()
 	assert(campaign.node_status("act_01", "act_01_node_01", catalog)["status"] == CampaignStateScript.STATUS_AVAILABLE)
@@ -41,9 +41,9 @@ func _init() -> void:
 	account.unlocked_wells["well_3"] = true
 	assert(account.content_catalog.has_well("well_3"))
 	for node in act["nodes"]:
-		if node["id"] != "act_01_node_09":
+		if node["id"] != "act_01_node_08":
 			campaign.completed_nodes["act_01/%s" % node["id"]] = true
-	assert(campaign.start_node("act_01", "act_01_node_09", catalog))
+	assert(campaign.start_node("act_01", "act_01_node_08", catalog))
 	result = {"run_id": "campaign-boss-1", "phase": RunStateScript.Phase.SUCCESS, "payout": 5, "completed_surges": 2}
 	assert(campaign.commit_terminal_result(result, account, catalog))
 	assert(campaign.unlocked_acts.has("act_01"))
@@ -54,7 +54,7 @@ func _init() -> void:
 	loaded_store.load_account()
 	var restored: RefCounted = CampaignStateScript.new()
 	assert(restored.from_save_payload(loaded_store.loaded_campaign_state, catalog))
-	assert(restored.completed_nodes.has("act_01/act_01_node_09"))
+	assert(restored.completed_nodes.has("act_01/act_01_node_08"))
 	var invalid: Dictionary = campaign.to_save_payload()
 	invalid["completed_nodes"].append("act_01/missing")
 	assert(not CampaignStateScript.validate_save_payload(invalid, catalog)["valid"])

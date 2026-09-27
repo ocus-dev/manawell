@@ -6,7 +6,7 @@ const Config = preload("res://scripts/game/side_view_visual_config.gd")
 func _init() -> void:
     var visual := Visual.new()
     root.add_child(visual)
-    for actor_id in ["hero", "breaker", "pursuer", "ranged", "harvester"]:
+    for actor_id in ["hero", "hero_2", "breaker", "pursuer", "ranged", "harvester"]:
         assert(visual.configure(actor_id, 23.0))
         var asset := Config.asset_for(actor_id)
         for multiplier in [1.0, 1.25, 0.75]:
@@ -21,7 +21,7 @@ func _init() -> void:
                     assert(is_equal_approx(clip.scale.y, expected_scale), "Scale accumulated")
                     assert(is_equal_approx(clip.scale.x, expected_scale * direction))
                     var motion: String = String(clip.animation)
-                    var m: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://assets/side-view/animations/%s_%s/manifest.json" % [actor_id, motion]))
+                    var m: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://assets/side-view/animations/%s_%s/manifest.json" % [asset["animation_folder"], motion]))
                     var crop: Array = m["union_crop"]
                     var cell: Array = m["cell_size"]
                     var pivot: Vector2 = asset["animation_source_anchor"] - Vector2(crop[0], crop[1])

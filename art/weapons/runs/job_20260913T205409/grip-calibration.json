@@ -1,0 +1,19 @@
+{
+  "coordinate_system": "top-left pixels; normalized values are relative to cropped-source",
+  "pivot_normalized": [
+    0.5,
+    1.0
+  ],
+  "pivot_pixels": [
+    259.5,
+    361.0
+  ],
+  "source_size": [
+    519,
+    361
+  ],
+  "world_size": [
+    368,
+    256
+  ]
+}
