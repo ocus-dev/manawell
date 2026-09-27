@@ -1,41 +1,4 @@
 {
-  "retired": {
-    "new_weapon": {
-      "assets": {
-        "icon": "res://assets/weapons/new_weapon/1/icon.png",
-        "world_sprite": "res://assets/weapons/new_weapon/1/world-sprite.png"
-      },
-      "base_modifiers": [
-        {
-          "family": "designer.base.attack_damage",
-          "operation": "flat",
-          "stat": "attack_damage",
-          "value": 0.0
-        }
-      ],
-      "behavior_id": "weapon.standard",
-      "description": "Better than your fists",
-      "label": "Smasher",
-      "pivot": {
-        "coordinate_space": "normalized",
-        "facing": "right",
-        "grip": [
-          0.5,
-          0.75
-        ],
-        "origin": "top_left"
-      },
-      "revision": 1.0,
-      "schema_version": 1.0,
-      "source_hashes": {
-        "icon_sha256": "0de5556c9bcb131208a53d82854c75ce6cd22e70e9751af68840f1d8899b5b35",
-        "job_id": "job_20260913T210039",
-        "manifest_sha256": "2ea194f241bd3a2c7db96d7dc28190c658090142c66a6970ed21fbfaeabbea2c",
-        "world_sprite_sha256": "1b6ec09de18eec6102be77404e3b8e64eb43f2746191c279d391e6f1ee33d01b"
-      },
-      "weapon_id": "new_weapon"
-    }
-  },
   "schema_version": 1.0,
   "weapons": {
     "156": {
@@ -81,8 +44,8 @@
     },
     "batton of beating": {
       "assets": {
-        "icon": "res://assets/weapons/batton of beating/5/icon.png",
-        "world_sprite": "res://assets/weapons/batton of beating/5/world-sprite.png"
+        "icon": "res://assets/weapons/batton of beating/3/icon.png",
+        "world_sprite": "res://assets/weapons/batton of beating/3/world-sprite.png"
       },
       "base_modifiers": [
         {
@@ -103,14 +66,14 @@
           1.0
         ],
         "hand_offset": [
-          1.0,
+          28.0,
           0.0
         ],
         "origin": "top_left",
         "rotation_degrees": 4.0,
         "world_scale": 1.5
       },
-      "revision": 5.0,
+      "revision": 3.0,
       "schema_version": 1.0,
       "source_hashes": {
         "icon_sha256": "889de072fda580bc2b452d6777bd269af83dda09aa9a3e92c908a17c0cca587b",
@@ -272,6 +235,41 @@
         "world_sprite_sha256": "744e0c66e55920955200b297518fd347588b338453a484ff4cbbda94f1af15ca"
       },
       "weapon_id": "luck_baton"
+    },
+    "new_weapon": {
+      "assets": {
+        "icon": "res://assets/weapons/new_weapon/1/icon.png",
+        "world_sprite": "res://assets/weapons/new_weapon/1/world-sprite.png"
+      },
+      "base_modifiers": [
+        {
+          "family": "designer.base.attack_damage",
+          "operation": "flat",
+          "stat": "attack_damage",
+          "value": 0.0
+        }
+      ],
+      "behavior_id": "weapon.standard",
+      "description": "Better than your fists",
+      "label": "Smasher",
+      "pivot": {
+        "coordinate_space": "normalized",
+        "facing": "right",
+        "grip": [
+          0.5,
+          0.75
+        ],
+        "origin": "top_left"
+      },
+      "revision": 1.0,
+      "schema_version": 1.0,
+      "source_hashes": {
+        "icon_sha256": "0de5556c9bcb131208a53d82854c75ce6cd22e70e9751af68840f1d8899b5b35",
+        "job_id": "job_20260913T210039",
+        "manifest_sha256": "2ea194f241bd3a2c7db96d7dc28190c658090142c66a6970ed21fbfaeabbea2c",
+        "world_sprite_sha256": "1b6ec09de18eec6102be77404e3b8e64eb43f2746191c279d391e6f1ee33d01b"
+      },
+      "weapon_id": "new_weapon"
     }
   }
 }

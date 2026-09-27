@@ -1,0 +1,14 @@
+{
+  "explicit_modifiers": [],
+  "item_level": 1.0,
+  "provenance": {
+    "kind": "designer",
+    "run_id": "",
+    "source_id": "draft.new_weapon"
+  },
+  "rarity": "common",
+  "recipe_id": "batton of beating.common.r2.r3.r4.r5",
+  "revision": 5,
+  "schema_version": 1.0,
+  "weapon_id": "batton of beating"
+}

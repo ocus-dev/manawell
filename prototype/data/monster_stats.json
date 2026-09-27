@@ -1,0 +1,28 @@
+{
+	"format_version": 1,
+	"monsters": {
+		"breaker": {
+			"attack_interval": 1.0,
+			"attack_range": 1.8,
+			"damage": 12.0,
+			"health": 50.0,
+			"move_speed": 3.1
+		},
+		"pursuer": {
+			"attack_interval": 1.0,
+			"attack_range": 1.2,
+			"damage": 26.0,
+			"health": 20.0,
+			"move_speed": 5.6
+		},
+		"ranged": {
+			"attack_interval": 0.65,
+			"damage": 8.0,
+			"health": 25.0,
+			"move_speed": 2.0,
+			"projectile_speed": 7.0,
+			"stop_range": 7.5,
+			"windup": 0.55
+		}
+	}
+}
