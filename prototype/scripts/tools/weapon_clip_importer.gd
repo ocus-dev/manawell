@@ -7,8 +7,12 @@ extends Control
 ## ComfyUI), line the frames up, set timing and which frames start an attack
 ## and land the hit, then save. The engine lives in weapon_clip_import.gd.
 
-signal saved(clip: Dictionary)
+## `target`: "weapon" (this weapon's own animation) or "type" (the default
+## for every weapon of its type).
+signal saved(clip: Dictionary, target: String)
 signal closed
+## Hero purpose: the frames become the hero's own idle, walk or attack.
+signal hero_saved(clip: Dictionary, animation: String, still_frame: int)
 
 const Imp = preload("res://scripts/tools/weapon_clip_import.gd")
 const WeaponClip = preload("res://scripts/model/weapon_clip.gd")
@@ -32,11 +36,27 @@ const METHODS := [
 const ALIGN_MODES := [
 	{"id": "feet", "label": "Line up the feet (poses drawn in different spots)"},
 	{"id": "fixed", "label": "Keep positions (video, or frames from one camera)"},
+	{"id": "body", "label": "Line up the body (walk and idle cycles: the torso stays put)"},
 ]
 
 ## Set by the lab.
 var comfy: Node
+## "weapon" (an attack animation for weapons) or "hero" (the hero's own
+## idle / walk / attack art, see start_hero()).
+var purpose := "weapon"
+var hero_target := "walk"
+## Line-up used when frames are cut out ("feet" unless a hero cycle).
+var default_align := "feet"
+var still_only := false
+var _title: Label
+var _hero_box: Control
+var _hero_picker: OptionButton
+var _still_check: CheckBox
 var weapon_id := ""
+## The weapon's type label ("Axe"); empty hides "Save as default".
+var type_label := ""
+## True when editing a type default: saving goes back to the default.
+var editing_default := false
 var hit_seconds := 0.0
 var attack_interval := 0.6
 
@@ -49,6 +69,8 @@ var frame_source_textures: Array = []
 var strip := Rect2i()
 var boxes: Array = []
 var ground_y := -1
+## Which pose owns each pixel of the strip (shape detection), or empty.
+var owners := PackedByteArray()
 var background := Color.WHITE
 var cut: Array = []
 var cut_textures: Array = []
@@ -63,6 +85,36 @@ var align_mode := "feet"
 var selected := 0
 var step := "source"
 var tool := "anchor"
+## hero_weapon: where the weapon sits in each cut frame, in that frame's
+## pixels: {grip: Vector2 or null, tip: Vector2 or null, behind: bool}.
+var track: Array = []
+## Next click with the Place weapon tool: "grip" or "tip".
+var weapon_step := "grip"
+## Reference sheet (the same animation with the weapon drawn in), shown as a
+## ghost behind each frame so the grip and far end are easy to click.
+var ref_cut: Array = []
+var ref_textures: Array = []
+var ref_anchors: Array = []
+var ref_offsets: Array = []
+var ref_scale := 1.0
+var show_ref := true
+## The weapon being edited in the lab, drawn in the hands as you place it:
+## {texture, grip (0-1), tip (px)}.
+var preview_weapon: Dictionary = {}
+## Front hand: per frame an L8 mask of the hand drawn over the weapon (or
+## null), whether the user painted it (so moving the grip won't redo it), and
+## the masked picture for drawing.
+var front_hand := true
+var hand_masks: Array = []
+var hand_painted: Array = []
+var hand_textures: Array = []
+## Frames Auto-place wasn't sure about (worth a look).
+var auto_unsure: Array = []
+## Weapons to pick from for the preview (set by the lab), and the pick.
+var preview_options: Array = []
+var preview_choice := ""
+var _preview_picker: OptionButton
+var _tip_cache: Dictionary = {}
 var brush := 6.0
 var onion := true
 var playing := false
@@ -98,6 +150,21 @@ var _height_spin: SpinBox
 var _scale_spin: SpinBox
 var _name_edit: LineEdit
 var _save_button: Button
+var _save_default_button: Button
+var _tool_group := ButtonGroup.new()
+var _weapon_free_check: CheckBox
+var _tool_weapon: Button
+var _tool_reference: Button
+var _ref_dialog: FileDialog
+var _ref_status: Label
+var _ref_scale_spin: SpinBox
+var _show_ref_check: CheckBox
+var _behind_check: CheckBox
+var _weapon_status: Label
+var _weapon_controls: Control
+var _front_hand_check: CheckBox
+var _tool_hand: Button
+var _auto_status: Label
 var _box_left: SpinBox
 var _box_right: SpinBox
 var _fps_spin: SpinBox
@@ -111,6 +178,10 @@ var _sections: Dictionary = {}
 var _loading := false
 var _drag := {}
 var _union := Rect2()
+## Line-up view zoom and pan (mouse wheel / right-drag; F or Fit resets).
+var view_zoom := 1.0
+var view_pan := Vector2.ZERO
+var _pan_drag := false
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -148,6 +219,12 @@ func _unhandled_input(event: InputEvent) -> void:
 			select_frame(selected + 1)
 		KEY_SPACE:
 			set_playing(not playing)
+		KEY_F:
+			fit_view()
+		KEY_EQUAL, KEY_KP_ADD:
+			zoom_view(1.25, _view.size * 0.5)
+		KEY_MINUS, KEY_KP_SUBTRACT:
+			zoom_view(0.8, _view.size * 0.5)
 		_:
 			handled = false
 	if handled:
@@ -156,14 +233,47 @@ func _unhandled_input(event: InputEvent) -> void:
 # ---------- opening sources ----------
 
 ## Opens the importer on a new, empty clip for `new_weapon_id`.
-func start(new_weapon_id: String, new_hit_seconds: float, new_interval: float) -> void:
+func start(new_weapon_id: String, new_hit_seconds: float, new_interval: float, new_purpose: String = "weapon") -> void:
+	purpose = new_purpose
+	default_align = "feet"
 	weapon_id = new_weapon_id
 	hit_seconds = new_hit_seconds
 	attack_interval = new_interval
 	_reset()
 	visible = true
 	_set_status("Open a pose sheet, a set of frames, or a video to begin.")
+	if _title != null:
+		_title.text = "HERO ANIMATION IMPORTER" if purpose == "hero" else "CLIP IMPORTER"
 	_refresh()
+
+## Opens the importer for the hero's own art (no weapon in the hands).
+## animation: "idle", "walk" or "attack".
+func start_hero(animation: String = "walk") -> void:
+	start("_hero", 0.0, 1.0, "hero")
+	hero_target = animation
+	still_only = false
+	# Walk and idle cycles keep the torso in place; attacks line up the feet.
+	default_align = "body" if animation != "attack" else "feet"
+	if _name_edit != null:
+		_name_edit.text = "Hero " + animation
+	_set_status("Open a sheet of the hero %s (side view, facing right, no weapon: empty hands closed as if gripping), frame images, or a video." % ("walking" if animation == "walk" else ("standing (idle)" if animation == "idle" else "attacking")))
+	_refresh()
+
+## Saves the frames as the hero's idle, walk or attack (hero purpose).
+func save_hero() -> Dictionary:
+	if cut.is_empty():
+		_fail("Cut out the frames first.")
+		return {}
+	mode = "hero"
+	_save_project()
+	var clip := build_clip()
+	if clip.is_empty():
+		_fail("Couldn't pack the frames into a sheet.")
+		return {}
+	hero_saved.emit(clip, hero_target, selected if still_only else -1)
+	visible = false
+	closed.emit()
+	return clip
 
 func close() -> void:
 	set_playing(false)
@@ -180,6 +290,7 @@ func _reset() -> void:
 	strip = Rect2i()
 	boxes = []
 	ground_y = -1
+	owners = PackedByteArray()
 	cut = []
 	cut_textures = []
 	anchors = []
@@ -192,7 +303,19 @@ func _reset() -> void:
 	body_height = 0.0
 	clip_scale = 1.0
 	mode = "hero"
-	align_mode = "feet"
+	align_mode = default_align
+	track = []
+	weapon_step = "grip"
+	ref_cut = []
+	ref_textures = []
+	ref_anchors = []
+	ref_offsets = []
+	ref_scale = 1.0
+	front_hand = true
+	hand_masks = []
+	hand_painted = []
+	hand_textures = []
+	auto_unsure = []
 	if _name_edit != null:
 		_name_edit.text = "Attack"
 
@@ -207,7 +330,7 @@ func open_sheet(path: String) -> bool:
 	source_kind = "sheet"
 	source_image = image
 	source_texture = ImageTexture.create_from_image(image)
-	align_mode = "feet"
+	align_mode = default_align
 	var layout := Imp.detect_layout(image, 0)
 	_apply_layout(layout)
 	var guessed := boxes.size()
@@ -215,6 +338,8 @@ func open_sheet(path: String) -> bool:
 	_refresh()
 	if guessed <= 1:
 		_set_status("Couldn't tell how many poses are on the sheet (they touch). Set Frames to the number of poses; the cuts move to the emptiest gaps.", AMBER)
+	elif not owners.is_empty():
+		_set_status("Found %d poses as separate shapes, so overlapping swords and feet won't bleed into the next frame. Press Cut out frames." % guessed, GOOD)
 	else:
 		_set_status("Found %d poses. Check the magenta cuts, then press Cut out frames." % guessed, GOOD)
 	return true
@@ -284,6 +409,7 @@ func _apply_layout(layout: Dictionary) -> void:
 	boxes = layout.get("boxes", []).duplicate()
 	ground_y = int(layout.get("ground_y", -1))
 	background = layout.get("background", Color.WHITE)
+	owners = layout.get("owners", PackedByteArray())
 	selected = 0
 
 ## Re-slices the sheet into `count` frames at the emptiest columns.
@@ -350,13 +476,22 @@ func cut_out() -> bool:
 		holds.append(WeaponClip.DEFAULT_FRAME_MS)
 	starts = []
 	hits = []
+	if track.size() != cut.size():
+		track = []
+		for _i in range(cut.size()):
+			track.append(_empty_track())
+	hand_masks = []
+	hand_painted = []
+	hand_textures = []
+	auto_unsure = []
+	_ensure_hand_arrays()
 	realign()
 	body_height = Imp.figure_height(cut[0]) if not cut.is_empty() else 0.0
 	busy = false
 	selected = 0
 	step = "align"
 	_refresh()
-	_set_status("Cut out %d frames. Line them up, erase stray bits, then set timing and the hit frame." % cut.size(), GOOD)
+	_set_status(("Cut out %d frames. Check the line-up (Space plays it), erase stray bits, set the frame timing, then save." if purpose == "hero" else "Cut out %d frames. Line them up, erase stray bits, then set timing and the hit frame.") % cut.size(), GOOD)
 	return true
 
 ## The cutout for frame `index` with the local methods.
@@ -364,6 +499,7 @@ func cut_frame_now(index: int, options: Dictionary) -> Image:
 	if source_kind == "sheet":
 		var local := options.duplicate()
 		local["background"] = background
+		_add_owners(local, index)
 		return Imp.cut_frame(source_image, boxes[index], local)
 	var image := Image.load_from_file(str(frame_sources[index]))
 	image.convert(Image.FORMAT_RGBA8)
@@ -391,7 +527,17 @@ func _trellis_frame(index: int, options: Dictionary) -> Image:
 	var local := options.duplicate()
 	if source_kind != "sheet":
 		local["drop_neighbors"] = false
+	elif image.get_size() == boxes[index].size:
+		_add_owners(local, index)
+		image = Imp.clear_other_owners(image, boxes[index], local)
 	return Imp.filter_pieces(image, local)
+
+func _add_owners(options: Dictionary, index: int) -> void:
+	if owners.is_empty() or boxes.size() <= index:
+		return
+	options["owners"] = owners
+	options["owner_strip"] = strip
+	options["frame"] = index
 
 ## Re-cuts one frame (undoes erasing).
 func recut_frame(index: int) -> void:
@@ -420,7 +566,10 @@ func realign(new_mode: String = "") -> void:
 	else:
 		for index in range(cut.size()):
 			var ground := float(ground_y - boxes[index].position.y) if source_kind == "sheet" and ground_y >= 0 and index < boxes.size() else -1.0
-			anchors.append(Imp.feet_anchor(cut[index], ground))
+			var feet := Imp.feet_anchor(cut[index], ground)
+			if align_mode == "body":
+				feet.x = Imp.body_center_x(cut[index])
+			anchors.append(feet)
 	_after_frames_changed()
 
 func nudge(index: int, delta: Vector2) -> void:
@@ -538,11 +687,38 @@ func build_clip() -> Dictionary:
 	# A fresh file name each save keeps the lab's texture cache honest.
 	sheet_path = project_dir.path_join("sheet_%d.png" % Time.get_ticks_msec())
 	for name in DirAccess.get_files_at(project_dir):
-		if name.begins_with("sheet_") and name.ends_with(".png"):
+		if (name.begins_with("sheet_") or name.begins_with("hand_")) and name.ends_with(".png"):
 			DirAccess.remove_absolute(project_dir.path_join(name))
 	if (packed.image as Image).save_png(sheet_path) != OK:
 		return {}
+	# The front hand packs exactly like the body sheet.
+	var hand_path := ""
+	_ensure_hand_arrays()
+	if mode == "hero_weapon" and front_hand and hand_masks.any(func(m: Variant) -> bool: return m != null):
+		var hands: Array = []
+		for index in range(cut.size()):
+			var mask: Variant = hand_masks[index]
+			var behind := index < track.size() and bool(track[index].behind)
+			if mask == null or behind:
+				hands.append(Image.create_empty(cut[index].get_width(), cut[index].get_height(), false, Image.FORMAT_RGBA8))
+			else:
+				hands.append(Imp.masked(cut[index], mask))
+		var hand_packed := Imp.pack(hands, anchors, Imp.MAX_CELL, cut)
+		hand_path = project_dir.path_join("hand_%d.png" % Time.get_ticks_msec())
+		if hand_packed.is_empty() or (hand_packed.image as Image).save_png(hand_path) != OK:
+			hand_path = ""
 	var scale := float(packed.scale)
+	var cell_track: Array = []
+	if mode == "hero_weapon":
+		var packed_anchor := Vector2(float(packed.anchor[0]), float(packed.anchor[1]))
+		for index in range(cut.size()):
+			var entry: Dictionary = track[index] if index < track.size() else _empty_track()
+			if not entry.grip is Vector2 or not entry.tip is Vector2:
+				cell_track.append(null)
+				continue
+			var grip: Vector2 = (Vector2(entry.grip) - Vector2(anchors[index])) * scale + packed_anchor
+			var along: Vector2 = Vector2(entry.tip) - Vector2(entry.grip)
+			cell_track.append({"grip": [grip.x, grip.y], "angle": rad_to_deg(along.angle()), "length": along.length() * scale, "behind": bool(entry.behind)})
 	var label := _name_edit.text.strip_edges() if _name_edit != null and not _name_edit.text.strip_edges().is_empty() else "Attack"
 	return WeaponClip.normalize({
 		"label": label,
@@ -558,19 +734,26 @@ func build_clip() -> Dictionary:
 		"frame_ms": holds.duplicate(),
 		"attacks": current_attacks(),
 		"fit_hit": true,
+		"track": cell_track,
+		"hand_source": hand_path,
 	})
 
-func save_clip() -> Dictionary:
+func save_clip(target: String = "") -> Dictionary:
+	if target.is_empty():
+		target = "type" if editing_default else "weapon"
 	if cut.is_empty():
 		_fail("Cut out the frames first.")
+		return {}
+	if mode == "hero_weapon" and placed_count() == 0:
+		_fail("Place the weapon in the hands on at least one frame first (Place weapon tool: click the hand, then the far end of the weapon).")
 		return {}
 	_save_project()
 	var clip := build_clip()
 	if clip.is_empty():
 		_fail("Couldn't pack the frames into a sheet.")
 		return {}
-	saved.emit(clip)
-	_set_status("Saved the clip to the weapon.", GOOD)
+	saved.emit(clip, target)
+	_set_status("Saved.", GOOD)
 	visible = false
 	closed.emit()
 	return clip
@@ -582,7 +765,13 @@ func _save_project() -> void:
 	for index in range(cut.size()):
 		var file := "frames/cut_%03d.png" % index
 		(cut[index] as Image).save_png(project_dir.path_join(file))
-		frames.append({"file": file, "anchor": [Vector2(anchors[index]).x, Vector2(anchors[index]).y]})
+		var frame_entry := {"file": file, "anchor": [Vector2(anchors[index]).x, Vector2(anchors[index]).y]}
+		if index < hand_masks.size() and hand_masks[index] is Image:
+			var hand_file := "frames/handmask_%03d.png" % index
+			(hand_masks[index] as Image).save_png(project_dir.path_join(hand_file))
+			frame_entry["hand"] = hand_file
+			frame_entry["hand_painted"] = bool(hand_painted[index])
+		frames.append(frame_entry)
 	var box_list: Array = []
 	for box in boxes:
 		var rect: Rect2i = box
@@ -608,6 +797,9 @@ func _save_project() -> void:
 		"body_height": body_height,
 		"scale": clip_scale,
 		"label": _name_edit.text if _name_edit != null else "Attack",
+		"track": _track_to_json(),
+		"front_hand": front_hand,
+		"reference": {"frames": ref_cut.size(), "offsets": ref_offsets.map(func(v: Vector2) -> Array: return [v.x, v.y]), "scale": ref_scale},
 	})
 
 ## Reopens a saved clip project for editing.
@@ -633,6 +825,9 @@ func load_project(dir: String, new_weapon_id: String, new_hit_seconds: float, ne
 	strip = Rect2i(int(strip_entry[0]), int(strip_entry[1]), int(strip_entry[2]), int(strip_entry[3]))
 	ground_y = int(project.get("ground_y", -1))
 	background = Color.html(str(project.get("background", "ffffff")))
+	if source_image != null and not boxes.is_empty():
+		var layout := Imp.detect_layout(source_image, boxes.size())
+		owners = layout.get("owners", PackedByteArray()) if layout.get("strip") == strip else PackedByteArray()
 	for entry in project.get("frames", []):
 		var image := Image.load_from_file(dir.path_join(str(entry.get("file", ""))))
 		if image == null or image.is_empty():
@@ -651,6 +846,34 @@ func load_project(dir: String, new_weapon_id: String, new_hit_seconds: float, ne
 	for value in project.get("hits", []):
 		hits.append(int(value))
 	mode = str(project.get("mode", "hero"))
+	track = []
+	for entry in project.get("track", []):
+		track.append(_track_from_json(entry))
+	while track.size() < cut.size():
+		track.append(_empty_track())
+	front_hand = bool(project.get("front_hand", true))
+	_ensure_hand_arrays()
+	var frame_entries: Array = project.get("frames", [])
+	for index in range(mini(frame_entries.size(), cut.size())):
+		var entry: Dictionary = frame_entries[index]
+		if str(entry.get("hand", "")).is_empty():
+			continue
+		var mask := Image.load_from_file(dir.path_join(str(entry.hand)))
+		if mask == null or mask.is_empty():
+			continue
+		mask.convert(Image.FORMAT_L8)
+		hand_masks[index] = mask
+		hand_painted[index] = bool(entry.get("hand_painted", false))
+		if not hand_painted[index] and track[index].grip is Vector2:
+			mask.set_meta("grip", track[index].grip)
+		_update_hand_texture(index)
+	var reference: Dictionary = project.get("reference", {})
+	if FileAccess.file_exists(dir.path_join("reference.png")) and int(reference.get("frames", 0)) > 0:
+		_load_reference_frames(dir.path_join("reference.png"))
+		ref_scale = float(reference.get("scale", ref_scale))
+		var offsets: Array = reference.get("offsets", [])
+		for index in range(mini(offsets.size(), ref_offsets.size())):
+			ref_offsets[index] = Vector2(float(offsets[index][0]), float(offsets[index][1]))
 	align_mode = str(project.get("align_mode", "feet"))
 	body_height = float(project.get("body_height", 0.0))
 	clip_scale = float(project.get("scale", 1.0))
@@ -673,6 +896,334 @@ func load_project(dir: String, new_weapon_id: String, new_hit_seconds: float, ne
 	_set_status("Editing %s. Save to update the weapon's clip." % dir.get_file(), GOOD)
 	return true
 
+# ---------- weapon in the hands ----------
+
+## The lab's weapons for the preview picker; `choice` is the id to show first.
+func set_preview_options(options: Array, choice: String = "") -> void:
+	preview_options = options
+	var saved := str(Imp.load_settings().get("preview_weapon", ""))
+	var pick := choice
+	if not saved.is_empty() and (saved == "__bar__" or options.any(func(o: Dictionary) -> bool: return str(o.id) == saved)):
+		pick = saved
+	choose_preview(pick, false)
+
+## Shows `id`'s art in the hands ("__bar__" = a plain bar).
+func choose_preview(id: String, remember: bool = true) -> void:
+	preview_weapon = {}
+	preview_choice = "__bar__"
+	for option in preview_options:
+		if str(option.id) == id or (id.is_empty() and preview_weapon.is_empty() and id != "__bar__"):
+			var texture: Texture2D = option.texture
+			var key := "%d|%s|%s" % [texture.get_instance_id(), str(option.grip), str(option.get("fit", {}).get("tip", ""))]
+			if not _tip_cache.has(key):
+				_tip_cache[key] = WeaponClip.resolve_tip(texture.get_image(), option.grip, option.get("fit", {}))
+			preview_weapon = {"texture": texture, "grip": option.grip, "tip": _tip_cache[key], "fit": option.get("fit", {})}
+			preview_choice = str(option.id)
+			break
+	if remember:
+		var settings := Imp.load_settings()
+		settings["preview_weapon"] = preview_choice
+		Imp.save_settings(settings)
+	_refresh_preview_picker()
+	if _view != null:
+		_view.queue_redraw()
+
+func _refresh_preview_picker() -> void:
+	if _preview_picker == null:
+		return
+	var was := _loading
+	_loading = true
+	_preview_picker.clear()
+	for option in preview_options:
+		_preview_picker.add_item(str(option.label))
+		_preview_picker.set_item_metadata(_preview_picker.item_count - 1, str(option.id))
+		if str(option.id) == preview_choice:
+			_preview_picker.select(_preview_picker.item_count - 1)
+	_preview_picker.add_item("Plain bar")
+	_preview_picker.set_item_metadata(_preview_picker.item_count - 1, "__bar__")
+	if preview_choice == "__bar__":
+		_preview_picker.select(_preview_picker.item_count - 1)
+	_loading = was
+
+# ---------- auto-place and front hand ----------
+
+func _ensure_hand_arrays() -> void:
+	while hand_masks.size() < cut.size():
+		hand_masks.append(null)
+		hand_painted.append(false)
+		hand_textures.append(null)
+	if hand_masks.size() > cut.size():
+		hand_masks.resize(cut.size())
+		hand_painted.resize(cut.size())
+		hand_textures.resize(cut.size())
+
+## Finds the weapon in the ghost and places it in the hands on `frames`
+## (default: every frame), lines the ghost up, marks "behind the body", and
+## makes the front hand. Needs the sheet with the weapon loaded.
+func auto_place(frames: Array = []) -> int:
+	if cut.is_empty() or ref_cut.size() != cut.size():
+		_fail("Load the sheet with the weapon first (Sheet with weapon...), then Auto-place.")
+		return 0
+	if mode != "hero_weapon":
+		set_weapon_free(true)
+	_ensure_hand_arrays()
+	var targets: Array = frames if not frames.is_empty() else range(cut.size())
+	var palette := Imp.body_palette(cut)
+	var placed := 0
+	auto_unsure = auto_unsure.filter(func(i: int) -> bool: return not targets.has(i))
+	for index in targets:
+		var body: Image = cut[index]
+		var offset := Imp.align_reference(body, anchors[index], ref_cut[index], ref_anchors[index], ref_scale, ref_offsets[index])
+		ref_offsets[index] = offset
+		var found := Imp.find_weapon(body, anchors[index], ref_cut[index], ref_anchors[index], ref_scale, offset, palette)
+		if not bool(found.get("ok", false)):
+			auto_unsure.append(index)
+			continue
+		track[index] = {"grip": found.grip, "tip": found.tip, "behind": bool(found.behind)}
+		var length := Vector2(found.grip).distance_to(found.tip)
+		var figure := Imp.figure_height(body)
+		# Short weapons or a "hand" down at the legs usually mean a miss.
+		if length < figure * 0.25 or float(found.grip.y) > Vector2(anchors[index]).y - figure * 0.28:
+			auto_unsure.append(index)
+		hand_painted[index] = false
+		_auto_hand(index)
+		placed += 1
+	auto_unsure.sort()
+	front_hand = true
+	_after_track_changed()
+	_refresh()
+	var message := "Auto-placed the weapon on %d of %d frames." % [placed, targets.size()]
+	if not auto_unsure.is_empty():
+		message += " Check frame%s %s: drag the green (hand) and orange (far end) dots if they're off." % ["" if auto_unsure.size() == 1 else "s", ", ".join(auto_unsure.map(func(i: int) -> String: return str(i + 1)))]
+	else:
+		message += " Step through the frames (Q/E) and drag any dot that's off."
+	_set_status(message, GOOD if auto_unsure.is_empty() else AMBER)
+	return placed
+
+## Rebuilds the front hand of `index` around its grip.
+func _auto_hand(index: int) -> void:
+	_ensure_hand_arrays()
+	var entry: Dictionary = track[index]
+	if not entry.grip is Vector2:
+		hand_masks[index] = null
+	else:
+		hand_masks[index] = Imp.hand_mask(cut[index], entry.grip)
+		hand_masks[index].set_meta("grip", entry.grip)
+	_update_hand_texture(index)
+
+func _update_hand_texture(index: int) -> void:
+	var mask: Variant = hand_masks[index]
+	if mask == null:
+		hand_textures[index] = null
+		return
+	var picture := Imp.masked(cut[index], mask)
+	if hand_textures[index] is ImageTexture and (hand_textures[index] as ImageTexture).get_size() == Vector2(picture.get_size()):
+		(hand_textures[index] as ImageTexture).update(picture)
+	else:
+		hand_textures[index] = ImageTexture.create_from_image(picture)
+
+## Paints (or with `erase`, removes) the front hand of `index` at `point`.
+func paint_hand(index: int, point: Vector2, erase: bool = false) -> void:
+	_ensure_hand_arrays()
+	if index < 0 or index >= cut.size():
+		return
+	if hand_masks[index] == null:
+		hand_masks[index] = Image.create_empty(cut[index].get_width(), cut[index].get_height(), false, Image.FORMAT_L8)
+	Imp.paint_mask(hand_masks[index], point, brush, 0 if erase else 255)
+	hand_painted[index] = true
+	_update_hand_texture(index)
+	if _view != null:
+		_view.queue_redraw()
+
+func reset_hand(index: int) -> void:
+	if index < 0 or index >= cut.size():
+		return
+	_ensure_hand_arrays()
+	hand_painted[index] = false
+	_auto_hand(index)
+	if _view != null:
+		_view.queue_redraw()
+
+func set_front_hand(on: bool) -> void:
+	front_hand = on
+	if _view != null:
+		_view.queue_redraw()
+
+func _empty_track() -> Dictionary:
+	return {"grip": null, "tip": null, "behind": false}
+
+func _track_to_json() -> Array:
+	var result: Array = []
+	for entry in track:
+		result.append({"grip": [entry.grip.x, entry.grip.y] if entry.grip is Vector2 else null, "tip": [entry.tip.x, entry.tip.y] if entry.tip is Vector2 else null, "behind": bool(entry.behind)})
+	return result
+
+func _track_from_json(entry: Variant) -> Dictionary:
+	var result := _empty_track()
+	if entry is Dictionary:
+		for key in ["grip", "tip"]:
+			if entry.get(key) is Array and entry[key].size() == 2:
+				result[key] = Vector2(float(entry[key][0]), float(entry[key][1]))
+		result["behind"] = bool(entry.get("behind", false))
+	return result
+
+## Frames with both the grip and the far end placed.
+func placed_count() -> int:
+	var count := 0
+	for entry in track:
+		if entry.grip is Vector2 and entry.tip is Vector2:
+			count += 1
+	return count
+
+## "This sheet has no weapon": the game draws each weapon's own picture.
+func set_weapon_free(on: bool) -> void:
+	mode = "hero_weapon" if on else "hero"
+	if on and track.size() != cut.size():
+		track = []
+		for _i in range(cut.size()):
+			track.append(_empty_track())
+	_union = _compute_union()
+	if on and selected < track.size():
+		tool = "weapon"
+		weapon_step = "grip" if not (track[selected].grip is Vector2) else "tip"
+	_refresh()
+
+func set_grip(index: int, point: Vector2) -> void:
+	if index >= 0 and index < track.size():
+		track[index]["grip"] = point
+		_after_track_changed()
+
+func set_tip(index: int, point: Vector2) -> void:
+	if index >= 0 and index < track.size():
+		track[index]["tip"] = point
+		_after_track_changed()
+
+func set_behind(index: int, on: bool) -> void:
+	if index >= 0 and index < track.size():
+		track[index]["behind"] = on
+		_after_track_changed()
+
+func copy_previous_track(index: int) -> void:
+	if index <= 0 or index >= track.size():
+		return
+	# Keep the weapon where it was relative to the feet.
+	var shift: Vector2 = Vector2(anchors[index]) - Vector2(anchors[index - 1])
+	var previous: Dictionary = track[index - 1]
+	track[index] = {"grip": previous.grip + shift if previous.grip is Vector2 else null, "tip": previous.tip + shift if previous.tip is Vector2 else null, "behind": bool(previous.behind)}
+	_after_track_changed()
+
+func clear_track(index: int) -> void:
+	if index >= 0 and index < track.size():
+		track[index] = _empty_track()
+		weapon_step = "grip"
+		_after_track_changed()
+
+## One click of the Place weapon tool: the hand first, then the far end;
+## after the far end it moves on to the next frame.
+func weapon_click(point: Vector2) -> void:
+	if selected >= track.size():
+		return
+	if weapon_step == "grip" or not (track[selected].grip is Vector2):
+		track[selected]["grip"] = point
+		track[selected]["tip"] = null
+		weapon_step = "tip"
+		_set_status("Frame %d: now click the far end of the weapon (the tip of the head or blade)." % (selected + 1))
+	else:
+		track[selected]["tip"] = point
+		weapon_step = "grip"
+		if selected < track.size() - 1:
+			selected += 1
+			_set_status("Weapon placed. Frame %d: click the hand gripping the weapon." % (selected + 1), GOOD)
+		else:
+			_set_status("Weapon placed on %d of %d frames. Press Space to play it." % [placed_count(), track.size()], GOOD)
+	_after_track_changed()
+
+func _after_track_changed() -> void:
+	_ensure_hand_arrays()
+	for index in range(mini(track.size(), cut.size())):
+		var entry: Dictionary = track[index]
+		var grip: Variant = entry.grip
+		var key: Variant = hand_masks[index].get_meta("grip") if hand_masks[index] is Image and hand_masks[index].has_meta("grip") else null
+		if not bool(hand_painted[index]) and grip != key:
+			if grip is Vector2:
+				hand_masks[index] = Imp.hand_mask(cut[index], grip)
+				hand_masks[index].set_meta("grip", grip)
+			else:
+				hand_masks[index] = null
+			_update_hand_texture(index)
+	if _view != null:
+		_view.queue_redraw()
+	_refresh_frame_controls()
+
+## Loads the same animation with the weapon drawn in, as a ghost to click on.
+func open_reference(path: String) -> bool:
+	if cut.is_empty():
+		return _fail("Cut out the weapon-free frames first, then load the sheet with the weapon.")
+	var image := Image.load_from_file(path)
+	if image == null or image.is_empty():
+		return _fail("Couldn't open %s as an image." % path.get_file())
+	image.convert(Image.FORMAT_RGBA8)
+	if not project_dir.is_empty():
+		image.save_png(project_dir.path_join("reference.png"))
+	if not _load_reference_frames_from_image(image):
+		return false
+	if mode != "hero_weapon":
+		set_weapon_free(true)
+	_after_frames_changed()
+	_refresh()
+	_set_status("Reference loaded: it shows as a ghost behind each frame. Click the hand, then the far end of its weapon.", GOOD)
+	return true
+
+func _load_reference_frames(path: String) -> bool:
+	var image := Image.load_from_file(path)
+	if image == null or image.is_empty():
+		return false
+	image.convert(Image.FORMAT_RGBA8)
+	return _load_reference_frames_from_image(image)
+
+func _load_reference_frames_from_image(image: Image) -> bool:
+	var layout := Imp.detect_layout(image, cut.size())
+	var boxes_found: Array = layout.get("boxes", [])
+	if boxes_found.size() != cut.size():
+		return _fail("The reference sheet has %d poses but this animation has %d frames." % [boxes_found.size(), cut.size()])
+	ref_cut = []
+	ref_textures = []
+	ref_anchors = []
+	ref_offsets = []
+	var ground := int(layout.get("ground_y", -1))
+	for index in range(boxes_found.size()):
+		var box: Rect2i = boxes_found[index]
+		var options := cut_options()
+		options["method"] = "solid"
+		options["background"] = layout.background
+		options["owners"] = layout.get("owners", PackedByteArray())
+		options["owner_strip"] = layout.strip
+		options["frame"] = index
+		var frame := Imp.cut_frame(image, box, options)
+		ref_cut.append(frame)
+		ref_textures.append(ImageTexture.create_from_image(frame))
+		ref_anchors.append(Imp.feet_anchor(frame, float(ground - box.position.y) if ground >= 0 else -1.0))
+		ref_offsets.append(Vector2.ZERO)
+	# ChatGPT edits come back at a slightly different size: match the heights
+	# of the hero (not the weapon) across frames.
+	var palette := Imp.body_palette(cut)
+	var ratios: Array = []
+	for index in range(cut.size()):
+		var ref_height := Imp.palette_height(ref_cut[index], palette)
+		var body_height_px := Imp.palette_height(cut[index], palette)
+		if ref_height > 0.0 and body_height_px > 0.0:
+			ratios.append(body_height_px / ref_height)
+	ratios.sort()
+	ref_scale = clampf(float(ratios[ratios.size() / 2]), 0.3, 3.0) if not ratios.is_empty() else 1.0
+	return true
+
+func nudge_reference(index: int, delta: Vector2, all_frames: bool = false) -> void:
+	for other in range(ref_offsets.size()):
+		if other == index or all_frames:
+			ref_offsets[other] = Vector2(ref_offsets[other]) + delta
+	if _view != null:
+		_view.queue_redraw()
+
 # ---------- view ----------
 
 func select_frame(index: int) -> void:
@@ -680,6 +1231,8 @@ func select_frame(index: int) -> void:
 	if count == 0:
 		return
 	selected = posmod(index, count)
+	if selected < track.size():
+		weapon_step = "tip" if track[selected].grip is Vector2 and not (track[selected].tip is Vector2) else "grip"
 	_refresh_frame_controls()
 	_view.queue_redraw()
 
@@ -700,10 +1253,16 @@ func _compute_union() -> Rect2:
 		var anchor: Vector2 = anchors[index]
 		low = Vector2(minf(low.x, -anchor.x), minf(low.y, -anchor.y))
 		high = Vector2(maxf(high.x, size.x - anchor.x), maxf(high.y, size.y - anchor.y))
+		# Keep the ghost (and its raised weapon) in view too.
+		if mode == "hero_weapon" and index < ref_cut.size():
+			var ghost_low: Vector2 = Vector2(ref_offsets[index]) - Vector2(ref_anchors[index]) * ref_scale
+			var ghost_high: Vector2 = ghost_low + Vector2((ref_cut[index] as Image).get_size()) * ref_scale
+			low = Vector2(minf(low.x, ghost_low.x), minf(low.y, ghost_low.y))
+			high = Vector2(maxf(high.x, ghost_high.x), maxf(high.y, ghost_high.y))
 	return Rect2(low, high - low)
 
 ## Where the shared anchor sits in the view and the view's zoom.
-func _align_transform() -> Dictionary:
+func _fit_transform() -> Dictionary:
 	var rect := Rect2(Vector2.ZERO, _view.size)
 	if not _union.has_area():
 		return {"scale": 1.0, "pivot": rect.size * 0.5}
@@ -711,6 +1270,30 @@ func _align_transform() -> Dictionary:
 	var s := minf(room.x / _union.size.x, room.y / _union.size.y)
 	var pivot := Vector2(20.0, 20.0) + (room - _union.size * s) * 0.5 - _union.position * s
 	return {"scale": s, "pivot": pivot}
+
+## The fitted view with the user's zoom and pan on top.
+func _align_transform() -> Dictionary:
+	var fit := _fit_transform()
+	var center := _view.size * 0.5
+	return {"scale": float(fit.scale) * view_zoom, "pivot": center + (Vector2(fit.pivot) - center) * view_zoom + view_pan}
+
+## Zooms by `factor` keeping the point under `at` (view pixels) still.
+func zoom_view(factor: float, at: Vector2) -> void:
+	var before := _align_transform()
+	var new_zoom := clampf(view_zoom * factor, 0.2, 8.0)
+	var applied := new_zoom / view_zoom
+	var target: Vector2 = at - (at - Vector2(before.pivot)) * applied
+	view_zoom = new_zoom
+	var fit := _fit_transform()
+	var center := _view.size * 0.5
+	view_pan = target - (center + (Vector2(fit.pivot) - center) * view_zoom)
+	_view.queue_redraw()
+
+func fit_view() -> void:
+	view_zoom = 1.0
+	view_pan = Vector2.ZERO
+	if _view != null:
+		_view.queue_redraw()
 
 func _draw_view() -> void:
 	var rect := Rect2(Vector2.ZERO, _view.size)
@@ -778,8 +1361,17 @@ func _draw_align() -> void:
 		shown = preview_frame_at(play_time)
 	if not playing and onion and selected > 0:
 		_draw_cut_frame(selected - 1, pivot, s, ONION)
+	if not playing and show_ref and mode == "hero_weapon":
+		_draw_reference(selected, pivot, s)
+	if shown >= 0 and mode == "hero_weapon":
+		_draw_weapon(shown, pivot, s, true)
 	if shown >= 0:
 		_draw_cut_frame(shown, pivot, s, Color.WHITE)
+	if shown >= 0 and mode == "hero_weapon":
+		_draw_weapon(shown, pivot, s, false)
+		_draw_hand(shown, pivot, s)
+		if not playing:
+			_draw_track_handles(shown, pivot, s)
 	# Anchor crosshair: the ground line (hero) or grip (weapon).
 	_view.draw_line(Vector2(0, pivot.y), Vector2(rect.size.x, pivot.y), Color(STRIP_LINE, 0.7), 1.0)
 	_view.draw_line(Vector2(pivot.x, pivot.y - 18), Vector2(pivot.x, pivot.y + 18), Color(STRIP_LINE, 0.9), 2.0)
@@ -790,11 +1382,75 @@ func _draw_align() -> void:
 		caption = "playing the combo  " + caption
 	elif tool == "erase":
 		caption += "   eraser: drag to erase stray bits"
+	elif tool == "weapon":
+		caption += "   place weapon: click the %s" % ("hand gripping it" if weapon_step == "grip" else "far end of the weapon")
+	elif tool == "reference":
+		caption += "   drag the ghost to line it up with this frame"
+	elif tool == "hand":
+		caption += "   front hand: paint the fist that wraps the weapon (Shift: erase)"
 	else:
 		caption += "   drag to move the frame, click to put that point on the %s" % ("ground mark" if mode == "hero" else "grip mark")
 	_view.draw_string(font, Vector2(12, rect.size.y - 12), caption, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, MUTED)
 	if not playing and hits.has(selected):
 		_view.draw_string(font, Vector2(12, 22), "HIT FRAME", HORIZONTAL_ALIGNMENT_LEFT, -1, 15, BAD)
+
+func _frame_origin(index: int, pivot: Vector2, s: float) -> Vector2:
+	return pivot - Vector2(anchors[index]) * s
+
+func _draw_reference(index: int, pivot: Vector2, s: float) -> void:
+	if index < 0 or index >= ref_textures.size():
+		return
+	var texture: Texture2D = ref_textures[index]
+	var scale := s * ref_scale
+	var origin := pivot + Vector2(ref_offsets[index]) * s - Vector2(ref_anchors[index]) * scale
+	_view.draw_texture_rect(texture, Rect2(origin, Vector2(texture.get_size()) * scale), false, Color(1.0, 0.85, 0.55, 0.45))
+
+## The lab's weapon (or a stand-in bar) in the hands of frame `index`.
+func _draw_weapon(index: int, pivot: Vector2, s: float, behind_pass: bool) -> void:
+	if index < 0 or index >= track.size():
+		return
+	var entry: Dictionary = track[index]
+	if bool(entry.behind) != behind_pass or not (entry.grip is Vector2) or not (entry.tip is Vector2):
+		return
+	var origin := _frame_origin(index, pivot, s)
+	var grip: Vector2 = entry.grip
+	var tip: Vector2 = entry.tip
+	var texture: Texture2D = preview_weapon.get("texture")
+	if texture == null:
+		_view.draw_line(origin + grip * s, origin + tip * s, Color("c9d3dc"), maxf(3.0, 6.0 * s))
+		return
+	var along := tip - grip
+	var clip := {"track": [{"grip": [grip.x, grip.y], "angle": rad_to_deg(along.angle()), "length": along.length(), "behind": false}]}
+	var placed := WeaponClip.hand_transform(clip, 0, Vector2(texture.get_size()), preview_weapon.get("grip", Vector2(0.5, 0.75)), preview_weapon.get("tip", Vector2.ZERO), preview_weapon.get("fit", {}))
+	var view := Transform2D(0.0, Vector2(s, s), 0.0, origin) * placed
+	_view.draw_set_transform_matrix(view)
+	_view.draw_texture(texture, -Vector2(texture.get_size()) * 0.5)
+	_view.draw_set_transform_matrix(Transform2D.IDENTITY)
+
+## The gripping hand, drawn over the weapon (front frames only).
+func _draw_hand(index: int, pivot: Vector2, s: float) -> void:
+	if not front_hand or index < 0 or index >= hand_textures.size() or hand_textures[index] == null:
+		return
+	if index < track.size() and bool(track[index].behind):
+		return
+	var texture: Texture2D = hand_textures[index]
+	var origin := _frame_origin(index, pivot, s)
+	_view.draw_texture_rect(texture, Rect2(origin, Vector2(texture.get_size()) * s), false)
+	if tool == "hand" and not playing:
+		# Tint the hand so it's clear what's painted.
+		_view.draw_texture_rect(texture, Rect2(origin, Vector2(texture.get_size()) * s), false, Color(0.3, 0.9, 1.0, 0.45))
+
+func _draw_track_handles(index: int, pivot: Vector2, s: float) -> void:
+	if index < 0 or index >= track.size():
+		return
+	var entry: Dictionary = track[index]
+	var origin := _frame_origin(index, pivot, s)
+	if entry.grip is Vector2 and entry.tip is Vector2:
+		_view.draw_line(origin + Vector2(entry.grip) * s, origin + Vector2(entry.tip) * s, Color(AMBER, 0.8), 1.5)
+	if entry.grip is Vector2:
+		_view.draw_circle(origin + Vector2(entry.grip) * s, 6.0, Color(STRIP_LINE, 0.9))
+	if entry.tip is Vector2:
+		_view.draw_circle(origin + Vector2(entry.tip) * s, 6.0, Color(AMBER, 0.9))
 
 func _draw_cut_frame(index: int, pivot: Vector2, s: float, tint: Color) -> void:
 	if index < 0 or index >= cut_textures.size():
@@ -814,6 +1470,22 @@ func _edge_positions() -> Array:
 
 func _on_view_input(event: InputEvent) -> void:
 	if step == "align" and not cut.is_empty():
+		# Wheel zooms, right- or middle-drag moves the view.
+		if event is InputEventMouseButton:
+			var button := event as InputEventMouseButton
+			if button.pressed and button.button_index == MOUSE_BUTTON_WHEEL_UP:
+				zoom_view(1.15, button.position)
+				return
+			if button.pressed and button.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+				zoom_view(1.0 / 1.15, button.position)
+				return
+			if button.button_index == MOUSE_BUTTON_RIGHT or button.button_index == MOUSE_BUTTON_MIDDLE:
+				_pan_drag = button.pressed
+				return
+		if event is InputEventMouseMotion and _pan_drag:
+			view_pan += (event as InputEventMouseMotion).relative
+			_view.queue_redraw()
+			return
 		_align_input(event)
 	elif source_kind == "sheet" and source_image != null:
 		_slice_input(event)
@@ -874,6 +1546,7 @@ func move_strip(edge: String, y: int) -> void:
 		bottom = clampi(y, top + 8, source_image.get_height())
 		ground_y = bottom
 	strip = Rect2i(strip.position.x, top, strip.size.x, bottom - top)
+	owners = PackedByteArray()
 	for index in range(boxes.size()):
 		var box: Rect2i = boxes[index]
 		boxes[index] = Rect2i(box.position.x, top, box.size.x, bottom - top)
@@ -896,6 +1569,19 @@ func _align_input(event: InputEvent) -> void:
 	if playing:
 		return
 	var frame_origin := pivot - Vector2(anchors[selected]) * s
+	if tool == "weapon" or tool == "reference":
+		_weapon_input(event, frame_origin, s)
+		return
+	if tool == "hand":
+		if event is InputEventMouseButton and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
+			var button := event as InputEventMouseButton
+			_drag = {"painting": true} if button.pressed else {}
+			if button.pressed:
+				paint_hand(selected, (button.position - frame_origin) / s, button.shift_pressed)
+		elif event is InputEventMouseMotion and not _drag.is_empty():
+			var motion := event as InputEventMouseMotion
+			paint_hand(selected, (motion.position - frame_origin) / s, motion.shift_pressed)
+		return
 	if event is InputEventMouseButton and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
 		var button := event as InputEventMouseButton
 		if button.pressed:
@@ -920,6 +1606,32 @@ func _align_input(event: InputEvent) -> void:
 			_view.queue_redraw()
 			_refresh_frame_controls()
 
+func _weapon_input(event: InputEvent, frame_origin: Vector2, s: float) -> void:
+	if event is InputEventMouseButton and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
+		var button := event as InputEventMouseButton
+		if not button.pressed:
+			if tool == "weapon" and not _drag.is_empty() and not bool(_drag.moved) and str(_drag.get("handle", "")) == "":
+				weapon_click((button.position - frame_origin) / s)
+			_drag = {}
+			return
+		_drag = {"start": button.position, "last": button.position, "moved": false, "handle": ""}
+		if tool == "weapon" and selected < track.size():
+			for key in ["grip", "tip"]:
+				var point: Variant = track[selected][key]
+				if point is Vector2 and button.position.distance_to(frame_origin + Vector2(point) * s) < 9.0:
+					_drag["handle"] = key
+	elif event is InputEventMouseMotion and not _drag.is_empty():
+		var motion := event as InputEventMouseMotion
+		if motion.position.distance_to(_drag.start) > 3.0:
+			_drag["moved"] = true
+		var delta: Vector2 = (motion.position - Vector2(_drag.last)) / s
+		_drag["last"] = motion.position
+		if tool == "reference" and bool(_drag.moved):
+			nudge_reference(selected, delta, motion.shift_pressed)
+		elif tool == "weapon" and str(_drag.handle) != "":
+			track[selected][str(_drag.handle)] = Vector2(track[selected][str(_drag.handle)]) + delta
+			_after_track_changed()
+
 # ---------- UI ----------
 
 func _build() -> void:
@@ -941,6 +1653,7 @@ func _build() -> void:
 	var header := HBoxContainer.new()
 	column.add_child(header)
 	var title := Label.new()
+	_title = title
 	title.text = "CLIP IMPORTER"
 	title.add_theme_color_override("font_color", AMBER)
 	title.add_theme_font_size_override("font_size", 18)
@@ -972,6 +1685,25 @@ func _build() -> void:
 	_view.gui_input.connect(_on_view_input)
 	_view.resized.connect(func() -> void: _view.queue_redraw())
 	left.add_child(_view)
+	var zoom_row := HBoxContainer.new()
+	left.add_child(zoom_row)
+	var zoom_out := _button("-")
+	zoom_out.tooltip_text = "Zoom out (mouse wheel, or -)"
+	zoom_out.pressed.connect(func() -> void: zoom_view(0.8, _view.size * 0.5))
+	zoom_row.add_child(zoom_out)
+	var zoom_in := _button("+")
+	zoom_in.tooltip_text = "Zoom in (mouse wheel, or +)"
+	zoom_in.pressed.connect(func() -> void: zoom_view(1.25, _view.size * 0.5))
+	zoom_row.add_child(zoom_in)
+	var fit_button := _button("Fit")
+	fit_button.tooltip_text = "Show the whole frame, ghost and weapon (F)"
+	fit_button.pressed.connect(fit_view)
+	zoom_row.add_child(fit_button)
+	var zoom_hint := Label.new()
+	zoom_hint.text = "Mouse wheel zooms, right-drag moves the view, F fits."
+	zoom_hint.add_theme_font_size_override("font_size", 12)
+	zoom_hint.add_theme_color_override("font_color", MUTED)
+	zoom_row.add_child(zoom_hint)
 	_strip_scroll = ScrollContainer.new()
 	_strip_scroll.custom_minimum_size = Vector2(0, 112)
 	_strip_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -991,6 +1723,7 @@ func _build() -> void:
 	side.add_child(_build_slice_section())
 	side.add_child(_build_cut_section())
 	side.add_child(_build_align_section())
+	side.add_child(_build_weapon_section())
 	side.add_child(_build_timing_section())
 	side.add_child(_build_save_section())
 	_sheet_dialog = _file_dialog(FileDialog.FILE_MODE_OPEN_FILE, "Open a pose sheet", PackedStringArray(["*.png, *.jpg, *.jpeg, *.webp ; Images"]))
@@ -999,6 +1732,8 @@ func _build() -> void:
 	_frames_dialog.files_selected.connect(func(paths: PackedStringArray) -> void: open_frames(Array(paths)))
 	_video_dialog = _file_dialog(FileDialog.FILE_MODE_OPEN_FILE, "Open a video", PackedStringArray(["*.mp4, *.webm, *.mov, *.gif, *.mkv, *.avi, *.m4v ; Videos"]))
 	_video_dialog.file_selected.connect(func(path: String) -> void: open_video(path))
+	_ref_dialog = _file_dialog(FileDialog.FILE_MODE_OPEN_FILE, "Open the same animation with the weapon drawn in", PackedStringArray(["*.png, *.jpg, *.jpeg, *.webp ; Images"]))
+	_ref_dialog.file_selected.connect(func(path: String) -> void: open_reference(path))
 
 func _build_source_section() -> Control:
 	var section := _section("1  SOURCE", "source")
@@ -1120,7 +1855,7 @@ func _build_align_section() -> Control:
 	body.add_child(_align_picker)
 	var tools := HBoxContainer.new()
 	body.add_child(tools)
-	var group := ButtonGroup.new()
+	var group := _tool_group
 	_tool_anchor = _button("Move / anchor")
 	_tool_anchor.toggle_mode = true
 	_tool_anchor.button_group = group
@@ -1168,6 +1903,129 @@ func _build_align_section() -> Control:
 	reset_button.tooltip_text = "Cut this frame out again (undoes erasing)."
 	reset_button.pressed.connect(func() -> void: recut_frame(selected))
 	row2.add_child(reset_button)
+	return section
+
+func _build_weapon_section() -> Control:
+	var section := _section("WEAPON IN THE HANDS", "weapon")
+	var body: VBoxContainer = section.get_meta("body")
+	_weapon_free_check = CheckBox.new()
+	_weapon_free_check.text = "This sheet has no weapon: draw each weapon's own art in the hands"
+	_weapon_free_check.tooltip_text = "For weapon-free animations. You mark where the hands hold the weapon in each frame, and every weapon that uses this animation shows its own picture there."
+	_weapon_free_check.toggled.connect(func(on: bool) -> void:
+		if not _loading:
+			set_weapon_free(on))
+	body.add_child(_weapon_free_check)
+	_weapon_controls = VBoxContainer.new()
+	body.add_child(_weapon_controls)
+	_weapon_controls.add_child(_note("1. Load the same animation with the weapon drawn in: it shows as a faint ghost. 2. With Place weapon, click the hand gripping the weapon, then the far end of the weapon (tip of the head or blade). It moves on to the next frame by itself. Drag the green and amber dots to adjust."))
+	var ref_row := HBoxContainer.new()
+	_weapon_controls.add_child(ref_row)
+	var ref_button := _button("Sheet with weapon...")
+	ref_button.tooltip_text = "The original sheet (with the weapon) the weapon-free one was made from."
+	ref_button.pressed.connect(func() -> void: _ref_dialog.popup_centered_ratio(0.7))
+	ref_row.add_child(ref_button)
+	_show_ref_check = CheckBox.new()
+	_show_ref_check.text = "Show ghost"
+	_show_ref_check.button_pressed = true
+	_show_ref_check.toggled.connect(func(on: bool) -> void:
+		show_ref = on
+		_view.queue_redraw())
+	ref_row.add_child(_show_ref_check)
+	_ref_scale_spin = _spin(0.2, 5.0, 0.01)
+	_ref_scale_spin.tooltip_text = "Size of the ghost. Matched to the weapon-free frames automatically."
+	_ref_scale_spin.value_changed.connect(func(value: float) -> void:
+		if not _loading:
+			ref_scale = value
+			_view.queue_redraw())
+	ref_row.add_child(_labeled("Ghost size", _ref_scale_spin))
+	_ref_status = Label.new()
+	_ref_status.add_theme_font_size_override("font_size", 12)
+	_ref_status.add_theme_color_override("font_color", MUTED)
+	_weapon_controls.add_child(_ref_status)
+	var auto_row := HBoxContainer.new()
+	_weapon_controls.add_child(auto_row)
+	var auto_button := _button("Auto-place all frames")
+	_amber(auto_button)
+	auto_button.tooltip_text = "Compares the two sheets to find the weapon: puts the grip in the fist, the far end at the tip, marks frames where it's behind the body, and makes the front hand. Then check each frame."
+	auto_button.pressed.connect(func() -> void: auto_place())
+	auto_row.add_child(auto_button)
+	var auto_one := _button("This frame")
+	auto_one.tooltip_text = "Auto-place just the selected frame again."
+	auto_one.pressed.connect(func() -> void: auto_place([selected]))
+	auto_row.add_child(auto_one)
+	_auto_status = Label.new()
+	_auto_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_auto_status.custom_minimum_size = Vector2(340, 0)
+	_auto_status.add_theme_font_size_override("font_size", 12)
+	_auto_status.add_theme_color_override("font_color", AMBER)
+	_weapon_controls.add_child(_auto_status)
+	var tools := HBoxContainer.new()
+	_weapon_controls.add_child(tools)
+	_tool_weapon = _button("Place weapon")
+	_tool_weapon.toggle_mode = true
+	_tool_weapon.button_group = _tool_group
+	_tool_weapon.pressed.connect(func() -> void:
+		tool = "weapon"
+		_view.queue_redraw())
+	tools.add_child(_tool_weapon)
+	_tool_reference = _button("Move ghost")
+	_tool_reference.toggle_mode = true
+	_tool_reference.button_group = _tool_group
+	_tool_reference.tooltip_text = "Drag the ghost to line it up with this frame. Hold Shift to move it on every frame."
+	_tool_reference.pressed.connect(func() -> void:
+		tool = "reference"
+		_view.queue_redraw())
+	tools.add_child(_tool_reference)
+	var row := HBoxContainer.new()
+	_weapon_controls.add_child(row)
+	_behind_check = CheckBox.new()
+	_behind_check.text = "Behind the body"
+	_behind_check.tooltip_text = "Draw the weapon behind the hero in this frame (for example raised behind the head)."
+	_behind_check.toggled.connect(func(on: bool) -> void:
+		if not _loading:
+			set_behind(selected, on))
+	row.add_child(_behind_check)
+	var copy_button := _button("Same as previous")
+	copy_button.pressed.connect(func() -> void: copy_previous_track(selected))
+	row.add_child(copy_button)
+	var clear_button := _button("Clear")
+	clear_button.pressed.connect(func() -> void: clear_track(selected))
+	row.add_child(clear_button)
+	var hand_row := HBoxContainer.new()
+	_weapon_controls.add_child(hand_row)
+	_front_hand_check = CheckBox.new()
+	_front_hand_check.text = "Front hand over the weapon"
+	_front_hand_check.button_pressed = true
+	_front_hand_check.tooltip_text = "Draws the fist that grips the weapon on top of it, so the fingers wrap the handle and the rest of the body stays behind."
+	_front_hand_check.toggled.connect(func(on: bool) -> void:
+		if not _loading:
+			set_front_hand(on))
+	hand_row.add_child(_front_hand_check)
+	_tool_hand = _button("Hand brush")
+	_tool_hand.toggle_mode = true
+	_tool_hand.button_group = _tool_group
+	_tool_hand.tooltip_text = "Paint the parts of the hero drawn over the weapon on this frame. Hold Shift to erase. Brush size is the eraser Size above."
+	_tool_hand.pressed.connect(func() -> void:
+		tool = "hand"
+		_view.queue_redraw())
+	hand_row.add_child(_tool_hand)
+	var reset_hand_button := _button("Auto hand")
+	reset_hand_button.tooltip_text = "Redo this frame's front hand around the grip."
+	reset_hand_button.pressed.connect(func() -> void: reset_hand(selected))
+	hand_row.add_child(reset_hand_button)
+	var preview_row := HBoxContainer.new()
+	_weapon_controls.add_child(preview_row)
+	_preview_picker = OptionButton.new()
+	_preview_picker.tooltip_text = "Only a preview while you place it. In the game every weapon using this animation shows its own art."
+	_preview_picker.item_selected.connect(func(index: int) -> void:
+		if not _loading:
+			choose_preview(str(_preview_picker.get_item_metadata(index))))
+	preview_row.add_child(_labeled("Preview with", _preview_picker))
+	_weapon_controls.add_child(_note("The preview weapon is only for checking the fit: in the game each weapon that uses this animation shows its own art, with its grip (from its Placement section) in the hand."))
+	_weapon_status = Label.new()
+	_weapon_status.add_theme_font_size_override("font_size", 12)
+	_weapon_status.add_theme_color_override("font_color", AMBER)
+	_weapon_controls.add_child(_weapon_status)
 	return section
 
 func _build_timing_section() -> Control:
@@ -1226,9 +2084,16 @@ func _build_save_section() -> Control:
 		_mode_picker.add_item(str(WeaponClip.MODE_LABELS[id]))
 	_mode_picker.tooltip_text = "Hero attack: the frames show the whole hero and replace its attack animation (the held weapon hides while it plays). Weapon frames: the frames show only the weapon and replace its picture during the swing."
 	_mode_picker.item_selected.connect(func(index: int) -> void:
-		mode = str(WeaponClip.MODES[index])
-		_refresh_frame_controls()
-		_view.queue_redraw())
+		if _loading:
+			return
+		var picked := str(WeaponClip.MODES[index])
+		if picked == "hero_weapon":
+			set_weapon_free(true)
+		else:
+			mode = picked
+			if tool == "weapon" or tool == "reference":
+				tool = "anchor"
+			_refresh())
 	body.add_child(_mode_picker)
 	var grid := GridContainer.new()
 	grid.columns = 4
@@ -1251,10 +2116,41 @@ func _build_save_section() -> Control:
 	_name_edit.text = "Attack"
 	_name_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	body.add_child(_labeled("Name", _name_edit))
-	_save_button = _button("Save clip to weapon")
-	_amber(_save_button)
-	_save_button.pressed.connect(func() -> void: save_clip())
+	_save_default_button = _button("Save as type default")
+	_amber(_save_default_button)
+	_save_default_button.tooltip_text = "Every weapon of this type that uses its type's default plays this animation."
+	_save_default_button.pressed.connect(func() -> void: save_clip("type"))
+	body.add_child(_save_default_button)
+	_save_button = _button("Save for this weapon only")
+	_save_button.pressed.connect(func() -> void:
+		if purpose == "hero":
+			save_hero()
+		else:
+			save_clip("weapon"))
 	body.add_child(_save_button)
+	# Hero purpose: which of the hero's animations these frames replace.
+	var hero_box := VBoxContainer.new()
+	_hero_box = hero_box
+	body.add_child(hero_box)
+	body.move_child(hero_box, 1)
+	_hero_picker = OptionButton.new()
+	for pair in [["idle", "Idle (standing)"], ["walk", "Walk"], ["attack", "Attack (the normal attack, for weapons without their own)"]]:
+		_hero_picker.add_item(str(pair[1]))
+		_hero_picker.set_item_metadata(_hero_picker.item_count - 1, pair[0])
+	_hero_picker.item_selected.connect(func(index: int) -> void:
+		if not _loading:
+			hero_target = str(_hero_picker.get_item_metadata(index))
+			_refresh())
+	hero_box.add_child(_labeled("Hero's", _hero_picker))
+	_still_check = CheckBox.new()
+	_still_check.text = "Only the selected frame (a still pose)"
+	_still_check.tooltip_text = "Use just the frame selected in the strip, e.g. a standing frame from a walk sheet as the idle."
+	_still_check.toggled.connect(func(on: bool) -> void:
+		if not _loading:
+			still_only = on
+			_refresh())
+	hero_box.add_child(_still_check)
+	hero_box.add_child(_note("Replaces the hero's art everywhere in the game. The old files are backed up in art/side-view/backups/. Hero height (frame 1) sets the size, and the feet line up with the old art. Keep the hands empty: weapons are drawn into them."))
 	return section
 
 func _refresh() -> void:
@@ -1268,11 +2164,56 @@ func _refresh() -> void:
 	_sections["cut"].visible = not source_kind.is_empty() and not aligning
 	_sections["align"].visible = has_cut
 	_sections["timing"].visible = has_cut
+	_sections["weapon"].visible = aligning and purpose != "hero"
+	var hero := purpose == "hero"
+	_start_check.visible = not hero
+	_hit_check.visible = not hero
+	_attacks_label.visible = not hero
+	_hero_box.visible = hero
+	_mode_picker.visible = not hero
+	for index in range(_hero_picker.item_count):
+		if str(_hero_picker.get_item_metadata(index)) == hero_target:
+			_hero_picker.select(index)
+	_still_check.button_pressed = still_only
+	_weapon_free_check.button_pressed = mode == "hero_weapon"
+	_weapon_controls.visible = mode == "hero_weapon"
+	_front_hand_check.button_pressed = front_hand
+	_auto_status.text = "" if auto_unsure.is_empty() else "Worth a look: frame%s %s." % ["" if auto_unsure.size() == 1 else "s", ", ".join(auto_unsure.map(func(i: int) -> String: return str(i + 1)))]
+	_ref_scale_spin.value = ref_scale
+	_ref_status.text = "Ghost: %d frames loaded." % ref_cut.size() if not ref_cut.is_empty() else "No ghost loaded (optional, but it makes the far end easy to find)."
+	match tool:
+		"weapon":
+			_tool_weapon.button_pressed = true
+		"reference":
+			_tool_reference.button_pressed = true
+		"hand":
+			_tool_hand.button_pressed = true
+		"erase":
+			_tool_erase.button_pressed = true
+		_:
+			_tool_anchor.button_pressed = true
 	_sections["save"].visible = has_cut
 	_count_spin.value = maxi(1, boxes.size())
 	_cut_button.disabled = busy or source_kind.is_empty()
 	_cut_button.text = "Cutting out..." if busy else ("Cut out frames again" if has_cut else "Cut out frames")
 	_save_button.disabled = busy or not has_cut
+	_save_default_button.disabled = busy or not has_cut
+	_save_default_button.visible = not type_label.is_empty()
+	_save_default_button.text = "Save as the %s default (all %s weapons)" % [type_label, type_label.to_lower()]
+	if editing_default:
+		_save_button.visible = false
+	else:
+		_save_button.visible = true
+	if hero:
+		_save_default_button.visible = false
+		_save_button.text = ("Save the selected frame as the hero's %s" % hero_target) if still_only else "Save as the hero's %s" % hero_target
+		_amber(_save_button)
+	else:
+		_save_button.text = "Save for this weapon only"
+		for style in ["normal", "hover"]:
+			_save_button.remove_theme_stylebox_override(style)
+		for color in ["font_color", "font_hover_color"]:
+			_save_button.remove_theme_color_override(color)
 	for index in range(ALIGN_MODES.size()):
 		if ALIGN_MODES[index].id == align_mode:
 			_align_picker.select(index)
@@ -1298,6 +2239,11 @@ func _refresh_frame_controls() -> void:
 		_start_check.disabled = selected == 0
 		_start_check.button_pressed = selected == 0 or starts.has(selected)
 		_hit_check.button_pressed = _is_hit(selected)
+		if _behind_check != null and selected < track.size():
+			_behind_check.button_pressed = bool(track[selected].behind)
+			var entry: Dictionary = track[selected]
+			var here := "placed" if entry.grip is Vector2 and entry.tip is Vector2 else ("click the far end" if entry.grip is Vector2 else "click the hand")
+			_weapon_status.text = "Frame %d: %s.   Weapon placed on %d of %d frames." % [selected + 1, here, placed_count(), track.size()]
 	_loading = false
 	_refresh_attacks()
 	_refresh_strip_labels()
@@ -1326,6 +2272,7 @@ func _refresh_attacks() -> void:
 
 func _rebuild_strip() -> void:
 	for child in _strip_box.get_children():
+		_strip_box.remove_child(child)
 		child.queue_free()
 	var textures: Array = cut_textures if not cut_textures.is_empty() else frame_source_textures
 	for index in range(textures.size()):
@@ -1347,7 +2294,7 @@ func _refresh_strip_labels() -> void:
 	for index in range(_strip_box.get_child_count()):
 		var button := _strip_box.get_child(index) as Button
 		var tags := str(index + 1)
-		if not cut.is_empty():
+		if not cut.is_empty() and purpose != "hero":
 			for number in range(attacks.size()):
 				if int(attacks[number].start) == index and attacks.size() > 1:
 					tags += " A%d" % (number + 1)

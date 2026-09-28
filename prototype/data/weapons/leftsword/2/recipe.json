@@ -1,0 +1,14 @@
+{
+  "explicit_modifiers": [],
+  "item_level": 1,
+  "provenance": {
+    "kind": "designer",
+    "run_id": "",
+    "source_id": "lab.leftsword"
+  },
+  "rarity": "common",
+  "recipe_id": "leftsword.common.r2",
+  "revision": 2,
+  "schema_version": 1,
+  "weapon_id": "leftsword"
+}

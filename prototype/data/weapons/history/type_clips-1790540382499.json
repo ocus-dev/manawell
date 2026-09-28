@@ -1,0 +1,109 @@
+{
+	"schema_version": 1.0,
+	"types": {
+		"axe": {
+			"clip": {
+				"anchor": [
+					124.0,
+					323.0
+				],
+				"attacks": [
+					{
+						"end": 6.0,
+						"hit": 3.0,
+						"start": 0.0
+					}
+				],
+				"body_height": 259.0,
+				"cell": [
+					278.0,
+					325.0
+				],
+				"columns": 7.0,
+				"fit_hit": true,
+				"frame_count": 7.0,
+				"frame_ms": [
+					83.0,
+					83.0,
+					83.0,
+					83.0,
+					83.0,
+					83.0,
+					83.0
+				],
+				"label": "Attack",
+				"mode": "hero_weapon",
+				"scale": 1.0,
+				"sheet": "res://assets/weapons/_types/axe/4/clip.png",
+				"track": [
+					{
+						"angle": 18.6767032004619,
+						"behind": false,
+						"grip": [
+							145.315979003906,
+							194.451385498047
+						],
+						"length": 167.068542480469
+					},
+					{
+						"angle": 18.6767032004619,
+						"behind": false,
+						"grip": [
+							145.315979003906,
+							194.451385498047
+						],
+						"length": 167.068542480469
+					},
+					{
+						"angle": 18.6767032004619,
+						"behind": false,
+						"grip": [
+							145.315979003906,
+							194.451385498047
+						],
+						"length": 167.068542480469
+					},
+					{
+						"angle": 18.6767032004619,
+						"behind": false,
+						"grip": [
+							145.315979003906,
+							194.451385498047
+						],
+						"length": 167.068542480469
+					},
+					{
+						"angle": 18.6767032004619,
+						"behind": false,
+						"grip": [
+							145.315979003906,
+							194.451385498047
+						],
+						"length": 167.068542480469
+					},
+					{
+						"angle": 18.6767032004619,
+						"behind": false,
+						"grip": [
+							145.315979003906,
+							194.451385498047
+						],
+						"length": 167.068542480469
+					},
+					{
+						"angle": 18.6767032004619,
+						"behind": false,
+						"grip": [
+							145.315979003906,
+							194.451385498047
+						],
+						"length": 167.068542480469
+					}
+				]
+			},
+			"label": "Axe",
+			"project": "C:/Users/zoids/Desktop/Game project/manawell/art/weapons/clips/156/hand_ax_2",
+			"revision": 4.0
+		}
+	}
+}

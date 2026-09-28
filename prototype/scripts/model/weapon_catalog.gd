@@ -163,6 +163,16 @@ static func validate_revision(revision: Variant, check_assets: bool = false) -> 
         var effects_check: Dictionary = WeaponEffectsScript.validate(revision.effects)
         if not effects_check.valid:
             return _failure("revision.effects", "INVALID_EFFECTS", str(effects_check.error))
+    if revision.has("weapon_type"):
+        var type_id: Variant = revision.weapon_type
+        if not type_id is String or type_id.is_empty() or type_id.length() > 40 or not type_id.is_valid_identifier() or type_id != type_id.to_lower():
+            return _failure("revision.weapon_type", "INVALID_WEAPON_TYPE", "weapon_type must be a lowercase name like axe or great_sword")
+    if revision.has("hand_fit"):
+        var fit_check: Dictionary = WeaponClipScript.validate_hand_fit(revision.hand_fit)
+        if not fit_check.valid:
+            return _failure("revision.hand_fit", "INVALID_HAND_FIT", str(fit_check.error))
+    if revision.has("clip_source") and not ["type", "own", "none"].has(str(revision.clip_source)):
+        return _failure("revision.clip_source", "INVALID_CLIP_SOURCE", "clip_source must be type, own or none")
     if revision.has("attack_clip"):
         var clip_check: Dictionary = WeaponClipScript.validate(revision.attack_clip)
         if not clip_check.valid:

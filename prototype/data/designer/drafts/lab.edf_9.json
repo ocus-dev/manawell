@@ -12,14 +12,14 @@
       0.75
     ],
     "hand_offset": [
-      14.0,
-      -26.0
+      -1.0,
+      8.0
     ],
     "icon": "",
-    "job_id": "job_20260926T230849",
+    "job_id": "job_20260927T213932",
     "rotation_degrees": 0.0,
-    "source": "art/ui-items/Weapons/edf10.png",
-    "world_scale": 1.0,
+    "source": "art/ui-items/Weapons/edf9.png",
+    "world_scale": 0.5,
     "world_sprite": ""
   },
   "base_modifiers": [
@@ -35,9 +35,16 @@
     "attacks_per_second": 1.67
   },
   "behavior_id": "weapon.standard",
+  "clip_source": "type",
   "description": "No description yet.",
   "draft_id": "lab.edf_9",
+  "effects": [],
   "explicit_modifiers": [],
+  "hand_fit": {
+    "angle": 180.0,
+    "flip": false,
+    "scale": 1.0
+  },
   "item_level": 1.0,
   "lab": {
     "cutout_method": "auto",
@@ -46,5 +53,7 @@
   "label": "Edf 9",
   "rarity": "common",
   "schema_version": 1.0,
-  "weapon_id": "edf_9"
+  "swing": {},
+  "weapon_id": "edf_9",
+  "weapon_type": "sword"
 }

@@ -27,8 +27,15 @@ extends RefCounted
 ##   frame_ms (hold time of every frame), attacks [{start, end, hit}] (0-based,
 ##   inclusive), fit_hit, project (absolute path of the importer project, drafts).
 
-const MODES := ["hero", "weapon"]
-const MODE_LABELS := {"hero": "Hero attack (whole hero + weapon)", "weapon": "Weapon frames (weapon only)"}
+const MODES := ["hero", "hero_weapon", "weapon"]
+const MODE_LABELS := {"hero": "Hero attack (whole hero + weapon)", "hero_weapon": "Hero body + each weapon's own art", "weapon": "Weapon frames (weapon only)"}
+## hero_weapon: the frames show the hero without a weapon, and `track` says
+## where the weapon sits in each frame: [{grip: [x, y], angle: degrees
+## (grip -> far end, screen space), length: px, behind: bool}] in cell pixels.
+## The game draws each weapon's own picture there, so one animation serves
+## every weapon of a type. `hand_fit` ({angle, scale}) on a weapon's revision
+## fine-tunes how its picture sits in the hands.
+const DEFAULT_HAND_FIT := {"angle": 0.0, "scale": 1.0, "flip": false}
 const MAX_FRAMES := 64
 const MAX_ATTACKS := 4
 const DEFAULT_FRAME_MS := 83.0
@@ -79,6 +86,10 @@ static func normalize(clip: Variant) -> Dictionary:
 		holds.append(clampf(value, 16.0, 2000.0))
 	result["frame_ms"] = holds
 	result["attacks"] = attack_ranges(result)
+	if str(result.mode) == "hero_weapon":
+		result["track"] = normalize_track(result.get("track", []), count)
+	else:
+		result.erase("track")
 	return result
 
 ## The clip's attacks as [{start, end, hit}], clamped to its frames. A clip
@@ -147,6 +158,20 @@ static func validate(clip: Variant) -> Dictionary:
 	for value in holds:
 		if not _is_number(value) or float(value) < 16.0 or float(value) > 2000.0:
 			return {"valid": false, "error": "attack_clip frame_ms values must be 16-2000"}
+	if clip.has("hand_sheet"):
+		var hand := str(clip.hand_sheet)
+		if not hand.begins_with("res://") or hand.contains("..") or hand.contains("\\"):
+			return {"valid": false, "error": "attack_clip hand_sheet must be a repository-local res:// path"}
+	if str(clip.get("mode", "")) == "hero_weapon":
+		var track: Variant = clip.get("track")
+		if not track is Array or track.size() != int(count):
+			return {"valid": false, "error": "attack_clip needs a weapon position for every frame"}
+		for entry in track:
+			if not entry is Dictionary or not _is_number(entry.get("angle")) or not _is_number(entry.get("length")) or float(entry.length) <= 0.0:
+				return {"valid": false, "error": "attack_clip weapon positions need an angle and a length"}
+			var grip: Variant = entry.get("grip")
+			if not grip is Array or grip.size() != 2 or not _is_number(grip[0]) or not _is_number(grip[1]):
+				return {"valid": false, "error": "attack_clip weapon positions need a grip [x, y]"}
 	var attacks: Variant = clip.get("attacks", [])
 	if not attacks is Array or attacks.size() > MAX_ATTACKS:
 		return {"valid": false, "error": "attack_clip allows up to %d attacks" % MAX_ATTACKS}
@@ -204,6 +229,20 @@ static func frame_rect(clip: Dictionary, frame: int) -> Rect2:
 	var index := clampi(frame, 0, maxi(0, int(clip.get("frame_count", 1)) - 1))
 	return Rect2(Vector2(index % columns * float(cell[0]), index / columns * float(cell[1])), Vector2(float(cell[0]), float(cell[1])))
 
+## The front-hand overlay (the gripping hand, drawn over the weapon), packed
+## exactly like the main sheet. "" if the clip has none.
+static func hand_path(clip: Variant) -> String:
+	if not clip is Dictionary:
+		return ""
+	var source := str(clip.get("hand_source", ""))
+	return source if not source.is_empty() else str(clip.get("hand_sheet", ""))
+
+static func load_hand(clip: Variant) -> Texture2D:
+	var path := hand_path(clip)
+	if path.is_empty():
+		return null
+	return load_sheet({"source": path})
+
 static func sheet_path(clip: Variant) -> String:
 	if not clip is Dictionary:
 		return ""
@@ -258,3 +297,119 @@ static func _num(value: Variant, fallback: float) -> float:
 
 static func _is_number(value: Variant) -> bool:
 	return (value is int or value is float) and is_finite(float(value))
+
+# ---------- weapon in the hands (hero_weapon) ----------
+
+## One entry per frame; frames without a position copy the one before (or
+## after, for the first frames).
+static func normalize_track(track: Variant, count: int) -> Array:
+	var entries: Array = []
+	for index in range(count):
+		var entry: Variant = track[index] if track is Array and index < track.size() else null
+		if entry is Dictionary and entry.get("grip") is Array and entry.grip.size() == 2 and _is_number(entry.get("angle")) and _is_number(entry.get("length")) and float(entry.length) > 0.0:
+			entries.append({"grip": [float(entry.grip[0]), float(entry.grip[1])], "angle": fposmod(float(entry.angle) + 180.0, 360.0) - 180.0, "length": clampf(float(entry.length), 1.0, 8192.0), "behind": bool(entry.get("behind", false))})
+		else:
+			entries.append(null)
+	for index in range(count):
+		if entries[index] == null and index > 0 and entries[index - 1] != null:
+			entries[index] = entries[index - 1].duplicate(true)
+	for index in range(count - 1, -1, -1):
+		if entries[index] == null and index < count - 1 and entries[index + 1] != null:
+			entries[index] = entries[index + 1].duplicate(true)
+	for index in range(count):
+		if entries[index] == null:
+			entries[index] = {"grip": [0.0, 0.0], "angle": -90.0, "length": 1.0, "behind": false}
+	return entries
+
+static func has_track(clip: Dictionary) -> bool:
+	return str(clip.get("mode", "")) == "hero_weapon" and clip.get("track") is Array and not clip.track.is_empty()
+
+static func normalize_hand_fit(fit: Variant) -> Dictionary:
+	var result: Dictionary = DEFAULT_HAND_FIT.duplicate()
+	if fit is Dictionary:
+		if _is_number(fit.get("angle")):
+			result["angle"] = clampf(float(fit.angle), -180.0, 180.0)
+		if _is_number(fit.get("scale")):
+			result["scale"] = clampf(float(fit.scale), 0.1, 5.0)
+		result["flip"] = bool(fit.get("flip", false))
+		var tip: Variant = fit.get("tip")
+		if tip is Array and tip.size() == 2 and _is_number(tip[0]) and _is_number(tip[1]):
+			result["tip"] = [clampf(float(tip[0]), 0.0, 1.0), clampf(float(tip[1]), 0.0, 1.0)]
+	return result
+
+## The weapon picture's far end in pixels: the one set in the lab (hand_fit.tip,
+## normalized) or, if none, the opaque pixel farthest from the grip.
+static func resolve_tip(image: Image, grip: Vector2, fit: Variant) -> Vector2:
+	var values := normalize_hand_fit(fit)
+	if values.has("tip") and image != null and not image.is_empty():
+		return Vector2(float(values.tip[0]), float(values.tip[1])) * Vector2(image.get_size())
+	return weapon_tip(image, grip)
+
+static func is_default_hand_fit(fit: Variant) -> bool:
+	var values := normalize_hand_fit(fit)
+	return is_zero_approx(float(values.angle)) and is_equal_approx(float(values.scale), 1.0) and not bool(values.flip) and not values.has("tip")
+
+static func validate_hand_fit(fit: Variant) -> Dictionary:
+	if not fit is Dictionary:
+		return {"valid": false, "error": "hand_fit must be an object"}
+	for key in fit:
+		if key == "tip":
+			var tip: Variant = fit[key]
+			if not tip is Array or tip.size() != 2 or not _is_number(tip[0]) or not _is_number(tip[1]) or float(tip[0]) < 0.0 or float(tip[0]) > 1.0 or float(tip[1]) < 0.0 or float(tip[1]) > 1.0:
+				return {"valid": false, "error": "hand_fit tip must be [x, y] between 0 and 1"}
+			continue
+		if not DEFAULT_HAND_FIT.has(key) or (key == "flip" and not fit[key] is bool) or (key != "flip" and not _is_number(fit[key])):
+			return {"valid": false, "error": "hand_fit takes angle and scale numbers, a flip true/false and a tip [x, y]"}
+	if float(fit.get("scale", 1.0)) < 0.1 or float(fit.get("scale", 1.0)) > 5.0 or absf(float(fit.get("angle", 0.0))) > 180.0:
+		return {"valid": false, "error": "hand_fit is out of range"}
+	return {"valid": true}
+
+## The far end of a weapon picture: the opaque pixel farthest from its grip.
+## `grip` is normalized (0-1). Returns pixels in the image.
+static func weapon_tip(image: Image, grip: Vector2) -> Vector2:
+	if image == null or image.is_empty():
+		return Vector2.ZERO
+	var source := image
+	if source.is_compressed():
+		source = image.duplicate() as Image
+		source.decompress()
+	var size := Vector2(source.get_size())
+	var grip_px := grip * size
+	var best := grip_px + Vector2(0, -1)
+	var best_distance := -1.0
+	var step := maxi(1, int(maxf(size.x, size.y) / 128.0))
+	for y in range(0, source.get_height(), step):
+		for x in range(0, source.get_width(), step):
+			if source.get_pixel(x, y).a < 0.5:
+				continue
+			var distance := grip_px.distance_squared_to(Vector2(x + 0.5, y + 0.5))
+			if distance > best_distance:
+				best_distance = distance
+				best = Vector2(x + 0.5, y + 0.5)
+	return best
+
+## Where a weapon picture goes in `frame`: maps the picture's centred local
+## pixels to cell pixels. `weapon_size` is the picture size, `grip` its
+## normalized grip, `tip` its far end in pixels (weapon_tip()).
+static func hand_transform(clip: Dictionary, frame: int, weapon_size: Vector2, grip: Vector2, tip: Vector2, fit: Dictionary = DEFAULT_HAND_FIT) -> Transform2D:
+	var track: Array = clip.get("track", [])
+	if track.is_empty() or weapon_size.x <= 0.0:
+		return Transform2D()
+	var entry: Dictionary = track[clampi(frame, 0, track.size() - 1)]
+	var hand_fit := normalize_hand_fit(fit)
+	var grip_px := grip * weapon_size
+	var axis := tip - grip_px
+	if axis.length() < 1.0:
+		axis = Vector2(0, -weapon_size.y * 0.5)
+	var scale := float(entry.length) / axis.length() * float(hand_fit.scale)
+	var rotation := deg_to_rad(float(entry.angle) + float(hand_fit.angle)) - axis.angle()
+	var grip_local := grip_px - weapon_size * 0.5
+	var origin := Vector2(float(entry.grip[0]), float(entry.grip[1])) - (grip_local * scale).rotated(rotation)
+	var placed := Transform2D(rotation, Vector2(scale, scale), 0.0, origin)
+	if bool(hand_fit.flip):
+		# Mirror the picture across its own grip-to-tip line (blade on the other side).
+		var u := axis.normalized()
+		var mirror := Transform2D(Vector2(2.0 * u.x * u.x - 1.0, 2.0 * u.x * u.y), Vector2(2.0 * u.x * u.y, 2.0 * u.y * u.y - 1.0), Vector2.ZERO)
+		mirror.origin = grip_local - mirror.basis_xform(grip_local)
+		placed = placed * mirror
+	return placed

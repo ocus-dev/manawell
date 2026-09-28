@@ -1,0 +1,110 @@
+{
+  "meta": {
+    "5": {
+      "display_node": "5",
+      "node_id": "5",
+      "parent_node": null,
+      "real_node_id": "5"
+    }
+  },
+  "outputs": {
+    "5": {
+      "images": [
+        {
+          "filename": "cutout_00001_.png",
+          "subfolder": "Telos\\Weapons\\job_20260927T213932",
+          "type": "output"
+        }
+      ]
+    }
+  },
+  "prompt": [
+    4.0,
+    "7534d571-bf76-4b65-8b85-e3eb8ddf4bbb",
+    {
+      "1": {
+        "class_type": "LoadImage",
+        "inputs": {
+          "image": "telos-weapon-job_20260927T213932.png"
+        }
+      },
+      "2": {
+        "class_type": "Trellis2RemoveBackground",
+        "inputs": {
+          "image": [
+            "1",
+            0.0
+          ],
+          "low_vram": true
+        }
+      },
+      "3": {
+        "class_type": "InvertMask",
+        "inputs": {
+          "mask": [
+            "2",
+            1.0
+          ]
+        }
+      },
+      "4": {
+        "class_type": "JoinImageWithAlpha",
+        "inputs": {
+          "alpha": [
+            "3",
+            0.0
+          ],
+          "image": [
+            "1",
+            0.0
+          ]
+        }
+      },
+      "5": {
+        "class_type": "SaveImage",
+        "inputs": {
+          "filename_prefix": "Telos/Weapons/job_20260927T213932/cutout",
+          "images": [
+            "4",
+            0.0
+          ]
+        }
+      }
+    },
+    {
+      "create_time": 1790570373121.0,
+      "telos_job": "weapon:job_20260927T213932"
+    },
+    [
+      "5"
+    ]
+  ],
+  "status": {
+    "completed": true,
+    "messages": [
+      [
+        "execution_start",
+        {
+          "prompt_id": "7534d571-bf76-4b65-8b85-e3eb8ddf4bbb",
+          "timestamp": 1790570373123.0
+        }
+      ],
+      [
+        "execution_cached",
+        {
+          "nodes": [],
+          "prompt_id": "7534d571-bf76-4b65-8b85-e3eb8ddf4bbb",
+          "timestamp": 1790570373131.0
+        }
+      ],
+      [
+        "execution_success",
+        {
+          "prompt_id": "7534d571-bf76-4b65-8b85-e3eb8ddf4bbb",
+          "timestamp": 1790570374386.0
+        }
+      ]
+    ],
+    "status_str": "success"
+  }
+}

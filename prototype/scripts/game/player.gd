@@ -12,7 +12,9 @@ const LEFT_BOUND: float = ArenaLayoutScript.LEFT_BOUND
 const RIGHT_BOUND: float = ArenaLayoutScript.RIGHT_BOUND
 const FEET_OFFSET: float = ArenaLayoutScript.HERO_FEET_OFFSET
 const GROUND_SUPPORT_Y: float = ArenaLayoutScript.FLOOR_TOP_Y - ArenaLayoutScript.HERO_FEET_OFFSET
-const WEAPON_SOCKET_LOCAL := Vector2(18.0, 21.0)
+## The front fist of the idle hero (the weapon-free red mech art, 2026-09-28).
+## Each weapon's Hand X/Y moves its grip from here.
+const WEAPON_SOCKET_LOCAL := Vector2(19.0, -4.0)
 ## Published weapon world sprites are prepared on a 256px reference canvas, but
 ## their aspect ratios vary widely. Gameplay maps the largest source dimension
 ## to this bounded size; authored world_scale remains a multiplier rather than a
@@ -67,6 +69,10 @@ var held_weapon_clip_combo_window := 1.0
 var held_weapon_clip_playing := false
 var held_weapon_clip_frame := -1
 var _base_weapon_texture: Texture2D
+## hero_weapon clips: how this weapon's picture sits in the hands.
+var held_weapon_hand_fit: Dictionary = {}
+var _weapon_tip := Vector2.ZERO
+var _hand_placed := false
 var _base_weapon_grip := Vector2(0.5, 0.75)
 
 func _ready() -> void:
@@ -109,10 +115,15 @@ func configure_held_weapon(texture: Texture2D, grip: Vector2 = Vector2(0.5, 0.75
 	held_weapon.visible = texture != null
 	_base_weapon_texture = texture
 	_base_weapon_grip = held_weapon_grip
+	_refresh_weapon_tip()
 	_update_held_weapon_transform()
 
 func _process(delta: float) -> void:
 	_advance_attack_clips(delta)
+	_advance_swing(delta)
+	_place_weapon_in_hands()
+
+func _advance_swing(delta: float) -> void:
 	if not held_weapon_attack_active or held_weapon == null or held_weapon.texture == null:
 		return
 	var duration := held_weapon_swing_duration()
@@ -190,7 +201,9 @@ func spawn_weapon_effect(index: int) -> Node2D:
 
 ## Sets the weapon's attack clip ({} for none). `hit_seconds`: when the game
 ## deals damage (0 for ranged); `attack_interval`: time between attacks.
-func configure_attack_clip(clip: Dictionary, hit_seconds: float = 0.0, attack_interval: float = 1.0) -> void:
+func configure_attack_clip(clip: Dictionary, hit_seconds: float = 0.0, attack_interval: float = 1.0, hand_fit: Dictionary = {}) -> void:
+	held_weapon_hand_fit = WeaponClipScript.normalize_hand_fit(hand_fit)
+	_refresh_weapon_tip()
 	_stop_weapon_clip()
 	held_weapon_clip = {}
 	held_weapon_clip_texture = null
@@ -202,8 +215,8 @@ func configure_attack_clip(clip: Dictionary, hit_seconds: float = 0.0, attack_in
 			longest = maxf(longest, float(WeaponClipScript.timeline(normalized, index, hit_seconds).length))
 	var combo_window := maxf(attack_interval * 1.6, longest + 0.5)
 	if visual != null:
-		if not normalized.is_empty() and str(normalized.mode) == "hero":
-			visual.set_attack_clip(normalized, texture, hit_seconds, combo_window)
+		if not normalized.is_empty() and str(normalized.mode) != "weapon":
+			visual.set_attack_clip(normalized, texture, hit_seconds, combo_window, WeaponClipScript.load_hand(clip) if str(normalized.mode) == "hero_weapon" else null)
 		else:
 			visual.clear_attack_clip()
 	if not normalized.is_empty() and str(normalized.mode) == "weapon":
@@ -267,6 +280,33 @@ func _advance_attack_clips(delta: float) -> void:
 
 ## A hero-mode clip draws the weapon itself, so the held weapon's picture is
 ## hidden while one plays (its effects still show).
+func _refresh_weapon_tip() -> void:
+	_weapon_tip = WeaponClipScript.resolve_tip(_base_weapon_texture.get_image(), _base_weapon_grip, held_weapon_hand_fit) if _base_weapon_texture != null else Vector2.ZERO
+
+## hero_weapon clips: puts this weapon's own picture where the frame's hands
+## are (drawn behind the body when the frame says so).
+func _place_weapon_in_hands() -> void:
+	if held_weapon == null or visual == null:
+		return
+	var placing: bool = visual.clip_places_weapon() and held_weapon.texture != null
+	if not placing:
+		if _hand_placed:
+			_hand_placed = false
+			weapon_socket.z_index = 2
+			_update_held_weapon_transform()
+		return
+	var clip: Dictionary = visual.attack_clip
+	var frame: int = visual.clip_frame
+	var local := WeaponClipScript.hand_transform(clip, frame, Vector2(held_weapon.texture.get_size()), held_weapon_grip, _weapon_tip, held_weapon_hand_fit)
+	held_weapon.global_transform = visual.clip_cell_to_global() * local
+	held_weapon.visible = true
+	weapon_socket.z_index = 0 if bool(clip.track[clampi(frame, 0, clip.track.size() - 1)].get("behind", false)) else 2
+	_hand_placed = true
+
+## Where this weapon's picture sits in the hands for `frame` (tests, previews).
+func hand_placed_transform() -> Transform2D:
+	return held_weapon.global_transform
+
 func _update_weapon_visibility() -> void:
 	if held_weapon == null:
 		return
@@ -414,6 +454,7 @@ func _start_held_weapon_attack_presentation() -> void:
 	held_weapon.visible = true
 	_queue_effects()
 	_update_held_weapon_transform()
+	_place_weapon_in_hands()
 	_fire_due_effects()
 
 func _finish_held_weapon_attack_presentation() -> void:

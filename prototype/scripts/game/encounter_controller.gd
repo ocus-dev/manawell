@@ -1,5 +1,6 @@
 extends Node2D
 
+const WeaponTypesScript = preload("res://scripts/model/weapon_types.gd")
 const RunStateScript = preload("res://scripts/model/run_state.gd")
 const BalanceData = preload("res://data/balance.gd")
 const EnemyScript = preload("res://scripts/game/melee_enemy.gd")
@@ -371,8 +372,10 @@ func _configure_held_weapon_visual(revision: Dictionary) -> void:
 	var effects: Variant = revision.get("effects", [])
 	# Melee damage lands MELEE_STRIKE_FRACTION into the attack; ranged shots fire at once.
 	hero.configure_held_weapon_effects(effects if effects is Array else [], weapon_interval * MELEE_STRIKE_FRACTION if weapon_behavior_id == "weapon.melee" else 0.0)
-	var clip: Variant = revision.get("attack_clip", {})
-	hero.configure_attack_clip(clip if clip is Dictionary else {}, weapon_interval * MELEE_STRIKE_FRACTION if weapon_behavior_id == "weapon.melee" else 0.0, weapon_interval)
+	# The weapon's own animation, its type's default, or none (WeaponTypes).
+	var clip: Dictionary = WeaponTypesScript.resolve_clip(revision, WeaponTypesScript.game_library())
+	var fit: Variant = revision.get("hand_fit", {})
+	hero.configure_attack_clip(clip, weapon_interval * MELEE_STRIKE_FRACTION if weapon_behavior_id == "weapon.melee" else 0.0, weapon_interval, fit if fit is Dictionary else {})
 
 func request_harvest() -> bool:
 	var harvested: bool = run_state.request_harvest()

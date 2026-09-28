@@ -1,0 +1,44 @@
+{
+	"schema_version": 1.0,
+	"types": {
+		"axe": {
+			"clip": {
+				"anchor": [
+					108.0,
+					283.0
+				],
+				"attacks": [
+					{
+						"end": 6.0,
+						"hit": 3.0,
+						"start": 0.0
+					}
+				],
+				"body_height": 164.0,
+				"cell": [
+					257.0,
+					285.0
+				],
+				"columns": 7.0,
+				"fit_hit": true,
+				"frame_count": 7.0,
+				"frame_ms": [
+					83.0,
+					83.0,
+					83.0,
+					83.0,
+					83.0,
+					83.0,
+					83.0
+				],
+				"label": "Attack",
+				"mode": "hero",
+				"scale": 1.0,
+				"sheet": "res://assets/weapons/_types/axe/3/clip.png"
+			},
+			"label": "Axe",
+			"project": "C:/Users/zoids/Desktop/Game project/manawell/art/weapons/clips/156/axe_4",
+			"revision": 3.0
+		}
+	}
+}

@@ -100,9 +100,11 @@ static func publish(draft: Dictionary, preparation_root: String, job_id: String,
 ## or null if a sheet is missing.
 static func _stage_effects(revision: Dictionary, stage_assets: String, final_asset_dir: String) -> Variant:
     var names: Array = []
-    if not revision.get("effects") is Array:
-        return names
-    for index in range(revision.effects.size()):
+    # (No early return without effects: the attack clip below still has to be
+    # staged. Skipping it left clips with the placeholder sheet, so every
+    # weapon without effects looked unpublished right after publishing.)
+    var effects: Array = revision.effects if revision.get("effects") is Array else []
+    for index in range(effects.size()):
         var effect: Dictionary = revision.effects[index]
         var source := str(effect.get("source", ""))
         if source.is_empty() and str(effect.get("sheet", "")) != Store.PENDING_EFFECT_SHEET:
@@ -125,6 +127,15 @@ static func _stage_effects(revision: Dictionary, stage_assets: String, final_ass
         clip.erase("project")
         clip["sheet"] = final_asset_dir.path_join("clip.png")
         names.append("clip.png")
+        var hand_source := str(clip.get("hand_source", ""))
+        if hand_source.is_empty() and clip.has("hand_sheet") and str(clip.hand_sheet) != Store.PENDING_EFFECT_SHEET:
+            hand_source = str(clip.hand_sheet)
+        if not hand_source.is_empty():
+            if not _copy_immutable(hand_source, stage_assets.path_join("hand.png")):
+                return null
+            clip.erase("hand_source")
+            clip["hand_sheet"] = final_asset_dir.path_join("hand.png")
+            names.append("hand.png")
     return names
 
 static func publish_placement_revision(weapon_id: String, pivot: Dictionary, data_root: String = DEFAULT_DATA_ROOT, asset_root: String = DEFAULT_ASSET_ROOT) -> Dictionary:

@@ -1,0 +1,195 @@
+{
+  "assets": {
+    "icon": "res://assets/weapons/sword/1/icon.png",
+    "world_sprite": "res://assets/weapons/sword/1/world-sprite.png"
+  },
+  "attack_clip": {
+    "anchor": [
+      113.0,
+      202.0
+    ],
+    "attacks": [
+      {
+        "end": 6,
+        "hit": 3,
+        "start": 0
+      }
+    ],
+    "body_height": 200.0,
+    "cell": [
+      242.0,
+      204.0
+    ],
+    "columns": 7,
+    "fit_hit": true,
+    "frame_count": 7,
+    "frame_ms": [
+      83.0,
+      83.0,
+      83.0,
+      83.0,
+      83.0,
+      83.0,
+      83.0
+    ],
+    "hand_sheet": "res://assets/weapons/sword/1/hand.png",
+    "label": "Attack",
+    "mode": "hero_weapon",
+    "scale": 1.0,
+    "sheet": "res://assets/weapons/sword/1/clip.png",
+    "track": [
+      {
+        "angle": 20.9426509010122,
+        "behind": false,
+        "grip": [
+          162.0,
+          125.0
+        ],
+        "length": 86.7294616699219
+      },
+      {
+        "angle": -151.990819902081,
+        "behind": false,
+        "grip": [
+          182.0,
+          150.0
+        ],
+        "length": 53.2353248596191
+      },
+      {
+        "angle": -166.920875767299,
+        "behind": false,
+        "grip": [
+          98.0,
+          18.0
+        ],
+        "length": 101.636604309082
+      },
+      {
+        "angle": -15.1540672869737,
+        "behind": false,
+        "grip": [
+          208.0,
+          95.0
+        ],
+        "length": 99.4585342407227
+      },
+      {
+        "angle": -13.3924974670039,
+        "behind": false,
+        "grip": [
+          220.0,
+          99.0
+        ],
+        "length": 107.935165405273
+      },
+      {
+        "angle": 4.89909234729598,
+        "behind": false,
+        "grip": [
+          224.0,
+          104.0
+        ],
+        "length": 105.385009765625
+      },
+      {
+        "angle": -152.949409631336,
+        "behind": false,
+        "grip": [
+          177.0,
+          155.0
+        ],
+        "length": 52.7730979919434
+      }
+    ]
+  },
+  "base_modifiers": [
+    {
+      "family": "designer.base.attack_damage",
+      "operation": "flat",
+      "stat": "attack_damage",
+      "value": 0.0
+    }
+  ],
+  "base_stats": {
+    "attack_damage": 10.0,
+    "attacks_per_second": 1.67
+  },
+  "behavior_id": "weapon.melee",
+  "clip_source": "type",
+  "description": "No description yet.",
+  "effects": [
+    {
+      "additive": true,
+      "align": true,
+      "anchor": [
+        0.95,
+        0.5
+      ],
+      "at": 0.5,
+      "columns": 8,
+      "follow": false,
+      "fps": 24.0,
+      "frame_count": 8,
+      "label": "Spark burst",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "opacity": 1.0,
+      "rotation": 0.0,
+      "sheet": "res://assets/weapons/sword/1/effects/0.png",
+      "size": 96.0,
+      "trigger": "hit"
+    },
+    {
+      "additive": true,
+      "align": true,
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "at": 0.5,
+      "columns": 10,
+      "follow": true,
+      "fps": 20.0,
+      "frame_count": 10,
+      "label": "Glow pulse",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "opacity": 1.0,
+      "rotation": 0.0,
+      "sheet": "res://assets/weapons/sword/1/effects/1.png",
+      "size": 120.0,
+      "trigger": "windup"
+    }
+  ],
+  "label": "Sword",
+  "pivot": {
+    "coordinate_space": "normalized",
+    "facing": "right",
+    "grip": [
+      0.1,
+      0.75
+    ],
+    "hand_offset": [
+      -16.0,
+      -29.0
+    ],
+    "origin": "top_left",
+    "rotation_degrees": 0.0,
+    "world_scale": 0.5
+  },
+  "revision": 1,
+  "schema_version": 1,
+  "source_hashes": {
+    "icon_sha256": "a3af31e0c1c3c72a76eb82aca04d123e2cb1f5e1ec0ad089a042110806cc2045",
+    "job_id": "job_20260927T142136",
+    "manifest_sha256": "dc2b29a3018c9db712e06f898f03bbb4cacea80335b3a7854c633e78eeaf27bf",
+    "world_sprite_sha256": "4fbe95053611f5135b494fe57792761112b388ba12977528707d2ebf2ff866e6"
+  },
+  "weapon_id": "sword",
+  "weapon_type": "sword"
+}

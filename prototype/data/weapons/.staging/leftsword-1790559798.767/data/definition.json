@@ -1,0 +1,47 @@
+{
+  "assets": {
+    "icon": "res://assets/weapons/leftsword/2/icon.png",
+    "world_sprite": "res://assets/weapons/leftsword/2/world-sprite.png"
+  },
+  "base_modifiers": [
+    {
+      "family": "designer.base.attack_damage",
+      "operation": "flat",
+      "stat": "attack_damage",
+      "value": 1.0
+    }
+  ],
+  "base_stats": {
+    "attack_damage": 10.0,
+    "attacks_per_second": 1.67
+  },
+  "behavior_id": "weapon.melee",
+  "clip_source": "type",
+  "description": "Trusty lefty",
+  "label": "lefty",
+  "pivot": {
+    "coordinate_space": "normalized",
+    "facing": "right",
+    "grip": [
+      0.1,
+      0.75
+    ],
+    "hand_offset": [
+      -14.0,
+      -27.0
+    ],
+    "origin": "top_left",
+    "rotation_degrees": 0.0,
+    "world_scale": 0.5
+  },
+  "revision": 2,
+  "schema_version": 1,
+  "source_hashes": {
+    "icon_sha256": "850b655baae9c5eaf2235c6973fa563302dbce9015f91671abf36b2501006ce5",
+    "job_id": "job_20260919T012801",
+    "manifest_sha256": "0182becad20ba0e301d23edd5e1673adbada670d69a4b24f1f16f30d98cf0ffd",
+    "world_sprite_sha256": "f7db6764e8bdc2d6d41622618faad3d731461a6d731b5bf17740eea8a8961e9a"
+  },
+  "weapon_id": "leftsword",
+  "weapon_type": "sword"
+}

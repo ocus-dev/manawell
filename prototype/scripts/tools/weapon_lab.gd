@@ -31,6 +31,18 @@ const WeaponEffects = preload("res://scripts/model/weapon_effects.gd")
 const EffectsPanelScript = preload("res://scripts/tools/weapon_lab_effects.gd")
 const WeaponClip = preload("res://scripts/model/weapon_clip.gd")
 const ClipImporterScript = preload("res://scripts/tools/weapon_clip_importer.gd")
+const WeaponTypes = preload("res://scripts/model/weapon_types.gd")
+const WeaponReadiness = preload("res://scripts/model/weapon_readiness.gd")
+const HeroAnimationsScript = preload("res://scripts/model/hero_animations.gd")
+const ShowcaseScript = preload("res://scripts/tools/weapon_lab_showcase.gd")
+const CheckScript = preload("res://scripts/tools/weapon_lab_check.gd")
+const MARKS_NAME := "lab_marks.json"
+## The lab lays itself out on a bigger canvas than the game (1280x720) and
+## makes the window bigger to match, then puts both back on the way out.
+const LAB_CANVAS := Vector2i(1600, 900)
+## The window size the lab asks for (clamped to the screen): wide enough for
+## Art | Details | Placement side by side.
+const LAB_WINDOW := Vector2i(1920, 1040)
 const MELEE_STRIKE_FRACTION := 0.4
 const SWING_TIPS := {
 	"duration": "Total length of the swing in seconds. Keep it at or under the time between attacks (1 / attacks per second).",
@@ -149,6 +161,28 @@ var clip_preview: Control
 var clip_summary: Label
 var clip_edit_button: Button
 var clip_remove_button: Button
+var type_picker: OptionButton
+## Category (weapon type) controls: list filter, the picker in section 1, and
+## the category manager dialog.
+var category_filter: OptionButton
+var category_choice := "__all__"
+var art_type_picker: OptionButton
+var category_dialog: AcceptDialog
+var category_rows: VBoxContainer
+var category_new_edit: LineEdit
+var type_new_edit: LineEdit
+var clip_source_buttons: Dictionary = {}
+var clip_make_button: Button
+var clip_default_button: Button
+var clip_defaults_label: Label
+var hand_fit_row: Control
+var hand_angle_spin: SpinBox
+var hand_scale_spin: SpinBox
+var hand_flip_check: CheckBox
+var _weapon_tip_cache: Dictionary = {}
+var picking_tip := false
+var hand_tip_button: Button
+var type_library: Dictionary = {}
 var clip_time := 0.0
 var _clip_textures: Dictionary = {}
 var swing_why: Label
@@ -159,8 +193,31 @@ var remove_button: Button
 var remove_dialog: ConfirmationDialog
 var discard_draft_button: Button
 var removed_check: CheckBox
+var showcase: Node
+var readiness_title: Label
+var readiness_rows: VBoxContainer
+var done_check: Button
+var lab_marks: Dictionary = {}
+var readiness: Dictionary = {}
+var _showcase_queued := false
+## Off in tests: leaves the window and canvas size alone.
+var resize_window := true
+var placement_section: Control
+var page_left: VBoxContainer
+var page_third: VBoxContainer
+var placement_grid: GridContainer
+## Canvas width from which Placement moves into a third column.
+const THREE_COLUMNS_FROM := 1700.0
+var _saved_canvas := Vector2i.ZERO
+var _saved_window := Vector2i.ZERO
+var _saved_aspect := Window.CONTENT_SCALE_ASPECT_KEEP
+var _embedded_hint := false
+var _embedded := false
+var _saved_window_position := Vector2i.ZERO
 
 func _ready() -> void:
+	_enlarge_window()
+	load_marks()
 	comfy = ComfyScript.new()
 	comfy.name = "ComfyCutout"
 	add_child(comfy)
@@ -174,10 +231,11 @@ func _ready() -> void:
 		select_entry(str(entries[0]["id"]))
 
 func _process(delta: float) -> void:
-	if swing_preview == null or arena != null or not ui.visible:
+	if arena != null or not ui.visible:
 		return
 	swing_time += delta
-	swing_preview.queue_redraw()
+	if swing_preview != null:
+		swing_preview.queue_redraw()
 	if clip_preview != null and (clip_importer == null or not clip_importer.visible):
 		clip_time += delta
 		clip_preview.queue_redraw()
@@ -195,6 +253,7 @@ func return_to_title() -> void:
 	if _dirty and not draft.is_empty():
 		save_draft()
 	Engine.time_scale = 1.0
+	_restore_window()
 	get_tree().change_scene_to_file(TITLE_SCENE)
 
 # ---------- entries ----------
@@ -206,7 +265,7 @@ func reload_entries() -> void:
 	var weapons: Dictionary = published_index().get("weapons", {})
 	for weapon_id in weapons:
 		var revision: Dictionary = weapons[weapon_id]
-		entries.append({"id": str(weapon_id), "label": str(revision.get("label", weapon_id)), "revision": int(revision.get("revision", 0)), "icon": str(revision.get("assets", {}).get("icon", "")), "draft": false})
+		entries.append({"id": str(weapon_id), "label": str(revision.get("label", weapon_id)), "revision": int(revision.get("revision", 0)), "icon": str(revision.get("assets", {}).get("icon", "")), "draft": false, "weapon_type": str(revision.get("weapon_type", "")), "clip_source": WeaponTypes.clip_source(revision)})
 		seen[str(weapon_id)] = entries.size() - 1
 	for draft_id in Store.list_drafts(draft_root):
 		if not str(draft_id).begins_with(DRAFT_PREFIX):
@@ -221,10 +280,12 @@ func reload_entries() -> void:
 			icon = Art.run_dir(job_id).path_join("square-icon.png")
 		if seen.has(weapon_id):
 			entries[seen[weapon_id]]["draft"] = true
+			entries[seen[weapon_id]]["weapon_type"] = str(saved.get("weapon_type", entries[seen[weapon_id]]["weapon_type"]))
+			entries[seen[weapon_id]]["clip_source"] = WeaponTypes.clip_source(saved) if saved.has("clip_source") or saved.has("attack_clip") else str(entries[seen[weapon_id]]["clip_source"])
 			if not icon.is_empty():
 				entries[seen[weapon_id]]["icon"] = icon
 		else:
-			entries.append({"id": weapon_id, "label": str(saved.get("label", weapon_id)), "revision": 0, "icon": icon, "draft": true})
+			entries.append({"id": weapon_id, "label": str(saved.get("label", weapon_id)), "revision": 0, "icon": icon, "draft": true, "weapon_type": str(saved.get("weapon_type", "")), "clip_source": WeaponTypes.clip_source(saved)})
 			seen[weapon_id] = entries.size() - 1
 	if show_removed:
 		var retired := retired_index()
@@ -296,6 +357,8 @@ func _new_draft(weapon_id: String) -> Dictionary:
 	fresh["description"] = ""
 	fresh["lab"] = {"cutout_method": "auto", "tolerance": 38.0}
 	fresh["base_stats"] = default_base_stats()
+	fresh["weapon_type"] = ""
+	fresh["clip_source"] = "type"
 	return fresh
 
 static func default_base_stats() -> Dictionary:
@@ -322,6 +385,9 @@ func draft_from_published(weapon_id: String, published: Dictionary) -> Dictionar
 	result["swing"] = published.get("swing", {}).duplicate(true) if published.get("swing") is Dictionary else {}
 	result["effects"] = published.get("effects", []).duplicate(true) if published.get("effects") is Array else []
 	result["attack_clip"] = published.get("attack_clip", {}).duplicate(true) if published.get("attack_clip") is Dictionary else {}
+	result["weapon_type"] = str(published.get("weapon_type", ""))
+	result["clip_source"] = WeaponTypes.clip_source(published)
+	result["hand_fit"] = WeaponClip.normalize_hand_fit(published.get("hand_fit", {}))
 	var recipe_path := ProjectSettings.globalize_path(data_root.path_join(weapon_id).path_join(str(int(published.get("revision", 1)))).path_join("recipe.json"))
 	if FileAccess.file_exists(recipe_path):
 		var recipe = JSON.parse_string(FileAccess.get_file_as_string(recipe_path))
@@ -553,9 +619,13 @@ func open_arena() -> void:
 	arena.exit_requested.connect(close_arena)
 	arena.placement_changed.connect(func(pivot: Dictionary) -> void: apply_pivot(pivot))
 	arena.swing_changed.connect(func(swing: Dictionary) -> void: apply_swing(swing))
+	# The arena is laid out for the game's own canvas.
+	_set_canvas(_saved_canvas)
+	if resize_window and _saved_canvas != Vector2i.ZERO:
+		get_window().content_scale_aspect = _saved_aspect
 	add_child(arena)
 	var label := str(draft.get("label", ""))
-	arena.configure_weapon(label if not label.is_empty() else "Unnamed weapon", current_world_texture(), current_pivot(), str(draft.get("behavior_id", "weapon.standard")), resolved_stats(), current_swing_for_game(), current_effects(), current_clip())
+	arena.configure_weapon(label if not label.is_empty() else "Unnamed weapon", current_world_texture(), current_pivot(), str(draft.get("behavior_id", "weapon.standard")), resolved_stats(), current_swing_for_game(), current_effects(), effective_clip(), hand_fit())
 	ui.visible = false
 	if current_world_texture() == null:
 		arena._set_status("No prepared art yet: the hero is testing the stats with an empty hand.")
@@ -568,6 +638,9 @@ func close_arena() -> void:
 	arena.queue_free()
 	arena = null
 	Engine.time_scale = 1.0
+	if resize_window and _saved_canvas != Vector2i.ZERO:
+		get_window().content_scale_aspect = Window.CONTENT_SCALE_ASPECT_EXPAND
+	_fit_canvas()
 	ui.visible = true
 	_apply_placement_controls()
 	_apply_swing_controls(draft.get("swing", {}))
@@ -599,6 +672,9 @@ func publish() -> Dictionary:
 			return _publish_result(false, "Cut out & prepare the art first (step 1).")
 	if str(draft.get("description", "")).is_empty():
 		draft["description"] = "No description yet."
+	var clip_problem := check_own_clip_files()
+	if not clip_problem.is_empty():
+		return _publish_result(false, clip_problem)
 	if is_published() and not has_changes_from_published():
 		return _publish_result(false, "Nothing changed since revision %d." % published_revision)
 	draft["revision"] = published_revision + 1
@@ -656,7 +732,13 @@ func has_changes_from_published() -> bool:
 		return true
 	if not _clips_equal(draft.get("attack_clip", {}), current.get("attack_clip", {})):
 		return true
-	return str(draft.art.job_id) != str(current.get("source_hashes", {}).get("job_id", ""))
+	if WeaponClip.normalize_hand_fit(draft.get("hand_fit", {})).hash() != WeaponClip.normalize_hand_fit(current.get("hand_fit", {})).hash():
+		return true
+	if str(draft.get("weapon_type", "")) != str(current.get("weapon_type", "")) or WeaponTypes.clip_source(draft) != WeaponTypes.clip_source(current):
+		return true
+	# No job id: still using the published art, which isn't a change.
+	var job_id := str(draft.art.job_id)
+	return not job_id.is_empty() and job_id != str(current.get("source_hashes", {}).get("job_id", ""))
 
 ## Effects count as changed if any uses a new (draft) sheet or any setting differs.
 static func _effects_equal(a: Variant, b: Variant) -> bool:
@@ -691,7 +773,7 @@ static func _clips_equal(a: Variant, b: Variant) -> bool:
 	for key in WeaponClip.DEFAULT:
 		if not Publisher._values_equal(l[key], r[key]):
 			return false
-	return str(l.get("sheet", "")) == str(r.get("sheet", ""))
+	return str(l.get("sheet", "")) == str(r.get("sheet", "")) and str(l.get("hand_sheet", "")) == str(r.get("hand_sheet", "")) and str(l.get("hand_source", "")).is_empty()
 
 static func _swings_equal(a: Variant, b: Variant) -> bool:
 	var left := WeaponSwing.normalize(a if a is Dictionary and not a.is_empty() else WeaponSwing.DEFAULT)
@@ -833,6 +915,7 @@ func _mark_dirty() -> void:
 		return
 	_dirty = true
 	_refresh_meta()
+	queue_showcase()
 
 func _on_name_changed(text: String) -> void:
 	if _loading:
@@ -846,6 +929,13 @@ func _on_name_changed(text: String) -> void:
 		id_edit.set_meta("auto", true)
 		draft["weapon_id"] = auto_id
 	page_title.text = str(draft["label"]).to_upper() if not str(draft["label"]).is_empty() else "NEW WEAPON"
+	# New weapons guess their type from the name until one is picked.
+	if not is_published() and (str(draft.get("weapon_type", "")).is_empty() or draft.get("type_guessed", false)):
+		var guessed := WeaponTypes.guess(str(draft.label))
+		if guessed != str(draft.get("weapon_type", "")):
+			draft["weapon_type"] = guessed
+			draft["type_guessed"] = not guessed.is_empty()
+			_refresh_clip_section()
 	_mark_dirty()
 
 func _on_id_changed(text: String) -> void:
@@ -966,6 +1056,7 @@ func _refresh_meta() -> void:
 	if remove_button != null:
 		remove_button.visible = not is_removed()
 		remove_button.text = "Remove" if is_published() else "Delete draft"
+	queue_showcase()
 
 func _refresh_resolved() -> void:
 	if resolved_label == null or _loading:
@@ -987,6 +1078,7 @@ func _refresh_resolved() -> void:
 		text += "\nCapped: %s (item bonuses cap at +%d%% of base damage, +%d%% attack speed)." % [", ".join(capped), roundi((Resolver.CAPS.attack_damage - 1.0) * 100.0), roundi((Resolver.CAPS.attacks_per_second - 1.0) * 100.0)]
 	resolved_label.text = text
 	_refresh_swing_note()
+	_refresh_clip_section()
 
 func _idle_status() -> String:
 	if not Art.is_complete(str(draft.get("art", {}).get("job_id", ""))) and not is_published():
@@ -1040,8 +1132,11 @@ func _render_tiles() -> void:
 		child.queue_free()
 	tiles.clear()
 	var filter := search.text.strip_edges().to_lower() if search != null else ""
+	_refresh_category_filter()
 	for entry in entries:
 		if not filter.is_empty() and not str(entry["label"]).to_lower().contains(filter) and not str(entry["id"]).to_lower().contains(filter):
+			continue
+		if not _in_category(entry):
 			continue
 		var tile := Button.new()
 		tile.toggle_mode = true
@@ -1057,11 +1152,15 @@ func _render_tiles() -> void:
 		if bool(entry.get("removed", false)):
 			tag = "removed (r%d)" % int(entry["revision"])
 			tile.modulate = Color(1, 1, 1, 0.55)
+		var category := str(entry.get("weapon_type", ""))
+		if not category.is_empty():
+			tag += "  ·  " + WeaponTypes.label_of(category, type_library)
 		tile.text = "%s\n%s" % [str(entry["label"]), tag]
 		tile.clip_text = true
 		var weapon_id := str(entry["id"])
 		tile.pressed.connect(func() -> void: select_entry(weapon_id))
 		tile_list.add_child(tile)
+		_add_tile_check(tile, weapon_id)
 		tiles[weapon_id] = tile
 	count_label.text = "%d weapon%s in the game" % [_published_count(), "" if _published_count() == 1 else "s"]
 	_sync_tiles()
@@ -1109,6 +1208,7 @@ func _refresh_art_previews() -> void:
 	icon_preview.texture = current_icon_texture()
 	swing_texture = world_preview.texture
 	world_preview.queue_redraw()
+	queue_showcase()
 
 ## Clicking the world sprite preview sets the grip there.
 func _on_world_preview_input(event: InputEvent) -> void:
@@ -1121,6 +1221,9 @@ func _on_world_preview_input(event: InputEvent) -> void:
 	var grip: Vector2 = (local_point - rect.position) / rect.size
 	if effects_panel != null and effects_panel.picking_anchor:
 		effects_panel.set_selected_anchor(grip)
+		return
+	if picking_tip:
+		set_weapon_tip(grip)
 		return
 	placement_spins["grip_x"].value = snappedf(clampf(grip.x, 0.0, 1.0), 0.01)
 	placement_spins["grip_y"].value = snappedf(clampf(grip.y, 0.0, 1.0), 0.01)
@@ -1143,6 +1246,13 @@ func _draw_grip_marker() -> void:
 	world_preview.draw_arc(point, 6.0, 0.0, TAU, 20, AMBER, 2.0)
 	world_preview.draw_line(point - Vector2(10, 0), point + Vector2(10, 0), AMBER, 1.0)
 	world_preview.draw_line(point - Vector2(0, 10), point + Vector2(0, 10), AMBER, 1.0)
+	# The far end used when the weapon is drawn in the hero's hands.
+	if hand_fit_row != null and hand_fit_row.visible:
+		var weapon := preview_weapon()
+		if not weapon.is_empty():
+			var tip: Vector2 = rect.position + Vector2(weapon.tip) / Vector2(weapon.texture.get_size()) * rect.size
+			world_preview.draw_line(point, tip, Color(GOOD, 0.7), 1.0)
+			world_preview.draw_circle(tip, 5.0, GOOD)
 
 # ---------- build ----------
 
@@ -1171,6 +1281,7 @@ func _build() -> void:
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 0)
 	book.add_child(column)
+	root.resized.connect(_layout_columns)
 	column.add_child(_build_header())
 	var body := HBoxContainer.new()
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -1197,12 +1308,15 @@ func _build() -> void:
 			remove_dialog.hide()
 			discard_draft())
 	root.add_child(remove_dialog)
+	_build_category_dialog()
 	clip_importer = ClipImporterScript.new()
 	clip_importer.name = "ClipImporter"
 	clip_importer.visible = false
 	clip_importer.comfy = comfy
 	clip_importer.saved.connect(_on_clip_saved)
+	clip_importer.hero_saved.connect(install_hero_animation)
 	root.add_child(clip_importer)
+	_layout_columns()
 
 func _build_header() -> Control:
 	var bar := PanelContainer.new()
@@ -1228,6 +1342,11 @@ func _build_header() -> Control:
 	count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	count_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(count_label)
+	var hero_button := _button("Hero animations...", true)
+	hero_button.name = "HeroAnimations"
+	hero_button.tooltip_text = "Replace the hero's own idle, walk or attack art with a pose sheet, frames or a video (no weapon in the hands; weapons are drawn into them)."
+	hero_button.pressed.connect(func() -> void: open_hero_importer("walk"))
+	row.add_child(hero_button)
 	var back := _button("Back to title  (Esc)")
 	back.name = "Back"
 	back.pressed.connect(return_to_title)
@@ -1236,7 +1355,7 @@ func _build_header() -> Control:
 
 func _build_index() -> Control:
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(250, 0)
+	panel.custom_minimum_size = Vector2(280, 0)
 	panel.add_theme_stylebox_override("panel", _box(Color("1b2024"), EDGE, 0, 0, 12, [0, 0, 1, 0]))
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 8)
@@ -1250,6 +1369,23 @@ func _build_index() -> Control:
 	search.placeholder_text = "Find a weapon"
 	search.text_changed.connect(func(_text: String) -> void: _render_tiles())
 	column.add_child(search)
+	var category_row := HBoxContainer.new()
+	category_row.add_theme_constant_override("separation", 6)
+	column.add_child(category_row)
+	category_filter = OptionButton.new()
+	category_filter.name = "CategoryFilter"
+	category_filter.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	category_filter.fit_to_longest_item = false
+	category_filter.tooltip_text = "Show only weapons of one category."
+	category_filter.item_selected.connect(func(index: int) -> void:
+		category_choice = str(category_filter.get_item_metadata(index))
+		_render_tiles())
+	category_row.add_child(category_filter)
+	var manage := _button("Edit", true)
+	manage.name = "EditCategories"
+	manage.tooltip_text = "Add, rename or remove weapon categories."
+	manage.pressed.connect(open_category_dialog)
+	category_row.add_child(manage)
 	removed_check = CheckBox.new()
 	removed_check.name = "ShowRemoved"
 	removed_check.text = "Show removed"
@@ -1290,16 +1426,30 @@ func _build_page() -> Control:
 	var sections := HBoxContainer.new()
 	sections.add_theme_constant_override("separation", 14)
 	column.add_child(sections)
-	sections.add_child(_build_art_section())
+	# Art and placement on the left, the previews and details on the right;
+	# each column is only as tall as its contents.
+	# On wide windows Placement gets a third column of its own (see _layout_columns).
+	var left := VBoxContainer.new()
+	left.add_theme_constant_override("separation", 10)
+	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sections.add_child(left)
+	left.add_child(_build_art_section())
+	placement_section = _build_placement_section()
+	left.add_child(placement_section)
+	page_left = left
 	var right := VBoxContainer.new()
 	right.add_theme_constant_override("separation", 10)
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	sections.add_child(right)
 	right.add_child(_build_details_section())
-	right.add_child(_build_placement_section())
-	column.add_child(_build_swing_section())
-	column.add_child(_build_effects_section())
+	page_third = VBoxContainer.new()
+	page_third.name = "PlacementColumn"
+	page_third.add_theme_constant_override("separation", 10)
+	page_third.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	page_third.visible = false
+	sections.add_child(page_third)
 	column.add_child(_build_clip_section())
+	column.add_child(_build_effects_section())
 	return scroll
 
 # ---------- swing ----------
@@ -1325,7 +1475,11 @@ func apply_swing(swing: Dictionary) -> void:
 
 func apply_swing_preset(preset_id: String) -> void:
 	_apply_swing_controls(WeaponSwing.preset(preset_id))
-	draft["swing"] = current_swing()
+	if swing_spins.is_empty():
+		var values := WeaponSwing.preset(preset_id)
+		draft["swing"] = {} if WeaponSwing.is_default(values) else values
+	else:
+		draft["swing"] = current_swing()
 	swing_time = 0.0
 	_mark_dirty()
 
@@ -1494,7 +1648,7 @@ func _build_effects_section() -> Control:
 	var section := _section("5  EFFECTS")
 	var column: VBoxContainer = section.get_meta("body")
 	var intro := Label.new()
-	intro.text = "Flipbooks that play during the attack: trails, sparks, glows, muzzle flashes. Each one fires at a moment in the swing and plays at an anchor point on the weapon. They show in the swing preview above and in the arena."
+	intro.text = "Flipbooks that play during the attack: trails, sparks, glows, muzzle flashes. Each one fires at a moment in the attack and plays at an anchor point on the weapon. Try them in the arena."
 	intro.add_theme_font_size_override("font_size", 12)
 	intro.add_theme_color_override("font_color", MUTED)
 	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -1669,6 +1823,23 @@ func _build_art_section() -> Control:
 			draft["lab"]["cutout_method"] = CUTOUT_METHODS[index][0]
 			_mark_dirty())
 	column.add_child(_field("Cutout", method_picker))
+	var type_row := HBoxContainer.new()
+	type_row.add_theme_constant_override("separation", 6)
+	art_type_picker = OptionButton.new()
+	art_type_picker.name = "ArtWeaponType"
+	art_type_picker.fit_to_longest_item = false
+	art_type_picker.tooltip_text = "What kind of weapon this is. Used to sort the list and to share attack animations (section 4)."
+	art_type_picker.item_selected.connect(func(index: int) -> void:
+		if _loading:
+			return
+		set_weapon_type(str(art_type_picker.get_item_metadata(index))))
+	type_row.add_child(_field("Weapon type", art_type_picker))
+	type_row.get_child(0).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var new_category := _button("+ New", true)
+	new_category.tooltip_text = "Add a weapon category."
+	new_category.pressed.connect(open_category_dialog)
+	type_row.add_child(new_category)
+	column.add_child(type_row)
 	tolerance_spin = _spin(5.0, 120.0, 1.0)
 	tolerance_spin.tooltip_text = "How different from the backdrop colour a pixel must be to stay."
 	tolerance_row = _field("Tolerance", tolerance_spin)
@@ -1711,6 +1882,7 @@ func _build_art_section() -> Control:
 func _build_details_section() -> Control:
 	var section := _section("2  DETAILS & STATS")
 	var column: VBoxContainer = section.get_meta("body")
+	column.add_child(_build_showcase())
 	name_edit = LineEdit.new()
 	name_edit.placeholder_text = "Weapon name"
 	name_edit.text_changed.connect(_on_name_changed)
@@ -1788,6 +1960,7 @@ func _build_placement_section() -> Control:
 	grid.columns = 4
 	grid.add_theme_constant_override("h_separation", 8)
 	column.add_child(grid)
+	placement_grid = grid
 	_placement_spin(grid, "grip_x", "Grip X", 0.0, 1.0, 0.01)
 	_placement_spin(grid, "grip_y", "Grip Y", 0.0, 1.0, 0.01)
 	_placement_spin(grid, "world_scale", "Scale", 0.1, 4.0, 0.05)
@@ -1805,7 +1978,7 @@ func _build_placement_section() -> Control:
 	facing_picker.item_selected.connect(func(_index: int) -> void: _mark_dirty())
 	grid.add_child(facing_picker)
 	var hint := Label.new()
-	hint.text = "Tip: fine-tune placement in the arena by dragging the weapon while the hero holds it."
+	hint.text = "Tip: drag the weapon in the Holding preview (section 2) to put it in the hand; the mouse wheel turns it and Shift + wheel resizes it. Check it in the arena too, while the hero walks and attacks."
 	hint.add_theme_font_size_override("font_size", 12)
 	hint.add_theme_color_override("font_color", MUTED)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -2017,41 +2190,191 @@ func _box(fill: Color, border: Color, border_width: int, radius: int, padding: f
 	style.content_margin_bottom = padding
 	return style
 
-# ---------- attack clip ----------
+# ---------- attack animation ----------
 
+## This weapon's own animation ({} if it has none).
 func current_clip() -> Dictionary:
 	var clip: Variant = draft.get("attack_clip", {})
 	return clip if WeaponClip.is_set(clip) else {}
 
+## The animation the weapon actually plays: its own, its type's default, or none.
+func effective_clip() -> Dictionary:
+	return WeaponTypes.resolve_clip(draft, type_library)
+
+func weapon_type() -> String:
+	return str(draft.get("weapon_type", ""))
+
+func type_label() -> String:
+	return WeaponTypes.label_of(weapon_type(), type_library) if not weapon_type().is_empty() else ""
+
 func attack_interval() -> float:
 	return float(resolved_stats().attack_interval)
 
-## Opens the clip importer for a new clip.
-func open_clip_importer() -> void:
-	_sync_from_controls()
-	clip_importer.start(str(draft.get("weapon_id", "")), hit_seconds(), attack_interval())
+func reload_type_library() -> void:
+	type_library = WeaponTypes.load_library(data_root)
 
-## Reopens the importer on the weapon's current clip project.
-func edit_clip() -> bool:
-	var project := str(current_clip().get("project", ""))
-	if project.is_empty():
-		_set_status("This clip has no importer project to edit (it was made elsewhere). Import it again instead.", BAD)
-		return false
-	_sync_from_controls()
-	return clip_importer.load_project(project, str(draft.get("weapon_id", "")), hit_seconds(), attack_interval())
-
-func remove_clip() -> void:
-	draft["attack_clip"] = {}
+func set_weapon_type(type_id: String) -> void:
+	var id := WeaponTypes.type_id_from(type_id)
+	draft["weapon_type"] = id
+	draft.erase("type_guessed")
 	_mark_dirty()
 	_refresh_clip_section()
-	_set_status("Removed the attack clip. The hero uses its normal attack with this weapon again.")
+	# Keep the list's category tags and filter counts current.
+	for entry in entries:
+		if str(entry.get("id", "")) == str(draft.get("weapon_id", "")):
+			entry["weapon_type"] = id
+	_render_tiles()
 
-func _on_clip_saved(clip: Dictionary) -> void:
+## "type" (the type's default), "own" (this weapon's), or "none".
+func set_clip_source(source: String) -> void:
+	if not WeaponTypes.SOURCES.has(source):
+		return
+	draft["clip_source"] = source
+	_mark_dirty()
+	_refresh_clip_section()
+
+## Makes sure this weapon's own animation sheets exist before publishing.
+## The clip importer replaces a project's sheet each time it saves, so an own
+## clip saved earlier can point at a file that's gone. If the weapon doesn't
+## play its own clip (it uses its type's default or the normal attack), the
+## stale copy is dropped; otherwise it says how to fix it. "" when all is well.
+func check_own_clip_files() -> String:
+	var clip: Variant = draft.get("attack_clip", {})
+	if not WeaponClip.is_set(clip):
+		return ""
+	var missing: Array = []
+	var source := str(clip.get("source", ""))
+	var sheet := str(clip.get("sheet", ""))
+	var sheet_file := source if not source.is_empty() else (ProjectSettings.globalize_path(sheet) if sheet.begins_with("res://") and sheet != Store.PENDING_EFFECT_SHEET else sheet)
+	if sheet_file.is_empty() or not FileAccess.file_exists(sheet_file):
+		missing.append(sheet_file if not sheet_file.is_empty() else "(no sheet)")
+	var hand_source := str(clip.get("hand_source", ""))
+	if not hand_source.is_empty() and not FileAccess.file_exists(hand_source):
+		missing.append(hand_source)
+	if missing.is_empty():
+		return ""
+	if WeaponTypes.clip_source(draft) != "own":
+		draft["attack_clip"] = {}
+		_mark_dirty()
+		_refresh_clip_section()
+		return ""
+	return "This weapon's own attack animation sheet is missing (%s), probably replaced when its importer project was saved again. Press Edit... in section 4 and save it again, then publish." % ", ".join(missing.map(func(path: String) -> String: return path.get_file()))
+
+## Opens the clip importer for the hero's own art.
+func open_hero_importer(animation: String = "walk") -> void:
+	_sync_from_controls()
+	clip_importer.type_label = ""
+	clip_importer.editing_default = false
+	clip_importer.start_hero(animation)
+
+## Makes the frames the hero's idle, walk or attack everywhere in the game.
+func install_hero_animation(clip: Dictionary, animation: String, still_frame: int = -1) -> Dictionary:
+	var result: Dictionary = HeroAnimationsScript.install(clip, animation, still_frame)
+	if not bool(result.ok):
+		_set_status("Couldn't install the hero %s: %s" % [animation, str(result.error)], BAD)
+		return result
+	if showcase != null:
+		showcase.reload_heroes()
+	queue_showcase()
+	_set_status("The hero's %s is now the new art (%d frame%s). The previews use it now; click back into the Godot editor so it imports the files before the next run. Old art backed up in art/side-view/backups/." % [animation, int(result.frame_count), "" if int(result.frame_count) == 1 else "s"], GOOD)
+	return result
+
+## Opens the clip importer for a new animation.
+func open_clip_importer() -> void:
+	_sync_from_controls()
+	clip_importer.type_label = type_label()
+	clip_importer.editing_default = false
+	clip_importer.set_preview_options(preview_weapon_options(), str(draft.get("weapon_id", "")))
+	clip_importer.start(str(draft.get("weapon_id", "")), hit_seconds(), attack_interval())
+
+## Reopens the importer on the animation in use (own, or the type default).
+func edit_clip() -> bool:
+	_sync_from_controls()
+	var editing_default := WeaponTypes.clip_source(draft) == "type"
+	var project := ""
+	if editing_default:
+		project = str(type_library.get("types", {}).get(weapon_type(), {}).get("project", ""))
+	else:
+		project = str(current_clip().get("project", ""))
+	if project.is_empty():
+		_set_status("That animation has no importer project to edit. Make a new one instead.", BAD)
+		return false
+	clip_importer.type_label = type_label()
+	clip_importer.editing_default = editing_default
+	clip_importer.set_preview_options(preview_weapon_options(), str(draft.get("weapon_id", "")))
+	return clip_importer.load_project(project, str(draft.get("weapon_id", "")), hit_seconds(), attack_interval())
+
+## Makes this weapon's own animation the default for its type.
+func set_own_as_type_default() -> bool:
+	if current_clip().is_empty():
+		_set_status("This weapon has no animation of its own to share.", BAD)
+		return false
+	return _save_type_default(current_clip())
+
+func remove_clip() -> void:
+	if WeaponTypes.clip_source(draft) == "type":
+		if WeaponTypes.remove_default(weapon_type(), data_root):
+			reload_type_library()
+			_refresh_clip_section()
+			_set_status("Removed the %s default. %s weapons use the hero's normal attack until a new default is set." % [type_label(), type_label()])
+		return
+	draft["attack_clip"] = {}
+	draft["clip_source"] = "type"
+	_mark_dirty()
+	_refresh_clip_section()
+	_set_status("Removed this weapon's own animation. It uses the %s default again." % type_label() if not weapon_type().is_empty() else "Removed this weapon's own animation.")
+
+func _on_clip_saved(clip: Dictionary, target: String) -> void:
+	if target == "type":
+		if not _save_type_default(clip):
+			return
+		# The importer replaces the project's sheet on every save, so a copy of
+		# the same animation on this weapon would point at a deleted file: keep
+		# it in step with the new sheet.
+		var own := current_clip()
+		if not own.is_empty() and str(own.get("project", "")) == str(clip.get("project", "")):
+			draft["attack_clip"] = clip.duplicate(true)
+			_mark_dirty()
+		if WeaponTypes.clip_source(draft) != "type":
+			draft["clip_source"] = "type"
+			_mark_dirty()
+		_refresh_clip_section()
+		return
 	draft["attack_clip"] = clip.duplicate(true)
+	draft["clip_source"] = "own"
 	_mark_dirty()
 	_refresh_clip_section()
 	var attacks := WeaponClip.attack_ranges(clip).size()
-	_set_status("Attack clip saved: %d frames, %d attack%s. Try it with Test in arena." % [int(clip.frame_count), attacks, "" if attacks == 1 else "s (the hero alternates between them)"], GOOD)
+	_set_status("Saved as this weapon's own animation: %d frames, %d attack%s. Try it with Test in arena." % [int(clip.frame_count), attacks, "" if attacks == 1 else "s (the hero alternates between them)"], GOOD)
+
+func _save_type_default(clip: Dictionary) -> bool:
+	if weapon_type().is_empty():
+		_set_status("Pick this weapon's type first (Axe, Sword...), then save the animation as that type's default.", BAD)
+		return false
+	var result := WeaponTypes.set_default(weapon_type(), clip, data_root, asset_root)
+	if not bool(result.ok):
+		_set_status("Couldn't set the %s default: %s" % [type_label(), str(result.error)], BAD)
+		return false
+	reload_type_library()
+	_refresh_clip_section()
+	var users := weapons_using_type_default(weapon_type())
+	_set_status("%s default saved. %d weapon%s use%s it now; new %s weapons get it automatically." % [type_label(), users.size(), "" if users.size() == 1 else "s", "s" if users.size() == 1 else "", type_label().to_lower()], GOOD)
+	return true
+
+## Weapons (published or drafts) of `type_id` that use their type's default.
+func weapons_using_type_default(type_id: String) -> Array:
+	var result: Array = []
+	for entry in entries:
+		var id := str(entry.get("id", ""))
+		var source: Dictionary = draft if id == str(draft.get("weapon_id", "")) else _entry_revision(entry)
+		if str(source.get("weapon_type", "")) == type_id and WeaponTypes.clip_source(source) == "type":
+			result.append(id)
+	if str(draft.get("weapon_id", "")).is_empty() and weapon_type() == type_id and WeaponTypes.clip_source(draft) == "type":
+		result.append("(this weapon)")
+	return result
+
+func _entry_revision(entry: Dictionary) -> Dictionary:
+	return {"weapon_type": str(entry.get("weapon_type", "")), "clip_source": str(entry.get("clip_source", "type"))}
 
 func _clip_texture(clip: Dictionary) -> Texture2D:
 	var path := WeaponClip.sheet_path(clip)
@@ -2060,14 +2383,53 @@ func _clip_texture(clip: Dictionary) -> Texture2D:
 	return _clip_textures[path]
 
 func _build_clip_section() -> Control:
-	var section := _section("6  ATTACK CLIP")
+	var section := _section("4  ATTACK ANIMATION")
 	var column: VBoxContainer = section.get_meta("body")
 	var intro := Label.new()
-	intro.text = "A drawn attack animation for this weapon, from a pose sheet (like a ChatGPT animation sheet), frame images, or a video. It can show the whole hero swinging (replacing the hero's attack while this weapon is equipped) or just the weapon. One clip can hold a combo: the hero alternates between its attacks."
+	intro.text = "How the hero attacks with this weapon. Give it a type, then either use that type's default animation (shared by every axe, every sword...) or give this weapon its own. Animations come from a pose sheet (like a ChatGPT animation sheet), frame images, or a video."
 	intro.add_theme_font_size_override("font_size", 12)
 	intro.add_theme_color_override("font_color", MUTED)
 	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	column.add_child(intro)
+	var type_row := HFlowContainer.new()
+	type_row.add_theme_constant_override("h_separation", 8)
+	column.add_child(type_row)
+	type_picker = OptionButton.new()
+	type_picker.name = "WeaponType"
+	type_picker.tooltip_text = "What kind of weapon this is. Weapons of the same type share their type's default animation."
+	type_picker.item_selected.connect(func(index: int) -> void:
+		if _loading:
+			return
+		set_weapon_type(str(type_picker.get_item_metadata(index))))
+	type_row.add_child(_field("Weapon type", type_picker))
+	type_new_edit = LineEdit.new()
+	type_new_edit.placeholder_text = "new type, e.g. great sword"
+	type_new_edit.custom_minimum_size = Vector2(200, 0)
+	type_new_edit.text_submitted.connect(func(text: String) -> void:
+		if not text.strip_edges().is_empty():
+			add_category(text, true)
+			type_new_edit.text = "")
+	type_row.add_child(type_new_edit)
+	var add_type := _button("Add type", true)
+	add_type.pressed.connect(func() -> void:
+		if not type_new_edit.text.strip_edges().is_empty():
+			add_category(type_new_edit.text, true)
+			type_new_edit.text = "")
+	type_row.add_child(add_type)
+	var source_row := HFlowContainer.new()
+	source_row.add_theme_constant_override("h_separation", 6)
+	column.add_child(source_row)
+	var group := ButtonGroup.new()
+	for source in [["type", "Use the type's default"], ["own", "Own animation"], ["none", "Hero's normal attack"]]:
+		var button := CheckBox.new()
+		button.name = "ClipSource_" + str(source[0])
+		button.button_group = group
+		button.text = str(source[1])
+		button.toggled.connect(func(on: bool) -> void:
+			if on and not _loading:
+				set_clip_source(str(source[0])))
+		source_row.add_child(button)
+		clip_source_buttons[source[0]] = button
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
 	column.add_child(row)
@@ -2086,34 +2448,93 @@ func _build_clip_section() -> Control:
 	clip_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	clip_summary.add_theme_font_size_override("font_size", 13)
 	side.add_child(clip_summary)
-	var buttons := HBoxContainer.new()
+	var buttons := HFlowContainer.new()
 	side.add_child(buttons)
-	var import_button := _button("Import clip...")
-	import_button.name = "ImportClip"
-	import_button.tooltip_text = "Open the clip importer: slice a pose sheet, cut out every frame, line them up, and set the hit frame."
-	import_button.pressed.connect(open_clip_importer)
-	buttons.add_child(import_button)
-	clip_edit_button = _button("Edit clip...")
-	clip_edit_button.tooltip_text = "Reopen this clip in the importer."
+	clip_make_button = _button("Make animation...")
+	clip_make_button.name = "ImportClip"
+	clip_make_button.tooltip_text = "Open the clip importer: slice a pose sheet, cut out every frame, line them up, set the hit frame, then save it for this weapon or as its type's default."
+	clip_make_button.pressed.connect(open_clip_importer)
+	buttons.add_child(clip_make_button)
+	clip_edit_button = _button("Edit...")
+	clip_edit_button.tooltip_text = "Reopen the animation in use in the importer."
 	clip_edit_button.pressed.connect(func() -> void: edit_clip())
 	buttons.add_child(clip_edit_button)
-	clip_remove_button = _button("Remove clip", true)
+	clip_default_button = _button("Make this the type default")
+	clip_default_button.tooltip_text = "Share this weapon's own animation with every weapon of its type."
+	clip_default_button.pressed.connect(func() -> void:
+		if set_own_as_type_default():
+			set_clip_source("type"))
+	buttons.add_child(clip_default_button)
+	clip_remove_button = _button("Remove", true)
 	clip_remove_button.pressed.connect(remove_clip)
 	buttons.add_child(clip_remove_button)
+	side.add_child(_build_hand_fit_row())
+	clip_defaults_label = Label.new()
+	clip_defaults_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	clip_defaults_label.add_theme_font_size_override("font_size", 12)
+	clip_defaults_label.add_theme_color_override("font_color", MUTED)
+	side.add_child(clip_defaults_label)
 	return section
 
 func _refresh_clip_section() -> void:
 	if clip_summary == null:
 		return
-	var clip := current_clip()
-	clip_edit_button.disabled = clip.is_empty() or str(clip.get("project", "")).is_empty()
-	clip_remove_button.disabled = clip.is_empty()
-	if clip.is_empty():
-		clip_summary.text = "No clip. The hero uses its normal attack and the swing above."
-		clip_summary.add_theme_color_override("font_color", MUTED)
-	else:
+	if type_library.is_empty():
+		reload_type_library()
+	var was_loading := _loading
+	_loading = true
+	# Types: none, every known type, plus this weapon's if it's new.
+	_fill_type_picker(type_picker, true)
+	_fill_type_picker(art_type_picker, false)
+	var source := WeaponTypes.clip_source(draft)
+	for key in clip_source_buttons:
+		clip_source_buttons[key].button_pressed = key == source
+	var label := type_label()
+	clip_source_buttons["type"].text = "Use the %s default" % label if not label.is_empty() else "Use the type's default"
+	clip_source_buttons["type"].disabled = weapon_type().is_empty()
+	_loading = was_loading
+	var own := current_clip()
+	var clip := effective_clip()
+	var fit := hand_fit()
+	var was := _loading
+	_loading = true
+	hand_fit_row.visible = WeaponClip.has_track(WeaponClip.normalize(clip)) if not clip.is_empty() else false
+	if world_preview != null:
+		world_preview.queue_redraw()
+	hand_angle_spin.value = float(fit.angle)
+	hand_scale_spin.value = float(fit.scale)
+	hand_flip_check.button_pressed = bool(fit.flip)
+	_loading = was
+	clip_default_button.visible = not own.is_empty() and not weapon_type().is_empty()
+	clip_default_button.text = "Make this the %s default" % label if not label.is_empty() else "Make this the type default"
+	var project := ""
+	if source == "type":
+		project = str(type_library.get("types", {}).get(weapon_type(), {}).get("project", ""))
+	elif source == "own":
+		project = str(own.get("project", ""))
+	clip_edit_button.disabled = clip.is_empty() or project.is_empty()
+	clip_remove_button.disabled = clip.is_empty() or source == "none"
+	clip_remove_button.text = "Remove the %s default" % label if source == "type" and not label.is_empty() else "Remove"
+	var lines: Array = []
+	match source:
+		"type":
+			if weapon_type().is_empty():
+				lines.append("Pick a weapon type to use its default animation. Until then the hero uses its normal attack.")
+			elif clip.is_empty():
+				lines.append("No %s default yet, so the hero uses its normal attack. Make an animation and save it as the %s default: every %s weapon gets it." % [label, label, label.to_lower()])
+			else:
+				var users := weapons_using_type_default(weapon_type())
+				lines.append("Using the %s default \"%s\", shared by %d weapon%s." % [label, str(clip.get("label", "")), users.size(), "" if users.size() == 1 else "s"])
+		"own":
+			if clip.is_empty():
+				lines.append("This weapon has no animation of its own yet. Make one, or switch back to the type's default.")
+			else:
+				lines.append("Using this weapon's own animation \"%s\"%s." % [str(clip.get("label", "")), "" if str(own.get("source", "")).is_empty() else " (not published yet)"])
+		"none":
+			lines.append("Using the hero's normal attack.")
+	if not clip.is_empty():
 		var normalized := WeaponClip.normalize(clip)
-		var lines: Array = ["%s: %s, %d frames%s." % [str(normalized.label), str(WeaponClip.MODE_LABELS.get(str(normalized.mode), "")).to_lower(), int(normalized.frame_count), "" if str(clip.get("source", "")).is_empty() else " (not published yet)"]]
+		lines[0] += " %s, %d frames." % [str(WeaponClip.MODE_LABELS.get(str(normalized.mode), "")), int(normalized.frame_count)]
 		var interval := attack_interval()
 		for index in range(WeaponClip.attack_ranges(normalized).size()):
 			var line := WeaponClip.timeline(normalized, index, hit_seconds())
@@ -2121,19 +2542,23 @@ func _refresh_clip_section() -> void:
 			if float(line.length) > interval + 0.001:
 				text += ". Longer than the %.2f s between attacks: the next attack cuts it off." % interval
 			lines.append(text)
-		if str(normalized.mode) == "hero":
-			lines.append("While it plays the held weapon is hidden (effects still show).")
-		clip_summary.text = "\n".join(lines)
-		clip_summary.add_theme_color_override("font_color", INK)
+	clip_summary.text = "\n".join(lines)
+	clip_summary.add_theme_color_override("font_color", INK if not clip.is_empty() else MUTED)
+	var defaults: Array = []
+	for type_id in type_library.get("types", {}):
+		var entry: Dictionary = type_library.types[type_id]
+		defaults.append("%s (\"%s\")" % [WeaponTypes.label_of(type_id, type_library), str(entry.get("clip", {}).get("label", ""))])
+	clip_defaults_label.text = "Type defaults: " + (", ".join(defaults) if not defaults.is_empty() else "none yet.")
 	clip_preview.queue_redraw()
+	queue_showcase()
 
-## Loops the clip's combo in the preview box.
+## Loops the animation in use in the preview box.
 func _draw_clip_preview() -> void:
 	var rect := Rect2(Vector2.ZERO, clip_preview.size)
-	var clip := current_clip()
+	var clip := effective_clip()
 	var texture := _clip_texture(clip) if not clip.is_empty() else null
 	if texture == null:
-		clip_preview.draw_string(ThemeDB.fallback_font, Vector2(12, rect.size.y * 0.5), "No clip", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, MUTED)
+		clip_preview.draw_string(ThemeDB.fallback_font, Vector2(12, rect.size.y * 0.5), "Hero's normal attack", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, MUTED)
 		return
 	var normalized := WeaponClip.normalize(clip)
 	var lines: Array = []
@@ -2161,5 +2586,602 @@ func _draw_clip_preview() -> void:
 	clip_preview.draw_line(Vector2(8, ground), Vector2(rect.size.x - 8, ground), Color(EDGE, 0.9), 1.0)
 	if frame < 0:
 		frame = int(lines[mini(number, lines.size() - 1)].frames[0]) if not lines.is_empty() else 0
+	var weapon := preview_weapon() if WeaponClip.has_track(normalized) else {}
+	var behind := false
+	if not weapon.is_empty():
+		behind = bool(normalized.track[clampi(frame, 0, normalized.track.size() - 1)].get("behind", false))
+		if behind:
+			_draw_preview_weapon(normalized, frame, weapon, origin, fit)
 	clip_preview.draw_texture_rect_region(texture, Rect2(origin, cell_size * fit), WeaponClip.frame_rect(normalized, frame))
+	if not weapon.is_empty() and not behind:
+		_draw_preview_weapon(normalized, frame, weapon, origin, fit)
 	clip_preview.draw_string(ThemeDB.fallback_font, Vector2(8, rect.size.y - 6), "attack %d  frame %d" % [mini(number, lines.size() - 1) + 1, frame + 1], HORIZONTAL_ALIGNMENT_LEFT, -1, 11, MUTED)
+
+# ---------- weapon in the hands (hero_weapon animations) ----------
+
+func hand_fit() -> Dictionary:
+	return WeaponClip.normalize_hand_fit(draft.get("hand_fit", {}))
+
+func set_hand_fit(angle: float, scale: float, flip: bool) -> void:
+	var values := {"angle": angle, "scale": scale, "flip": flip}
+	if hand_fit().has("tip"):
+		values["tip"] = hand_fit().tip
+	draft["hand_fit"] = WeaponClip.normalize_hand_fit(values)
+	_mark_dirty()
+	if clip_preview != null:
+		clip_preview.queue_redraw()
+
+## This weapon's picture, grip and far end, for drawing it in the hands.
+func preview_weapon() -> Dictionary:
+	# The section 1 preview holds the loaded picture; current_world_texture()
+	# makes a new texture each call, which would be freed mid-draw.
+	var texture: Texture2D = world_preview.texture if world_preview != null and world_preview.texture != null else current_world_texture()
+	if texture == null:
+		return {}
+	var grip_values: Array = draft.get("art", {}).get("grip", [0.5, 0.75])
+	var grip := Vector2(float(grip_values[0]), float(grip_values[1]))
+	var key := "%s|%s|%s" % [str(texture.get_instance_id()), str(grip), str(hand_fit().get("tip", ""))]
+	if not _weapon_tip_cache.has(key):
+		_weapon_tip_cache[key] = WeaponClip.resolve_tip(texture.get_image(), grip, hand_fit())
+	return {"texture": texture, "grip": grip, "tip": _weapon_tip_cache[key], "fit": hand_fit()}
+
+func _build_hand_fit_row() -> Control:
+	hand_fit_row = HFlowContainer.new()
+	hand_fit_row.name = "HandFit"
+	hand_fit_row.add_theme_constant_override("h_separation", 8)
+	var caption := Label.new()
+	caption.text = "This weapon in the hands:"
+	caption.add_theme_font_size_override("font_size", 13)
+	caption.add_theme_color_override("font_color", MUTED)
+	hand_fit_row.add_child(caption)
+	hand_angle_spin = _spin(-180.0, 180.0, 1.0)
+	hand_angle_spin.suffix = "°"
+	hand_angle_spin.tooltip_text = "Turn this weapon's picture in the hands (for art drawn at an angle)."
+	hand_fit_row.add_child(_field("Angle", hand_angle_spin))
+	hand_scale_spin = _spin(0.1, 5.0, 0.05)
+	hand_scale_spin.value = 1.0
+	hand_scale_spin.tooltip_text = "Size compared with the weapon in the animation (1 = same length)."
+	hand_fit_row.add_child(_field("Size", hand_scale_spin))
+	hand_tip_button = _button("Set far end...", true)
+	hand_tip_button.tooltip_text = "Click the end of the weapon picture that should point away from the hand (the axe head, the blade tip). Right-click the button to go back to automatic."
+	hand_tip_button.pressed.connect(func() -> void:
+		picking_tip = true
+		_set_status("Click the far end of the weapon (the head or blade tip) on the world sprite in section 1."))
+	hand_tip_button.gui_input.connect(func(event: InputEvent) -> void:
+		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
+			clear_weapon_tip())
+	hand_fit_row.add_child(hand_tip_button)
+	hand_flip_check = CheckBox.new()
+	hand_flip_check.text = "Flip"
+	hand_flip_check.tooltip_text = "Put the blade or head on the other side of the handle."
+	hand_fit_row.add_child(hand_flip_check)
+	for control in [hand_angle_spin, hand_scale_spin]:
+		(control as SpinBox).value_changed.connect(func(_value: float) -> void:
+			if not _loading:
+				set_hand_fit(hand_angle_spin.value, hand_scale_spin.value, hand_flip_check.button_pressed))
+	hand_flip_check.toggled.connect(func(_on: bool) -> void:
+		if not _loading:
+			set_hand_fit(hand_angle_spin.value, hand_scale_spin.value, hand_flip_check.button_pressed))
+	return hand_fit_row
+
+func _draw_preview_weapon(clip: Dictionary, frame: int, weapon: Dictionary, origin: Vector2, fit: float) -> void:
+	var texture: Texture2D = weapon.texture
+	var placed := WeaponClip.hand_transform(clip, frame, Vector2(texture.get_size()), weapon.grip, weapon.tip, weapon.fit)
+	clip_preview.draw_set_transform_matrix(Transform2D(0.0, Vector2(fit, fit), 0.0, origin) * placed)
+	clip_preview.draw_texture(texture, -Vector2(texture.get_size()) * 0.5)
+	clip_preview.draw_set_transform_matrix(Transform2D.IDENTITY)
+
+## Weapons the importer can preview in the hands: this one first, then every
+## other weapon with art. {id, label, texture, grip, fit}.
+func preview_weapon_options() -> Array:
+	var options: Array = []
+	var current_id := str(draft.get("weapon_id", ""))
+	var current := preview_weapon()
+	if not current.is_empty():
+		options.append({"id": current_id, "label": "%s (this weapon)" % (str(draft.get("label", "")) if not str(draft.get("label", "")).is_empty() else "This weapon"), "texture": current.texture, "grip": current.grip, "fit": current.fit})
+	for entry in entries:
+		var id := str(entry.get("id", ""))
+		if id == current_id or bool(entry.get("removed", false)):
+			continue
+		var texture: Texture2D = null
+		var grip_values: Array = [0.5, 0.75]
+		var fit := {}
+		var saved := Store.load_draft(DRAFT_PREFIX + id, draft_root)
+		var job_id := str(saved.get("art", {}).get("job_id", ""))
+		if Art.is_complete(job_id):
+			texture = Art.load_texture(Art.run_dir(job_id).path_join("world-sprite.png"))
+			grip_values = saved.get("art", {}).get("grip", grip_values)
+			fit = saved.get("hand_fit", {})
+		else:
+			var published := published_entry(id)
+			if not published.is_empty():
+				texture = Art.load_texture(str(published.get("assets", {}).get("world_sprite", "")))
+				grip_values = published.get("pivot", {}).get("grip", grip_values)
+				fit = published.get("hand_fit", {})
+		if texture == null:
+			continue
+		options.append({"id": id, "label": str(entry.get("label", id)), "texture": texture, "grip": Vector2(float(grip_values[0]), float(grip_values[1])), "fit": WeaponClip.normalize_hand_fit(fit)})
+	return options
+
+## The far end of this weapon's picture (normalized), for animations that
+## draw it in the hero's hands. Clears the automatic guess.
+func set_weapon_tip(point: Vector2) -> void:
+	picking_tip = false
+	var values := hand_fit()
+	values["tip"] = [clampf(point.x, 0.0, 1.0), clampf(point.y, 0.0, 1.0)]
+	draft["hand_fit"] = WeaponClip.normalize_hand_fit(values)
+	_mark_dirty()
+	world_preview.queue_redraw()
+	if clip_preview != null:
+		clip_preview.queue_redraw()
+	_set_status("Far end set. The weapon now points from the grip toward that point in the hero's hands.", GOOD)
+
+func clear_weapon_tip() -> void:
+	var values := hand_fit()
+	values.erase("tip")
+	draft["hand_fit"] = WeaponClip.normalize_hand_fit(values)
+	_mark_dirty()
+	world_preview.queue_redraw()
+	_set_status("Far end back to automatic (the point of the picture farthest from the grip).")
+
+# ---------- weapon categories ----------
+
+## Fills a weapon type picker: "Not set", every category, and this weapon's.
+func _fill_type_picker(picker: OptionButton, show_defaults: bool) -> void:
+	if picker == null:
+		return
+	var was := _loading
+	_loading = true
+	picker.clear()
+	picker.add_item("Not set")
+	picker.set_item_metadata(0, "")
+	picker.select(0)
+	for type_id in category_ids():
+		var has_default := show_defaults and not WeaponTypes.default_clip(type_library, type_id).is_empty()
+		picker.add_item(WeaponTypes.label_of(type_id, type_library) + ("  (has default)" if has_default else ""))
+		picker.set_item_metadata(picker.item_count - 1, type_id)
+		if type_id == weapon_type():
+			picker.select(picker.item_count - 1)
+	_loading = was
+
+## Every category: built-in, added, and any a weapon uses.
+func category_ids() -> Array:
+	if type_library.is_empty():
+		reload_type_library()
+	var used: Array = [weapon_type()]
+	for entry in entries:
+		used.append(str(entry.get("weapon_type", "")))
+	return WeaponTypes.known_types(type_library, used)
+
+func category_count(type_id: String) -> int:
+	var count := 0
+	for entry in entries:
+		if str(entry.get("weapon_type", "")) == type_id:
+			count += 1
+	return count
+
+func _in_category(entry: Dictionary) -> bool:
+	match category_choice:
+		"__all__":
+			return true
+		"__none__":
+			return str(entry.get("weapon_type", "")).is_empty()
+	return str(entry.get("weapon_type", "")) == category_choice
+
+func set_category_filter(choice: String) -> void:
+	category_choice = choice
+	_render_tiles()
+
+func _refresh_category_filter() -> void:
+	if category_filter == null:
+		return
+	category_filter.clear()
+	category_filter.add_item("All categories (%d)" % entries.size())
+	category_filter.set_item_metadata(0, "__all__")
+	var index := 0
+	for type_id in category_ids():
+		var count := category_count(type_id)
+		category_filter.add_item("%s (%d)" % [WeaponTypes.label_of(type_id, type_library), count])
+		category_filter.set_item_metadata(category_filter.item_count - 1, type_id)
+		if type_id == category_choice:
+			index = category_filter.item_count - 1
+	category_filter.add_item("No category (%d)" % category_count(""))
+	category_filter.set_item_metadata(category_filter.item_count - 1, "__none__")
+	if category_choice == "__none__":
+		index = category_filter.item_count - 1
+	if index == 0 and category_choice != "__all__":
+		category_choice = "__all__"
+	category_filter.select(index)
+
+## Adds a category; with `assign`, this weapon gets it too.
+func add_category(name: String, assign: bool = false) -> String:
+	var type_id := WeaponTypes.add_category(name, data_root)
+	if type_id.is_empty():
+		_set_status("Type a name for the category.", BAD)
+		return ""
+	reload_type_library()
+	if assign:
+		set_weapon_type(type_id)
+	else:
+		_refresh_clip_section()
+	_render_tiles()
+	_refresh_category_rows()
+	_set_status("Category %s added." % WeaponTypes.label_of(type_id, type_library), GOOD)
+	return type_id
+
+func rename_category(type_id: String, name: String) -> void:
+	if WeaponTypes.rename_category(type_id, name, data_root):
+		reload_type_library()
+		_refresh_clip_section()
+		_render_tiles()
+
+func remove_category(type_id: String) -> void:
+	var label := WeaponTypes.label_of(type_id, type_library)
+	WeaponTypes.remove_category(type_id, data_root)
+	reload_type_library()
+	if category_choice == type_id:
+		category_choice = "__all__"
+	_refresh_clip_section()
+	_render_tiles()
+	_refresh_category_rows()
+	var users := category_count(type_id)
+	_set_status("Removed the %s category.%s" % [label, (" %d weapon%s still use%s it; change their type to clear it." % [users, "" if users == 1 else "s", "s" if users == 1 else ""]) if users > 0 else ""])
+
+func open_category_dialog() -> void:
+	_refresh_category_rows()
+	category_dialog.size = Vector2i(560, 480)
+	category_dialog.popup_centered()
+	category_new_edit.grab_focus()
+
+func _build_category_dialog() -> void:
+	category_dialog = AcceptDialog.new()
+	category_dialog.name = "CategoryDialog"
+	category_dialog.title = "Weapon categories"
+	category_dialog.ok_button_text = "Done"
+	category_dialog.max_size = Vector2i(600, 560)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 8)
+	category_dialog.add_child(column)
+	var add_row := HBoxContainer.new()
+	column.add_child(add_row)
+	category_new_edit = LineEdit.new()
+	category_new_edit.placeholder_text = "New category, e.g. Shotgun"
+	category_new_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	category_new_edit.text_submitted.connect(func(text: String) -> void:
+		if not text.strip_edges().is_empty():
+			add_category(text, false)
+			category_new_edit.text = "")
+	add_row.add_child(category_new_edit)
+	var add_button := _button("Add")
+	add_button.pressed.connect(func() -> void:
+		if not category_new_edit.text.strip_edges().is_empty():
+			add_category(category_new_edit.text, false)
+			category_new_edit.text = "")
+	add_row.add_child(add_button)
+	var note := Label.new()
+	note.text = "Rename a category by editing its name. Removing one keeps it on weapons that already use it."
+	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	note.add_theme_font_size_override("font_size", 12)
+	note.add_theme_color_override("font_color", MUTED)
+	note.custom_minimum_size = Vector2(500, 0)
+	column.add_child(note)
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(500, 300)
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	column.add_child(scroll)
+	category_rows = VBoxContainer.new()
+	category_rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(category_rows)
+	root.add_child(category_dialog)
+
+func _refresh_category_rows() -> void:
+	if category_rows == null:
+		return
+	for child in category_rows.get_children():
+		category_rows.remove_child(child)
+		child.queue_free()
+	for type_id in category_ids():
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 6)
+		var name_edit_row := LineEdit.new()
+		name_edit_row.text = WeaponTypes.label_of(type_id, type_library)
+		name_edit_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var id := str(type_id)
+		name_edit_row.text_submitted.connect(func(text: String) -> void: rename_category(id, text))
+		name_edit_row.focus_exited.connect(func() -> void:
+			if name_edit_row.text != WeaponTypes.label_of(id, type_library):
+				rename_category(id, name_edit_row.text))
+		row.add_child(name_edit_row)
+		var info := Label.new()
+		var has_default := not WeaponTypes.default_clip(type_library, id).is_empty()
+		info.text = "%d weapon%s%s" % [category_count(id), "" if category_count(id) == 1 else "s", ", has animation" if has_default else ""]
+		info.custom_minimum_size = Vector2(170, 0)
+		info.add_theme_font_size_override("font_size", 12)
+		info.add_theme_color_override("font_color", MUTED)
+		row.add_child(info)
+		var remove := _button("Remove", true)
+		remove.tooltip_text = "Remove this category%s." % (" and its default animation" if has_default else "")
+		remove.pressed.connect(func() -> void: remove_category(id))
+		row.add_child(remove)
+		category_rows.add_child(row)
+
+# ---------- preview + readiness (section 2) ----------
+
+func _build_showcase() -> Control:
+	var box := VBoxContainer.new()
+	box.name = "Showcase"
+	box.add_theme_constant_override("separation", 8)
+	showcase = ShowcaseScript.new()
+	showcase.name = "ShowcaseStages"
+	showcase.hand_offset_dragged.connect(_on_showcase_dragged)
+	showcase.placement_nudged.connect(nudge_placement)
+	box.add_child(showcase)
+	var panel := PanelContainer.new()
+	panel.name = "Readiness"
+	panel.add_theme_stylebox_override("panel", _box(Color("15191c"), EDGE, 1, 4, 10))
+	box.add_child(panel)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 5)
+	panel.add_child(column)
+	var head := HBoxContainer.new()
+	head.add_theme_constant_override("separation", 8)
+	column.add_child(head)
+	readiness_title = Label.new()
+	readiness_title.name = "ReadinessTitle"
+	readiness_title.add_theme_font_size_override("font_size", 16)
+	readiness_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	head.add_child(readiness_title)
+	var done_label := Label.new()
+	done_label.text = "Mark done"
+	done_label.add_theme_font_size_override("font_size", 13)
+	done_label.add_theme_color_override("font_color", MUTED)
+	done_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	head.add_child(done_label)
+	done_check = CheckScript.new(24.0, true)
+	done_check.name = "DoneCheck"
+	done_check.tooltip_text = "Your own green check: tick it once this weapon is animated and in the game. It shows on the weapon's tile in the list too."
+	done_check.toggled.connect(func(on: bool) -> void:
+		if not _loading:
+			set_marked(str(draft.get("weapon_id", "")), on))
+	head.add_child(done_check)
+	readiness_rows = VBoxContainer.new()
+	readiness_rows.name = "ReadinessRows"
+	readiness_rows.add_theme_constant_override("separation", 3)
+	column.add_child(readiness_rows)
+	return box
+
+## Refreshes the previews and the readiness list once, after the current edits.
+func queue_showcase() -> void:
+	if _showcase_queued or showcase == null:
+		return
+	_showcase_queued = true
+	refresh_showcase.call_deferred()
+
+func refresh_showcase() -> void:
+	_showcase_queued = false
+	if showcase == null or draft.is_empty():
+		return
+	if not _loading:
+		_sync_from_controls()
+	var clip := effective_clip()
+	var interval := attack_interval()
+	var swing := current_swing_for_game()
+	var longest := float(swing.get("duration", 0.0))
+	if not clip.is_empty():
+		var normalized := WeaponClip.normalize(clip)
+		for index in range(WeaponClip.attack_ranges(normalized).size()):
+			longest = maxf(longest, float(WeaponClip.timeline(normalized, index, hit_seconds()).length))
+	var texture: Texture2D = world_preview.texture if world_preview != null else null
+	showcase.show_weapon({"texture": texture, "pivot": current_pivot(), "swing": swing, "effects": current_effects(), "clip": clip, "hand_fit": hand_fit(), "hit_seconds": hit_seconds(), "interval": interval, "loop_period": maxf(interval, longest + 0.35)})
+	_refresh_readiness()
+
+## Dragging the weapon in the Holding preview moves Hand X/Y.
+func _on_showcase_dragged(offset: Vector2, finished: bool) -> void:
+	draft["art"]["hand_offset"] = [offset.x, offset.y]
+	_apply_placement_controls()
+	if finished:
+		_mark_dirty()
+		_set_status("Hand position set to %d, %d. Check it in the arena while the hero walks and attacks." % [roundi(offset.x), roundi(offset.y)])
+
+## Mouse wheel over the Holding preview: turn (rotation_degrees) or resize (world_scale).
+func nudge_placement(key: String, amount: float) -> void:
+	if not placement_spins.has(key):
+		return
+	var spin: SpinBox = placement_spins[key]
+	spin.value = spin.value + amount
+
+func readiness_info() -> Dictionary:
+	var art: Dictionary = draft.get("art", {})
+	return {
+		"has_art": world_preview != null and world_preview.texture != null,
+		"weapon_type": weapon_type(),
+		"type_label": type_label(),
+		"clip_source": WeaponTypes.clip_source(draft),
+		"clip": effective_clip(),
+		"grip": art.get("grip", [0.5, 0.75]),
+		"hand_offset": art.get("hand_offset", [0.0, 0.0]),
+		"published": published_revision if is_published() else 0,
+		"removed": is_removed(),
+		"has_changes": is_published() and has_changes_from_published(),
+	}
+
+func _refresh_readiness() -> void:
+	readiness = WeaponReadiness.check(readiness_info())
+	var colors := {"art": BAD, "animation": BAD, "publish": AMBER, "check": AMBER, "ready": GOOD}
+	readiness_title.text = str(readiness.title)
+	readiness_title.add_theme_color_override("font_color", colors.get(str(readiness.state), INK))
+	for child in readiness_rows.get_children():
+		child.queue_free()
+	for item in readiness.items:
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 7)
+		var icon: Button = CheckScript.new(15.0, false)
+		icon.set_status(str(item.status))
+		icon.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+		row.add_child(icon)
+		var text := Label.new()
+		text.text = str(item.text)
+		text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		text.add_theme_font_size_override("font_size", 12)
+		text.add_theme_color_override("font_color", INK if str(item.status) != "ok" else MUTED)
+		row.add_child(text)
+		readiness_rows.add_child(row)
+	var weapon_id := str(draft.get("weapon_id", ""))
+	var was := _loading
+	_loading = true
+	done_check.disabled = weapon_id.is_empty()
+	done_check.set_pressed_no_signal(is_marked(weapon_id))
+	done_check.queue_redraw()
+	_loading = was
+
+# ---------- green "done" marks ----------
+
+func marks_path() -> String:
+	return data_root.path_join(MARKS_NAME)
+
+func load_marks() -> void:
+	lab_marks = {}
+	if not FileAccess.file_exists(marks_path()):
+		return
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(marks_path()))
+	if parsed is Dictionary and parsed.get("done") is Dictionary:
+		lab_marks = parsed.done
+
+func is_marked(weapon_id: String) -> bool:
+	return not weapon_id.is_empty() and bool(lab_marks.get(weapon_id, false))
+
+## Your own "done" check for a weapon. Saved right away (no publish needed).
+func set_marked(weapon_id: String, on: bool) -> void:
+	if weapon_id.is_empty():
+		return
+	if on:
+		lab_marks[weapon_id] = true
+	else:
+		lab_marks.erase(weapon_id)
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(data_root))
+	var file := FileAccess.open(marks_path(), FileAccess.WRITE)
+	if file != null:
+		file.store_string(JSON.stringify({"schema_version": 1, "done": lab_marks}, "\t"))
+		file.close()
+	if tiles.has(weapon_id):
+		var check: Button = tiles[weapon_id].get_node_or_null("DoneCheck")
+		if check != null:
+			check.set_pressed_no_signal(on)
+			check.queue_redraw()
+	if weapon_id == str(draft.get("weapon_id", "")) and done_check != null:
+		done_check.set_pressed_no_signal(on)
+		done_check.queue_redraw()
+
+func _add_tile_check(tile: Button, weapon_id: String) -> void:
+	for style_name in ["normal", "hover", "pressed", "hover_pressed", "focus"]:
+		var style: StyleBox = tile.get_theme_stylebox(style_name, "Button")
+		if style != null:
+			var padded := style.duplicate()
+			padded.content_margin_right = 36
+			tile.add_theme_stylebox_override(style_name, padded)
+	var check: Button = CheckScript.new(22.0, true)
+	check.name = "DoneCheck"
+	check.tooltip_text = "Done: animated and in the game. Click to tick or untick."
+	check.set_pressed_no_signal(is_marked(weapon_id))
+	check.set_anchors_preset(Control.PRESET_CENTER_RIGHT)
+	check.offset_left = -32
+	check.offset_right = -8
+	check.offset_top = -12
+	check.offset_bottom = 12
+	check.toggled.connect(func(on: bool) -> void: set_marked(weapon_id, on))
+	tile.add_child(check)
+
+# ---------- bigger window while in the lab ----------
+
+func _enlarge_window() -> void:
+	var window := get_window()
+	if window == null or not resize_window:
+		return
+	_saved_canvas = window.content_scale_size
+	_saved_aspect = window.content_scale_aspect
+	_saved_window = window.size
+	_saved_window_position = window.position
+	window.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_EXPAND
+	if not window.size_changed.is_connected(_fit_canvas):
+		window.size_changed.connect(_fit_canvas)
+	_fit_canvas()
+	if DisplayServer.get_name() == "headless" or window.mode != Window.MODE_WINDOWED:
+		return
+	if Engine.has_method("is_embedded_in_editor") and Engine.call("is_embedded_in_editor"):
+		# The editor's Game tab decides the size (it can't be resized or moved
+		# from here); say how to get the wide layout.
+		_embedded_hint = true
+		_embedded = true
+		return
+	var screen := DisplayServer.window_get_current_screen()
+	var usable := DisplayServer.screen_get_usable_rect(screen)
+	var target := Vector2i(mini(LAB_WINDOW.x, int(usable.size.x * 0.96)), mini(LAB_WINDOW.y, int(usable.size.y * 0.92)))
+	if target.x > window.size.x or target.y > window.size.y:
+		window.size = Vector2i(maxi(target.x, window.size.x), maxi(target.y, window.size.y))
+		window.position = usable.position + (usable.size - window.size) / 2
+
+## Lays the lab out at the window's own pixel size so nothing is scaled (and
+## blurred). Big windows use a whole-number scale (2x on 4K); windows smaller
+## than the 1280x720 layout are scaled down to fit.
+func lab_canvas_for(window_size: Vector2i) -> Vector2i:
+	var size := Vector2(maxi(1, window_size.x), maxi(1, window_size.y))
+	var factor := maxi(1, floori(minf(size.x / float(LAB_CANVAS.x), size.y / float(LAB_CANVAS.y))))
+	var canvas := size / float(factor)
+	var shrink := maxf(1280.0 / canvas.x, 720.0 / canvas.y)
+	if shrink > 1.0:
+		canvas *= shrink
+	return Vector2i(roundi(canvas.x), roundi(canvas.y))
+
+func _fit_canvas() -> void:
+	if arena != null or _saved_canvas == Vector2i.ZERO:
+		return
+	_set_canvas(lab_canvas_for(get_window().size))
+
+## Wide windows: Art | Details | Placement. Otherwise Placement sits under Art.
+func _layout_columns() -> void:
+	if placement_section == null or root == null:
+		return
+	layout_for_width(root.size.x)
+
+## Art | Details | Placement from THREE_COLUMNS_FROM canvas pixels up.
+func layout_for_width(width: float) -> void:
+	var wide := width >= THREE_COLUMNS_FROM
+	var parent := placement_section.get_parent()
+	if wide and parent != page_third:
+		parent.remove_child(placement_section)
+		page_third.add_child(placement_section)
+	elif not wide and parent != page_left:
+		parent.remove_child(placement_section)
+		page_left.add_child(placement_section)
+	page_third.visible = wide
+	if not wide and _embedded_hint and status_label != null:
+		_embedded_hint = false
+		_set_status.call_deferred("Running in the editor's Game tab at a fixed size. Set the tab's size mode to Stretch to Fit to use the whole tab.")
+
+func three_columns() -> bool:
+	return placement_section != null and placement_section.get_parent() == page_third
+
+func _set_canvas(canvas: Vector2i) -> void:
+	var window := get_window()
+	if window == null or not resize_window or canvas == Vector2i.ZERO:
+		return
+	window.content_scale_size = canvas
+	_layout_columns.call_deferred()
+
+func _restore_window() -> void:
+	var window := get_window()
+	if window == null or not resize_window or _saved_canvas == Vector2i.ZERO:
+		return
+	if window.size_changed.is_connected(_fit_canvas):
+		window.size_changed.disconnect(_fit_canvas)
+	window.content_scale_size = _saved_canvas
+	window.content_scale_aspect = _saved_aspect
+	if DisplayServer.get_name() != "headless" and not _embedded and window.mode == Window.MODE_WINDOWED and window.size != _saved_window:
+		window.size = _saved_window
+		window.position = _saved_window_position
+	_saved_canvas = Vector2i.ZERO
+
+func _exit_tree() -> void:
+	_restore_window()

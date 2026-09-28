@@ -37,6 +37,7 @@ var weapon_behavior_id := "weapon.standard"
 var weapon_swing: Dictionary = WeaponSwing.normalize(WeaponSwing.DEFAULT)
 var weapon_effects: Array = []
 var weapon_clip: Dictionary = {}
+var weapon_hand_fit: Dictionary = {}
 var _swing_spins: Dictionary = {}
 var _swing_preset: OptionButton
 var weapon_interval: float = BalanceData.WEAPON_INTERVAL
@@ -108,9 +109,10 @@ func _exit_tree() -> void:
 
 ## Loads the weapon under test.
 ## `stats`: {"attack_damage", "attack_interval", "projectile_speed"} (resolved game values).
-func configure_weapon(label: String, texture: Texture2D, pivot: Dictionary, behavior_id: String, stats: Dictionary, swing: Dictionary = {}, effects: Array = [], attack_clip: Dictionary = {}) -> void:
+func configure_weapon(label: String, texture: Texture2D, pivot: Dictionary, behavior_id: String, stats: Dictionary, swing: Dictionary = {}, effects: Array = [], attack_clip: Dictionary = {}, hand_fit: Dictionary = {}) -> void:
 	weapon_effects = effects.duplicate(true)
 	weapon_clip = attack_clip.duplicate(true)
+	weapon_hand_fit = hand_fit.duplicate(true)
 	weapon_swing = WeaponSwing.normalize(swing if not swing.is_empty() else WeaponSwing.DEFAULT)
 	if swing.is_empty():
 		weapon_swing["preset"] = "default"
@@ -132,7 +134,7 @@ func configure_weapon(label: String, texture: Texture2D, pivot: Dictionary, beha
 func _apply_weapon_effects() -> void:
 	if weapon_hero != null:
 		weapon_hero.configure_held_weapon_effects(weapon_effects, weapon_interval * MELEE_STRIKE_FRACTION if is_melee() else 0.0)
-		weapon_hero.configure_attack_clip(weapon_clip, weapon_interval * MELEE_STRIKE_FRACTION if is_melee() else 0.0, weapon_interval)
+		weapon_hero.configure_attack_clip(weapon_clip, weapon_interval * MELEE_STRIKE_FRACTION if is_melee() else 0.0, weapon_interval, weapon_hand_fit)
 
 ## Longest attack in the weapon's clip (0 without one).
 func clip_attack_length() -> float:
@@ -608,7 +610,6 @@ func _build_meter() -> Control:
 		_sync_controls()
 		placement_changed.emit(current_pivot()))
 	placement_page.add_child(reset_placement)
-	tabs.add_child(_build_swing_tab())
 	return panel
 
 func _build_swing_tab() -> Control:

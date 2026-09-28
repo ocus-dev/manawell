@@ -42,7 +42,8 @@ const RANGED_PROJECTILE_LIFETIME: float = 3.0
 const DASH_DURATION: float = 0.2
 const DASH_SPEED: float = 15.0
 const DASH_COOLDOWN: float = 4.0
-const HERO_HORIZONTAL_SPEED: float = 192.0
+## Matched to the walk cycle (hero_walk: 8 frames, ~0.52 s, ~53 units per cycle) so the feet stay planted.
+const HERO_HORIZONTAL_SPEED: float = 100.0
 const HERO_GRAVITY: float = 1200.0
 const HERO_JUMP_VELOCITY: float = -600.0
 const HERO_JUMP_RELEASE_VELOCITY: float = -240.0

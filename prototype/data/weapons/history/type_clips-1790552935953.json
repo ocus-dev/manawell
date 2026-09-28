@@ -1,0 +1,214 @@
+{
+	"schema_version": 1.0,
+	"types": {
+		"axe": {
+			"clip": {
+				"anchor": [
+					124.0,
+					323.0
+				],
+				"attacks": [
+					{
+						"end": 6.0,
+						"hit": 3.0,
+						"start": 0.0
+					}
+				],
+				"body_height": 259.0,
+				"cell": [
+					278.0,
+					325.0
+				],
+				"columns": 7.0,
+				"fit_hit": true,
+				"frame_count": 7.0,
+				"frame_ms": [
+					86.0,
+					83.0,
+					160.0,
+					50.0,
+					150.0,
+					83.0,
+					83.0
+				],
+				"label": "Attack",
+				"mode": "hero_weapon",
+				"scale": 1.0,
+				"sheet": "res://assets/weapons/_types/axe/1/clip.png",
+				"track": [
+					{
+						"angle": 43.4398050457952,
+						"behind": false,
+						"grip": [
+							201.30549621582,
+							208.179260253906
+						],
+						"length": 120.587585449219
+					},
+					{
+						"angle": -150.193141433291,
+						"behind": true,
+						"grip": [
+							187.251358032227,
+							75.4107055664063
+						],
+						"length": 201.18684387207
+					},
+					{
+						"angle": -154.142274849122,
+						"behind": true,
+						"grip": [
+							212.233001708984,
+							32.5026550292969
+						],
+						"length": 210.144439697266
+					},
+					{
+						"angle": -39.5881350143253,
+						"behind": false,
+						"grip": [
+							190.19010925293,
+							153.158447265625
+						],
+						"length": 156.56462097168
+					},
+					{
+						"angle": 65.5560395405665,
+						"behind": false,
+						"grip": [
+							258.639038085938,
+							216.966781616211
+						],
+						"length": 98.1271667480469
+					},
+					{
+						"angle": 51.2483744181826,
+						"behind": false,
+						"grip": [
+							248.197708129883,
+							208.845718383789
+						],
+						"length": 113.05973815918
+					},
+					{
+						"angle": 34.5741921823619,
+						"behind": false,
+						"grip": [
+							195.990875244141,
+							201.884811401367
+						],
+						"length": 104.265312194824
+					}
+				]
+			},
+			"label": "Axe",
+			"project": "C:/Users/zoids/Desktop/Game project/manawell/art/weapons/clips/edf_6/hand_ax_7",
+			"revision": 1.0
+		},
+		"sword": {
+			"clip": {
+				"anchor": [
+					113.0,
+					202.0
+				],
+				"attacks": [
+					{
+						"end": 6.0,
+						"hit": 3.0,
+						"start": 0.0
+					}
+				],
+				"body_height": 200.0,
+				"cell": [
+					242.0,
+					204.0
+				],
+				"columns": 7.0,
+				"fit_hit": true,
+				"frame_count": 7.0,
+				"frame_ms": [
+					83.0,
+					83.0,
+					83.0,
+					83.0,
+					83.0,
+					83.0,
+					83.0
+				],
+				"hand_sheet": "res://assets/weapons/_types/sword/1/hand.png",
+				"label": "Attack",
+				"mode": "hero_weapon",
+				"scale": 1.0,
+				"sheet": "res://assets/weapons/_types/sword/1/clip.png",
+				"track": [
+					{
+						"angle": 20.9426509010122,
+						"behind": false,
+						"grip": [
+							162.0,
+							125.0
+						],
+						"length": 86.7294616699219
+					},
+					{
+						"angle": -151.990819902081,
+						"behind": false,
+						"grip": [
+							182.0,
+							150.0
+						],
+						"length": 53.2353248596191
+					},
+					{
+						"angle": -166.920875767299,
+						"behind": false,
+						"grip": [
+							98.0,
+							18.0
+						],
+						"length": 101.636604309082
+					},
+					{
+						"angle": -15.1540672869737,
+						"behind": false,
+						"grip": [
+							208.0,
+							95.0
+						],
+						"length": 99.4585342407227
+					},
+					{
+						"angle": -13.3924974670039,
+						"behind": false,
+						"grip": [
+							220.0,
+							99.0
+						],
+						"length": 107.935165405273
+					},
+					{
+						"angle": 4.89909234729598,
+						"behind": false,
+						"grip": [
+							224.0,
+							104.0
+						],
+						"length": 105.385009765625
+					},
+					{
+						"angle": -152.949409631336,
+						"behind": false,
+						"grip": [
+							177.0,
+							155.0
+						],
+						"length": 52.7730979919434
+					}
+				]
+			},
+			"label": "Sword",
+			"project": "C:/Users/zoids/Desktop/Game project/manawell/art/weapons/clips/156/sword_hands_3",
+			"revision": 1.0
+		}
+	}
+}

@@ -6,6 +6,7 @@ const BACKUP_PATH := "user://account_save.bak"
 const MONSTER_TEST_ARENA_SCENE := "res://scenes/tools/monster_test_arena.tscn"
 const WEAPON_LAB_SCENE := "res://scenes/tools/weapon_lab.tscn"
 const MonsterEncyclopediaScript = preload("res://scripts/tools/monster_encyclopedia.gd")
+const MenuStyleScript = preload("res://scripts/ui/title_menu_style.gd")
 
 @onready var menu: VBoxContainer = $Menu
 @onready var continue_button: Button = $Menu/Continue
@@ -25,6 +26,11 @@ func _ready() -> void:
 	new_game_confirmation.confirmed.connect(_start_new_game)
 	$SettingsPanel/Settings/Fullscreen.button_pressed = DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
 	_add_dev_tools()
+	# Readable menu: dark button plates with light text, amber + ▶ when
+	# selected, and the dev tools grouped under a divider.
+	MenuStyleScript.apply(self, "plates")
+	MenuStyleScript.style_settings(self)
+	_explain_embedded_fullscreen()
 	if continue_button.disabled:
 		$Menu/NewGame.grab_focus()
 	else:
@@ -96,5 +102,28 @@ func _hide_settings() -> void:
 	menu.visible = true
 	$Menu/Settings.grab_focus()
 
+## Inside the editor's Game tab the window can't go fullscreen (Godot only
+## allows windowed mode there), so the toggle is turned off with a note.
+func is_embedded_in_editor() -> bool:
+	return Engine.has_method("is_embedded_in_editor") and bool(Engine.call("is_embedded_in_editor"))
+
+func _explain_embedded_fullscreen() -> void:
+	if not is_embedded_in_editor():
+		return
+	var toggle: CheckButton = $SettingsPanel/Settings/Fullscreen
+	toggle.disabled = true
+	toggle.tooltip_text = "Not available inside the editor's Game tab."
+	var note := Label.new()
+	note.name = "FullscreenNote"
+	note.text = "Fullscreen isn't available while the game runs inside the editor's Game tab. Use the tab's Stretch to Fit button, or untick Embed Game on Next Play to run in its own window."
+	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	note.custom_minimum_size = Vector2(280, 0)
+	note.add_theme_font_size_override("font_size", 12)
+	note.add_theme_color_override("font_color", Color("d9cfbd"))
+	$SettingsPanel/Settings.add_child(note)
+	$SettingsPanel/Settings.move_child(note, toggle.get_index() + 1)
+
 func _set_fullscreen(enabled: bool) -> void:
+	if is_embedded_in_editor():
+		return
 	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN if enabled else DisplayServer.WINDOW_MODE_WINDOWED)

@@ -2,6 +2,7 @@ extends SceneTree
 
 const Resolver = preload("res://scripts/model/hero_stat_resolver.gd")
 const Definitions = preload("res://scripts/model/item_definitions.gd")
+const BalanceData = preload("res://data/balance.gd")
 
 func _instance(instance_id: String, base_id: String, rarity: String, implicits: Array, explicit_modifiers: Array) -> Dictionary:
     return {"schema_version": 1, "instance_id": instance_id, "base_id": base_id, "rarity": rarity, "item_level": 1, "implicit_modifiers": implicits.duplicate(true), "explicit_modifiers": explicit_modifiers.duplicate(true), "generation_version": "loot-v1", "provenance": {"kind": "legacy", "run_id": "", "enemy_id": 0, "node_id": ""}, "inspected": true, "locked": false}
@@ -29,7 +30,7 @@ func _init() -> void:
     assert(is_equal_approx(result.stats.attacks_per_second, 1.7166666667))
     assert(is_equal_approx(result.stats.max_health, 105.0))
     assert(is_equal_approx(result.stats.armor, 12.0))
-    assert(is_equal_approx(result.stats.move_speed, 195.84))
+    assert(is_equal_approx(result.stats.move_speed, BalanceData.HERO_HORIZONTAL_SPEED * 1.02))
     assert(is_equal_approx(result.stats.health_regen, 0.20))
     assert(is_equal_approx(result.stats.mining_bonus, 0.11))
     assert(is_equal_approx(result.stats.drop_bonus, 0.06))
@@ -52,7 +53,7 @@ func _init() -> void:
     assert(capped.stats.attacks_per_second <= capped.research.standard_weapon.attacks_per_second * 1.30 + 1e-8)
     assert(capped.stats.projectile_speed <= capped.research.standard_weapon.projectile_speed * 1.25 + 1e-8)
     assert(capped.stats.max_health <= 150.0)
-    assert(capped.stats.move_speed <= 230.4)
+    assert(capped.stats.move_speed <= BalanceData.HERO_HORIZONTAL_SPEED * 1.2 + 1e-6)
 
     var fan := Resolver.resolve({"weapon.damage": 1, "weapon.shots": 1}, instances, {"weapon": "weapon-b"}, 2.0, 1.0, "", "weapon.fan")
     assert(is_equal_approx(fan.stats.attack_damage, 11.05))

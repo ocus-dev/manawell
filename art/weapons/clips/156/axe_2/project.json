@@ -1,0 +1,131 @@
+{
+	"align_mode": "feet",
+	"background": "eaeaea",
+	"body_height": 164.0,
+	"boxes": [
+		[
+			7,
+			49,
+			182,
+			283
+		],
+		[
+			189,
+			49,
+			200,
+			283
+		],
+		[
+			389,
+			49,
+			174,
+			283
+		],
+		[
+			563,
+			49,
+			208,
+			283
+		],
+		[
+			771,
+			49,
+			205,
+			283
+		],
+		[
+			976,
+			49,
+			232,
+			283
+		],
+		[
+			1208,
+			49,
+			167,
+			283
+		]
+	],
+	"cut": {
+		"clear_holes": true,
+		"drop_neighbors": true,
+		"method": "solid",
+		"min_piece": 0.03,
+		"tolerance": 38.0
+	},
+	"frame_ms": [
+		83.0,
+		83.0,
+		83.0,
+		83.0,
+		83.0,
+		83.0,
+		83.0
+	],
+	"frame_sources": [],
+	"frames": [
+		{
+			"anchor": [
+				97.1528396606445,
+				374.680633544922
+			],
+			"file": "frames/cut_000.png"
+		},
+		{
+			"anchor": [
+				105.0,
+				281.0
+			],
+			"file": "frames/cut_001.png"
+		},
+		{
+			"anchor": [
+				89.0,
+				281.0
+			],
+			"file": "frames/cut_002.png"
+		},
+		{
+			"anchor": [
+				106.0,
+				283.0
+			],
+			"file": "frames/cut_003.png"
+		},
+		{
+			"anchor": [
+				105.0,
+				283.0
+			],
+			"file": "frames/cut_004.png"
+		},
+		{
+			"anchor": [
+				85.0,
+				281.0
+			],
+			"file": "frames/cut_005.png"
+		},
+		{
+			"anchor": [
+				77.0,
+				281.0
+			],
+			"file": "frames/cut_006.png"
+		}
+	],
+	"ground_y": -1,
+	"hits": [],
+	"label": "Attack",
+	"mode": "hero",
+	"scale": 1.0,
+	"schema_version": 1,
+	"source_kind": "sheet",
+	"starts": [],
+	"strip": [
+		7,
+		49,
+		1368,
+		283
+	]
+}

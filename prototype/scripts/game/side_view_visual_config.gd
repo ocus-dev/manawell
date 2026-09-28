@@ -65,7 +65,25 @@ const ASSETS := {
     },
 }
 
+## Animations installed while the game runs (the Weapon Lab's hero animation
+## importer), keyed by folder ("hero_walk"): SpriteFrames and their manifest.
+## They replace the preloaded ones until the editor has imported the new files.
+static var runtime_frames := {}
+static var runtime_manifests := {}
+
 static func asset_for(asset_id: String) -> Dictionary:
+	var asset := _asset_for(asset_id)
+	if runtime_frames.is_empty() or asset.is_empty():
+		return asset
+	var folder := str(asset.get("animation_folder", ""))
+	var result := asset.duplicate()
+	for animation in ["idle", "walk", "attack"]:
+		var key := "%s_%s" % [folder, animation]
+		if runtime_frames.has(key):
+			result["%s_frames" % animation] = runtime_frames[key]
+	return result
+
+static func _asset_for(asset_id: String) -> Dictionary:
 	if asset_id == "hero_2":
 		# Hero 2 ships in stages: the static cutout can be played immediately,
 		# while its locomotion/attack clips arrive later. Prefer the distinct

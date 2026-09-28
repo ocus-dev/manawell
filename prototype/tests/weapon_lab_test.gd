@@ -14,10 +14,14 @@ const Effects = preload("res://scripts/model/weapon_effects.gd")
 const EffectArt = preload("res://scripts/tools/weapon_effect_art.gd")
 const Clip = preload("res://scripts/model/weapon_clip.gd")
 const ClipImport = preload("res://scripts/tools/weapon_clip_import.gd")
+const Types = preload("res://scripts/model/weapon_types.gd")
 const HeroScript = preload("res://scripts/game/player.gd")
 const Resolver = preload("res://scripts/model/hero_stat_resolver.gd")
 const Definitions = preload("res://scripts/model/item_definitions.gd")
 const LabScript = preload("res://scripts/tools/weapon_lab.gd")
+const Readiness = preload("res://scripts/model/weapon_readiness.gd")
+const HeroAnims = preload("res://scripts/model/hero_animations.gd")
+const VisualConfig = preload("res://scripts/game/side_view_visual_config.gd")
 const ArenaScript = preload("res://scripts/tools/weapon_test_arena.gd")
 const MonsterStatsScript = preload("res://scripts/model/monster_stats.gd")
 const EnemyScript = preload("res://scripts/game/melee_enemy.gd")
@@ -46,6 +50,7 @@ func _run() -> void:
 	await _check_lab(source)
 	await _check_arena()
 	await _check_title_entry()
+	await _check_hero_animations()
 	Art.repo_root_override = ""
 	Art.receipt_root = Store.JOB_ROOT
 	MonsterStatsScript.reload()
@@ -252,23 +257,19 @@ func _check_swing(lab: Node) -> void:
 	hero._process(0.1)
 	check(hero.held_weapon_attack_offset == Vector2.ZERO and hero.held_weapon_attack_active, "no swing keeps the built-in motion")
 	hero.queue_free()
-	# Lab: pick a preset, publish, and it's on the revision.
+	# Lab: the swing editor is gone (attack animations replace it), but a
+	# weapon's swing data still publishes and plays.
 	lab.select_entry("glow_blade")
-	check(lab.current_swing().is_empty() and lab.swing_preset.get_item_metadata(lab.swing_preset.selected) == "default", "weapons start with the default swing")
+	check(lab.swing_preview == null and lab.find_child("SwingPreset", true, false) == null, "no swing section in the lab")
 	lab.apply_swing_preset("slash")
-	check(str(lab.draft.swing.preset) == "slash" and is_equal_approx(float(lab.swing_spins["strike_angle"].value), 110.0), "preset fills the swing controls")
-	lab.swing_spins["duration"].value = 0.42
-	check(lab.swing_preset.get_item_metadata(lab.swing_preset.selected) == "custom" and is_equal_approx(float(lab.draft.swing.duration), 0.42), "editing a value makes it custom")
+	check(str(lab.draft.swing.preset) == "slash", "swing data still settable")
 	var result: Dictionary = lab.publish()
 	check(result.ok, "swing published: %s" % result.message)
 	var entry: Dictionary = lab.published_entry("glow_blade")
-	check(entry.has("swing") and is_equal_approx(float(entry.swing.duration), 0.42) and Catalog.validate_revision(entry, false).valid, "revision carries a valid swing")
-	# Arena round trip.
+	check(entry.has("swing") and Catalog.validate_revision(entry, false).valid, "revision carries a valid swing")
 	lab.open_arena()
-	check(is_equal_approx(float(lab.arena.weapon_swing.duration), 0.42) and not lab.arena.weapon_hero.held_weapon_swing.is_empty(), "arena hero uses the swing")
-	lab.arena._swing_spins["strike_angle"].value = 140.0
+	check(not lab.arena.weapon_hero.held_weapon_swing.is_empty() and lab.arena.find_child("WeaponTabs", true, false).get_child_count() == 1, "arena hero uses the swing; no Swing tab")
 	lab.arena.return_to_title()
-	check(is_equal_approx(float(lab.draft.swing.strike_angle), 140.0) and is_equal_approx(float(lab.swing_spins["strike_angle"].value), 140.0), "arena swing edits come back to the lab")
 	lab.apply_swing_preset("default")
 	check(lab.current_swing().is_empty(), "back to default stores no swing")
 	# Research presets.
@@ -282,20 +283,6 @@ func _check_swing(lab: Node) -> void:
 	var linear_mid := (float(axe.windup_angle) + float(axe.strike_angle)) * 0.5
 	check(axe_mid < linear_mid - 30.0, "negative snap: the axe accelerates late into the chop")
 	check(is_equal_approx(float(Swing.sample(axe, 0.4 / float(axe.duration)).angle), float(axe.strike_angle)), "at 1.0 attacks/s the axe hit lands exactly at the end of the chop")
-	lab.behavior_picker.select(1)
-	lab.base_rate_spin.value = 1.67
-	var axe_index := -1
-	for index in range(lab.swing_preset.item_count):
-		if lab.swing_preset.get_item_metadata(index) == "test_axe":
-			axe_index = index
-	lab.swing_preset.select(axe_index)
-	lab.apply_swing_preset("test_axe")
-	check(lab.swing_why.visible and lab.swing_why.text.contains("overhead"), "research notes shown for the ax")
-	check(lab.swing_note.text.contains("during the wind-up"), "warns that the ax hit lands in the wind-up at 1.67/s")
-	check(lab.swing_speed_button.visible, "offers the recommended attack speed")
-	lab.swing_speed_button.pressed.emit()
-	check(is_equal_approx(float(lab.base_rate_spin.value), 1.0) and not lab.swing_note.text.contains("during the wind-up"), "recommended speed fixes the timing")
-	lab.apply_swing_preset("default")
 
 func _check_effects(lab: Node) -> void:
 	# Model.
@@ -429,6 +416,21 @@ func _check_clip(lab: Node) -> void:
 		# The left foot sits 6 px left of the anchor in every frame.
 		var foot := packed_image.get_pixel(int(cell[0]) * index + int(float(anchor[0])) - 6, int(float(anchor[1])) - 3)
 		check(foot.a > 0.9, "frame %d lined up on its feet" % (index + 1))
+	# Poses whose swords reach under the next pose (overlapping columns, but
+	# separate shapes) are still split into one frame each, with no bleed.
+	var overlap := Image.create_empty(420, 120, false, Image.FORMAT_RGBA8)
+	overlap.fill(Color8(236, 236, 236))
+	for index in range(3):
+		var x := 30 + index * 120
+		overlap.fill_rect(Rect2i(x, 30, 30, 55), Color8(200, 40, 40))
+		overlap.fill_rect(Rect2i(x + 5, 85, 20, 25), Color8(60, 60, 70))
+		if index < 2:
+			overlap.fill_rect(Rect2i(x + 20, 95, 104, 4), Color8(90, 90, 110))
+	var shapes := ClipImport.detect_layout(overlap, 0)
+	check(str(shapes.mode) == "figures" and shapes.boxes.size() == 3, "overlapping poses found as 3 shapes (%s, %d)" % [shapes.mode, shapes.boxes.size()])
+	var middle: Rect2i = shapes.boxes[1]
+	var middle_cut := ClipImport.cut_frame(overlap, middle, {"background": shapes.background, "owners": shapes.owners, "owner_strip": shapes.strip, "frame": 1})
+	check(middle.position.x <= 150 and middle_cut.get_pixel(152 - middle.position.x, 97 - middle.position.y).a < 0.1 and middle_cut.get_pixel(160 - middle.position.x, 50 - middle.position.y).a > 0.9, "the previous pose's sword is cleared from the next frame")
 	# Importer in the lab: slice, cut out, mark the combo, save, publish.
 	lab.select_entry("glow_blade")
 	lab.open_clip_importer()
@@ -448,12 +450,30 @@ func _check_clip(lab: Node) -> void:
 	check(not saved.is_empty() and not importer.visible and lab.current_clip().frame_count == 3, "clip saved to the weapon")
 	check(FileAccess.file_exists(str(saved.source)) and str(saved.source).contains("/clips/glow_blade/") and FileAccess.file_exists(str(saved.project).path_join("project.json")), "clip sheet and project written under the weapon's folder")
 	check(Catalog.validate_revision(Store.revision_for(lab.draft), false).valid, "draft revision with a clip validates")
+	# No effects on this weapon: the clip must still be staged (regression).
+	lab.effects_panel.set_effects([], "glow_blade")
+	lab.draft["effects"] = []
 	var result: Dictionary = lab.publish()
 	check(result.ok, "clip published: %s" % result.message)
 	var entry: Dictionary = lab.published_entry("glow_blade")
 	var published_clip: Dictionary = entry.get("attack_clip", {})
 	check(str(published_clip.get("sheet", "")).ends_with("/clip.png") and FileAccess.file_exists(ProjectSettings.globalize_path(str(published_clip.sheet))) and not published_clip.has("source") and not published_clip.has("project"), "clip sheet copied into the revision's assets")
+	check(not lab.has_changes_from_published() and str(lab.readiness_info().get("has_changes")) == "false", "right after publishing, the weapon counts as in the game")
 	check(not lab.publish().ok, "unchanged clip doesn't publish again")
+	# An own clip whose sheet was replaced by a later importer save.
+	var kept_clip: Dictionary = lab.draft.attack_clip.duplicate(true)
+	var kept_source := str(lab.draft.get("clip_source", ""))
+	var stale := kept_clip.duplicate(true)
+	stale["source"] = ProjectSettings.globalize_path(TEMP_USER.path_join("gone/sheet_1.png"))
+	lab.draft["attack_clip"] = stale
+	lab.draft["clip_source"] = "own"
+	var problem: String = lab.check_own_clip_files()
+	check(problem.contains("sheet_1.png") and problem.contains("Edit...") and not lab.publish().ok, "a missing own sheet stops publishing with a clear message")
+	lab.draft["clip_source"] = "type"
+	check(lab.check_own_clip_files().is_empty() and lab.current_clip().is_empty(), "an unused stale copy is dropped instead")
+	lab.draft["attack_clip"] = kept_clip
+	lab.draft["clip_source"] = kept_source
+
 	check(lab.edit_clip() and importer.cut.size() == 3 and is_equal_approx(float(importer.holds[0]), 150.0) and importer.current_attacks().size() == 2, "clip reopens in the importer for editing")
 	importer.close()
 	# Game: the hero plays the combo instead of its attack animation.
@@ -501,6 +521,9 @@ func _check_clip(lab: Node) -> void:
 	lab.remove_clip()
 	check(lab.current_clip().is_empty() and lab.has_changes_from_published(), "removing the clip is a change to publish")
 	lab.draft["attack_clip"] = entry.attack_clip.duplicate(true)
+	lab.draft["clip_source"] = "own"
+	await _check_type_defaults(lab, sheet_path)
+	await _check_hands(lab)
 	# Video frames through ffmpeg, when it's installed.
 	var ffmpeg := ClipImport.find_ffmpeg()
 	if not ffmpeg.is_empty():
@@ -513,6 +536,283 @@ func _check_clip(lab: Node) -> void:
 		check(await importer.cut_out() and Vector2(importer.anchors[0]) == Vector2(importer.anchors[-1]), "video frames keep their positions")
 		importer.close()
 	await process_frame
+
+## A weapon-free body sheet and the same poses with a weapon drawn in: three
+## poses on a flat backdrop; the weapon is a bar from the fist upward.
+func _make_hands_sheet(with_weapon: bool) -> String:
+	var image := Image.create_empty(360, 200, false, Image.FORMAT_RGBA8)
+	image.fill(Color8(236, 236, 236))
+	for index in range(3):
+		var x := 40 + index * 110
+		image.fill_rect(Rect2i(x, 80, 30, 60), Color8(200, 40, 40))
+		image.fill_rect(Rect2i(x + 4, 140, 22, 30), Color8(60, 60, 70))
+		image.fill_rect(Rect2i(x + 30, 100, 10, 10), Color8(40, 40, 50))
+		if with_weapon:
+			image.fill_rect(Rect2i(x + 33, 40 + index * 10, 4, 60 - index * 10), Color8(150, 150, 170))
+	var path := ProjectSettings.globalize_path(TEMP_USER.path_join("downloads/hands_%s.png" % ("axe" if with_weapon else "body")))
+	image.save_png(path)
+	return path
+
+func _check_hands(lab: Node) -> void:
+	# Model: a 20x80 upright weapon gripped near the bottom.
+	var picture := Image.create_empty(20, 80, false, Image.FORMAT_RGBA8)
+	picture.fill_rect(Rect2i(8, 0, 4, 80), Color.WHITE)
+	var tip := Clip.weapon_tip(picture, Vector2(0.5, 0.9))
+	check(tip.y < 2.0 and absf(tip.x - 10.0) < 3.0, "weapon's far end found at the top (%s)" % tip)
+	var clip := {"track": [{"grip": [50.0, 60.0], "angle": 0.0, "length": 36.0, "behind": false}]}
+	var placed := Clip.hand_transform(clip, 0, Vector2(20, 80), Vector2(0.5, 0.9), tip)
+	var grip_local := Vector2(10, 72) - Vector2(10, 40)
+	check((placed * grip_local).distance_to(Vector2(50, 60)) < 0.5 and (placed * (tip - Vector2(10, 40))).distance_to(Vector2(86, 60)) < 1.0, "picture's grip on the hand, far end along the track")
+	var flipped := Clip.hand_transform(clip, 0, Vector2(20, 80), Vector2(0.5, 0.9), tip, {"flip": true})
+	check((flipped * grip_local).distance_to(Vector2(50, 60)) < 0.5 and (flipped * Vector2(-5, 0)).y != (placed * Vector2(-5, 0)).y, "flip mirrors the picture across its handle")
+	check(Clip.validate_hand_fit({"angle": 10.0, "scale": 1.2, "flip": true}).valid and not Clip.validate_hand_fit({"scale": 9.0}).valid, "hand fit validation")
+	check(Clip.resolve_tip(picture, Vector2(0.5, 0.9), {"tip": [0.5, 1.0]}) == Vector2(10, 80) and Clip.validate_hand_fit({"tip": [0.2, 0.3]}).valid and not Clip.validate_hand_fit({"tip": [2, 0]}).valid, "far end can be set by hand")
+	# Importer: weapon-free body + ghost sheet, click hand then far end.
+	lab.select_entry("glow_blade")
+	lab.open_clip_importer()
+	var importer: Control = lab.clip_importer
+	check(importer.open_sheet(_make_hands_sheet(false)) and importer.boxes.size() == 3, "weapon-free sheet sliced")
+	check(not importer.preview_options.is_empty() and str(importer.preview_options[0].id) == "glow_blade" and not importer.preview_weapon.is_empty(), "previews with this weapon's art by default")
+	importer.choose_preview("__bar__", false)
+	check(importer.preview_weapon.is_empty() and importer.preview_choice == "__bar__", "can preview with a plain bar instead")
+	importer.choose_preview("glow_blade", false)
+	await importer.cut_out()
+	importer.set_weapon_free(true)
+	check(importer.mode == "hero_weapon" and importer.tool == "weapon" and importer.track.size() == 3, "weapon-free mode starts the Place weapon tool")
+	check(importer.open_reference(_make_hands_sheet(true)) and importer.ref_cut.size() == 3, "sheet with the weapon loads as a ghost")
+	check(importer.save_clip("weapon").is_empty() and importer.visible, "can't save before placing the weapon")
+	var fist: Vector2 = Vector2(importer.anchors[0]) + Vector2(20, -65)
+	importer.select_frame(0)
+	importer.weapon_click(fist)
+	importer.weapon_click(fist + Vector2(0, -40))
+	check(importer.selected == 1 and importer.placed_count() == 1, "placing the far end moves on to the next frame")
+	importer.copy_previous_track(1)
+	importer.select_frame(2)
+	importer.weapon_click(Vector2(importer.anchors[2]) + Vector2(20, -65))
+	importer.weapon_click(Vector2(importer.anchors[2]) + Vector2(50, -65))
+	importer.set_behind(2, true)
+	check(importer.placed_count() == 3, "weapon placed on every frame")
+	# Auto-place finds the same grip and the weapon's true far end.
+	var manual: Array = importer.track.duplicate(true)
+	var manual_offsets: Array = importer.ref_offsets.duplicate()
+	for index in range(3):
+		importer.clear_track(index)
+	check(importer.auto_place() == 3 and importer.placed_count() == 3, "auto-place fills every frame")
+	var anchor0: Vector2 = importer.anchors[0]
+	check(Vector2(importer.track[0].grip).distance_to(anchor0 + Vector2(20, -65)) <= 6.0, "auto grip in the fist (%s vs %s)" % [importer.track[0].grip, anchor0 + Vector2(20, -65)])
+	check(Vector2(importer.track[0].tip).distance_to(anchor0 + Vector2(20, -130)) <= 6.0 and not bool(importer.track[0].behind), "auto far end at the weapon's tip (%s)" % importer.track[0].tip)
+	var mask: Image = importer.hand_masks[0]
+	var grip_px := Vector2i(Vector2(importer.track[0].grip).round())
+	check(mask != null and mask.get_pixelv(grip_px).r > 0.5 and mask.get_pixelv(Vector2i(anchor0 + Vector2(0, -10))).r < 0.5, "front hand covers the fist, not the legs")
+	importer.brush = 30.0
+	importer.paint_hand(0, Vector2(grip_px), true)
+	check(importer.hand_masks[0].get_pixelv(grip_px).r < 0.5 and importer.hand_painted[0], "hand brush erases (Shift)")
+	importer.reset_hand(0)
+	check(importer.hand_masks[0].get_pixelv(grip_px).r > 0.5 and not importer.hand_painted[0], "Auto hand redoes it")
+	importer.brush = 6.0
+	importer.track = manual
+	importer.ref_offsets = manual_offsets
+	importer._after_track_changed()
+	var saved: Dictionary = importer.save_clip("weapon")
+	check(FileAccess.file_exists(str(saved.get("hand_source", ""))) and str(Store.revision_for(lab.draft).attack_clip.get("hand_sheet", "")) == Store.PENDING_EFFECT_SHEET, "front-hand sheet saved with the clip")
+	var hand_sheet := Image.load_from_file(str(saved.hand_source))
+	var body_sheet := Image.load_from_file(str(saved.source))
+	check(hand_sheet.get_size() == body_sheet.get_size(), "hand sheet packs like the body sheet")
+	check(str(saved.get("mode", "")) == "hero_weapon" and saved.track.size() == 3 and is_equal_approx(float(saved.track[2].angle), 0.0) and bool(saved.track[2].behind), "track saved in the clip")
+	check(absf(float(saved.track[0].angle) + 90.0) < 0.5 and absf(float(saved.track[0].length) - 40.0 * float(Clip.normalize(saved).cell[0]) / float(Clip.normalize(saved).cell[0])) < 1.0, "first frame points straight up, 40 px long")
+	check(Catalog.validate_revision(Store.revision_for(lab.draft), false).valid, "draft with a weapon-free animation validates")
+	check(lab.hand_fit_row.visible, "lab shows the in-hands fine-tune for this animation")
+	lab.picking_tip = true
+	lab.set_weapon_tip(Vector2(0.5, 0.0))
+	check(lab.hand_fit().has("tip") and lab.hand_fit().has("scale") and Catalog.validate_revision(Store.revision_for(lab.draft), false).valid, "far end picked on the sprite and saved")
+	lab.clear_weapon_tip()
+	check(not lab.hand_fit().has("tip"), "far end back to automatic")
+	lab.hand_scale_spin.value = 1.5
+	check(is_equal_approx(float(lab.hand_fit().scale), 1.5) and Store.revision_for(lab.draft).has("hand_fit"), "hand fit saved on the weapon")
+	check(lab.edit_clip() and importer.mode == "hero_weapon" and importer.placed_count() == 3 and importer.ref_cut.size() == 3, "reopening keeps the weapon placements and the ghost")
+	var before: Dictionary = importer._align_transform()
+	var probe: Vector2 = Vector2(before.pivot) + Vector2(30, -40)
+	importer.zoom_view(2.0, probe)
+	var after: Dictionary = importer._align_transform()
+	check(is_equal_approx(float(after.scale), float(before.scale) * 2.0) and (Vector2(after.pivot) + (probe - Vector2(before.pivot)) / float(before.scale) * float(after.scale)).distance_to(probe) < 0.01, "wheel zoom keeps the point under the mouse still")
+	importer.fit_view()
+	check(is_equal_approx(float(importer._align_transform().scale), float(before.scale)), "Fit resets the view")
+	importer.close()
+	# Game: the hero draws this weapon's own picture in the hands.
+	var holder := Node2D.new()
+	root.add_child(holder)
+	var hero: Node2D = HeroScript.new()
+	holder.add_child(hero)
+	hero.position = Vector2(300, 200)
+	hero.configure_held_weapon(ImageTexture.create_from_image(picture), Vector2(0.5, 0.9))
+	hero.configure_attack_clip(saved, 0.24, 0.6)
+	hero.visual.play_attack()
+	hero._process(0.0)
+	var normalized := Clip.normalize(saved)
+	var hand_global: Vector2 = hero.visual.clip_cell_to_global() * Vector2(float(normalized.track[0].grip[0]), float(normalized.track[0].grip[1]))
+	var picture_grip: Vector2 = hero.held_weapon.global_transform * grip_local
+	check(hero.visual.clip_places_weapon() and picture_grip.distance_to(hand_global) < 0.5 and is_equal_approx(hero.held_weapon.self_modulate.a, 1.0), "weapon's own picture is held at the frame's grip")
+	check(hero.visual.hand_sprite.visible and hero.visual.hand_sprite.region_rect == hero.visual.clip_sprite.region_rect and hero.visual.hand_sprite.z_index + hero.visual.z_index > hero.weapon_socket.z_index, "front hand drawn over the weapon")
+	var far_end: Vector2 = hero.held_weapon.global_transform * (tip - Vector2(10, 40))
+	check(far_end.y < picture_grip.y - 5.0, "and points up like the drawn axe")
+	hero.visual.advance_attack_clip(10.0)
+	hero.visual.play_attack()
+	hero.visual.advance_attack_clip(0.0)
+	var frame: int = hero.visual.clip_frame
+	hero._process(0.0)
+	check(hero.weapon_socket.z_index == (0 if bool(normalized.track[frame].behind) else 2), "behind-the-body frames draw the weapon behind")
+	check(hero.visual.hand_sprite.visible == (not bool(normalized.track[frame].behind)), "no front hand when the weapon is behind")
+	hero.visual.set_facing(-1)
+	hero._process(0.0)
+	var mirrored_grip: Vector2 = hero.held_weapon.global_transform * grip_local
+	check(mirrored_grip.distance_to(hero.visual.clip_cell_to_global() * Vector2(float(normalized.track[frame].grip[0]), float(normalized.track[frame].grip[1]))) < 0.5, "facing left mirrors the placement")
+	hero.interrupt_held_weapon_attack()
+	hero._process(0.0)
+	check(not hero._hand_placed and hero.weapon_socket.z_index == 2, "weapon goes back to its normal hold after the attack")
+	holder.queue_free()
+	lab.draft["hand_fit"] = {}
+	lab.draft["attack_clip"] = {}
+	lab.draft["clip_source"] = "type"
+
+## Weapon types: an animation saved as the Axe default plays for every axe
+## that uses its type's default, without republishing them.
+func _check_type_defaults(lab: Node, sheet_path: String) -> void:
+	check(Types.guess("Lumber Axe") == "axe" and Types.guess("light blade") == "sword" and Types.guess("beat stick") == "club" and Types.guess("Thing") == "", "type guessed from the name")
+	check(Types.type_id_from("Great Sword") == "great_sword" and Types.is_valid_type("great_sword") and not Types.is_valid_type("Great Sword"), "type ids")
+	check(Types.clip_source({"attack_clip": {"sheet": "res://a.png", "frame_count": 1}}) == "own" and Types.clip_source({}) == "type", "old revisions keep their own clip; others use the type")
+	var bad: Dictionary = lab.published_entry("glow_blade").duplicate(true)
+	bad["weapon_type"] = "Axe!"
+	check(not Catalog.validate_revision(bad, false).valid, "invalid weapon type rejected")
+	# glow_blade has its own clip; make it the Axe default.
+	lab.select_entry("glow_blade")
+	lab.set_weapon_type("axe")
+	check(lab.type_picker.get_item_metadata(lab.type_picker.selected) == "axe", "type picker shows axe")
+	check(lab.set_own_as_type_default(), "own animation becomes the Axe default")
+	var library := Types.load_library(lab.data_root)
+	var default_clip: Dictionary = library.types.axe.clip
+	check(int(library.types.axe.revision) == 1 and str(default_clip.sheet).ends_with("_types/axe/1/clip.png") and FileAccess.file_exists(ProjectSettings.globalize_path(str(default_clip.sheet))) and not default_clip.has("source"), "default sheet copied into its own revision folder")
+	lab.set_clip_source("type")
+	check(Types.clip_source(lab.draft) == "type" and not lab.effective_clip().is_empty(), "weapon now uses the Axe default")
+	check(lab.publish().ok and lab.published_entry("glow_blade").weapon_type == "axe" and lab.published_entry("glow_blade").clip_source == "type", "type and source publish on the revision")
+	# A new axe picks up the default automatically.
+	lab.new_weapon()
+	lab.name_edit.text = "Lumber Axe"
+	lab.name_edit.text_changed.emit("Lumber Axe")
+	check(lab.weapon_type() == "axe" and Types.clip_source(lab.draft) == "type" and int(lab.effective_clip().get("frame_count", 0)) == 3, "new axe guesses its type and uses the default")
+	check(lab.clip_summary.text.contains("Axe default"), "summary names the default in use")
+	# Saving from the importer as the type default updates every axe.
+	lab.open_clip_importer()
+	var importer: Control = lab.clip_importer
+	check(importer._save_default_button.visible and importer._save_default_button.text.contains("Axe"), "importer offers Save as the Axe default")
+	importer.open_sheet(sheet_path)
+	importer.set_frame_count(3)
+	await importer.cut_out()
+	importer.set_all_holds(60.0)
+	importer.save_clip("type")
+	library = Types.load_library(lab.data_root)
+	check(int(library.types.axe.revision) == 2 and is_equal_approx(float(library.types.axe.clip.frame_ms[0]), 60.0), "importer saved a new Axe default")
+	check(is_equal_approx(float(Types.resolve_clip(lab.published_entry("glow_blade"), library).frame_ms[0]), 60.0), "published axe plays the new default without republishing")
+	check(lab.edit_clip() and importer.editing_default and not importer._save_button.visible, "editing the default reopens it as the default")
+	importer.close()
+	lab.set_clip_source("none")
+	check(lab.effective_clip().is_empty(), "hero's normal attack when chosen")
+	lab.select_entry("glow_blade")
+	# Removing the default.
+	check(Types.remove_default("axe", lab.data_root) and Types.default_clip(Types.load_library(lab.data_root), "axe").is_empty(), "type default removed")
+	lab.reload_type_library()
+	# Categories: add as many as you like, pick one in the art section, filter the list.
+	var shotgun: String = lab.add_category("Shotgun")
+	check(shotgun == "shotgun" and lab.category_ids().has("shotgun") and Types.load_library(lab.data_root).types.shotgun.label == "Shotgun", "category added and saved")
+	check(lab.add_category("Great Sword") == "great_sword" and lab.category_ids().has("great_sword"), "multi-word category")
+	var shotgun_index := -1
+	for index in range(lab.art_type_picker.item_count):
+		if lab.art_type_picker.get_item_metadata(index) == "shotgun":
+			shotgun_index = index
+	check(shotgun_index > 0, "art section offers the new category")
+	lab.art_type_picker.select(shotgun_index)
+	lab.art_type_picker.item_selected.emit(shotgun_index)
+	check(lab.weapon_type() == "shotgun" and lab.type_picker.get_item_metadata(lab.type_picker.selected) == "shotgun", "picking it in the art section sets the weapon type (both pickers)")
+	lab.set_category_filter("shotgun")
+	check(lab.tiles.size() == 1 and lab.tiles.has(str(lab.draft.weapon_id)) and lab.tiles[str(lab.draft.weapon_id)].text.contains("Shotgun"), "list filtered to the category, tile shows it")
+	lab.set_category_filter("axe")
+	check(lab.tiles.is_empty() or not lab.tiles.has(str(lab.draft.weapon_id)), "other categories hide it")
+	lab.set_category_filter("__all__")
+	lab.rename_category("shotgun", "Scatter Gun")
+	check(Types.label_of("shotgun", lab.type_library) == "Scatter Gun", "category renamed")
+	lab.remove_category("great_sword")
+	lab.remove_category("bow")
+	check(not lab.category_ids().has("great_sword") and not lab.category_ids().has("bow"), "categories removed, built-ins too")
+	lab.open_category_dialog()
+	check(lab.category_rows.get_child_count() == lab.category_ids().size(), "manager lists every category")
+	lab.category_dialog.hide()
+	lab.set_weapon_type("axe")
+	# Section 2: live previews, the readiness check, and your own green check.
+	check(lab.get_window().content_scale_size == lab.lab_canvas_for(lab.get_window().size), "the lab lays out at the window's own pixel size")
+	check(lab.lab_canvas_for(Vector2i(1366, 768)) == Vector2i(1366, 768) and lab.lab_canvas_for(Vector2i(3840, 2160)) == Vector2i(1920, 1080) and lab.lab_canvas_for(Vector2i(1024, 576)) == Vector2i(1280, 720), "canvas: 1:1, whole-number scale on big screens, never smaller than 1280x720")
+	lab.refresh_showcase()
+	await process_frame
+	check(lab.showcase.attack_hero.held_weapon.texture != null and lab.showcase.hold_hero.held_weapon.texture != null, "attack and holding previews both hold this weapon")
+	check(str(lab.readiness.state) == "animation" and lab.readiness_title.text == "Needs an attack animation", "no axe default yet: flagged as needing an animation")
+	# Drag the weapon in the Holding preview; the wheel turns it.
+	var stage: Node = lab.showcase
+	var hero: Node2D = stage.hold_hero
+	var grip_point: Vector2 = stage.hold_view.get_canvas_transform() * hero.held_weapon_grip_world_position()
+	var before: Array = lab.draft.art.hand_offset.duplicate()
+	stage.begin_drag(grip_point)
+	stage.drag_to(grip_point + Vector2(28, -14))
+	stage.end_drag()
+	var moved: Array = lab.draft.art.hand_offset
+	check(float(moved[0]) > float(before[0]) + 5.0 and float(moved[1]) < float(before[1]) - 2.0 and is_equal_approx(lab.placement_spins["offset_x"].value, float(moved[0])), "dragging in the Holding preview moves Hand X/Y")
+	var base_zoom: float = stage.hold_camera.zoom.x
+	stage.set_hold_zoom(3.0)
+	await process_frame
+	await process_frame
+	check(is_equal_approx(stage.hold_camera.zoom.x, base_zoom * 3.0) and stage.hold_camera.position.distance_to(hero.weapon_socket.position) < 0.5 and stage.hold_zoom_label.text == "3x", "Holding preview zooms in on the hand")
+	var zoomed_grip: Vector2 = stage.hold_view.get_canvas_transform() * hero.held_weapon_grip_world_position()
+	var zoomed_before: Array = lab.draft.art.hand_offset.duplicate()
+	stage.begin_drag(zoomed_grip)
+	stage.drag_to(zoomed_grip + Vector2(30, 0))
+	stage.end_drag()
+	check(absf(float(lab.draft.art.hand_offset[0]) - float(zoomed_before[0]) - 30.0 / stage.hold_camera.zoom.x) <= 1.0, "dragging while zoomed moves the weapon less (finer placement)")
+	stage.set_hold_zoom(50.0)
+	check(is_equal_approx(stage.hold_zoom, stage.HOLD_ZOOM_MAX), "zoom is capped")
+	stage.set_hold_zoom(0.1)
+	check(is_equal_approx(stage.hold_zoom, 1.0) and is_equal_approx(stage.hold_camera.zoom.x, base_zoom), "and goes back to the whole hero")
+	var turned := float(lab.placement_spins["rotation_degrees"].value)
+	lab.nudge_placement("rotation_degrees", -3.0)
+	check(is_equal_approx(float(lab.draft.art.rotation_degrees), turned - 3.0), "mouse wheel turns the weapon")
+	check(lab.readiness_rows.get_child_count() == lab.readiness.items.size(), "readiness lists every check")
+	lab.set_clip_source("none")
+	lab.refresh_showcase()
+	var anim_text := ""
+	for item in lab.readiness.items:
+		if item.key == "animation":
+			anim_text = str(item.text)
+	check(anim_text.contains("normal attack") and str(lab.readiness.state) == "animation", "hero's normal attack counts as needing an animation")
+	lab.set_clip_source("type")
+	var marked_id := str(lab.draft.weapon_id)
+	check(not lab.is_marked(marked_id), "not marked done at first")
+	var tile_check: Button = lab.tiles[marked_id].get_node("DoneCheck")
+	tile_check.button_pressed = true
+	check(lab.is_marked(marked_id) and lab.done_check.button_pressed and FileAccess.file_exists(lab.marks_path()), "tile check marks it done, saved, details agree")
+	lab.load_marks()
+	check(lab.is_marked(marked_id), "done mark survives a reload")
+	lab.done_check.button_pressed = false
+	check(not lab.is_marked(marked_id) and not lab.tiles[marked_id].get_node("DoneCheck").button_pressed, "unticking in the details clears the tile")
+	var clip := {"frame_count": 4, "sheet": "res://x.png", "mode": "hero_weapon"}
+	var base := {"has_art": true, "weapon_type": "axe", "type_label": "Axe", "clip_source": "type", "clip": clip, "grip": [0.3, 0.8], "hand_offset": [0, 0], "published": 2, "removed": false, "has_changes": false}
+	check(Readiness.check(base).state == "ready", "animated, published weapon is ready")
+	check(Readiness.check(_with(base, "has_changes", true)).state == "publish", "unpublished edits need publishing")
+	check(Readiness.check(_with(base, "clip", _with(clip, "mode", "hero"))).state == "check", "a type default with a painted-in weapon is flagged to check")
+	check(Readiness.check(_with(base, "has_art", false)).state == "art", "no art comes first")
+	lab.layout_for_width(1280.0)
+	check(not lab.three_columns() and not lab.page_third.visible, "1280 wide: Placement sits under Art")
+	lab.layout_for_width(1843.0)
+	check(lab.three_columns() and lab.page_third.visible, "wide window: Placement gets its own column")
+	lab.layout_for_width(1311.0)
+	check(not lab.three_columns() and lab.placement_section.get_parent() == lab.page_left, "and moves back when the window shrinks")
+	lab._restore_window()
+	check(lab.get_window().content_scale_size == Vector2i(1280, 720), "leaving the lab puts the game canvas back")
 
 func _with(source: Dictionary, key: String, value: Variant) -> Dictionary:
 	var copy := source.duplicate(true)
@@ -598,3 +898,56 @@ func _remove_tree(path: String) -> void:
 	for sub in directory.get_directories():
 		_remove_tree(path.path_join(sub))
 	DirAccess.remove_absolute(path)
+
+## The hero's own idle / walk / attack from the importer (hero purpose).
+func _check_hero_animations() -> void:
+	HeroAnims.animations_root = TEMP_RES.path_join("animations")
+	HeroAnims.backups_root = ProjectSettings.globalize_path(TEMP_USER.path_join("hero_backups"))
+	# Two 40x60 cells, a 30x50 "hero" standing on the anchor (20, 58).
+	var sheet := Image.create_empty(80, 60, false, Image.FORMAT_RGBA8)
+	sheet.fill_rect(Rect2i(5, 8, 30, 50), Color(0.9, 0.2, 0.2))
+	sheet.fill_rect(Rect2i(47, 10, 30, 48), Color(0.9, 0.2, 0.2))
+	var sheet_path := ProjectSettings.globalize_path(TEMP_USER.path_join("hero_sheet.png"))
+	sheet.save_png(sheet_path)
+	var clip := {"source": sheet_path, "frame_count": 2, "columns": 2, "cell": [40, 60], "anchor": [20, 58], "body_height": 50.0, "frame_ms": [100, 200], "mode": "hero"}
+	var result: Dictionary = HeroAnims.install(clip, "walk")
+	check(bool(result.ok) and int(result.frame_count) == 2, "walk installed")
+	var folder := HeroAnims.folder_path("walk")
+	var manifest: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(folder.path_join("manifest.json")))
+	var asset: Dictionary = VisualConfig.ASSETS.hero
+	var scale := float(asset.animation_reference_height) / 50.0
+	check(absf(float(manifest.union_crop[0]) + 20.0 * scale - float(asset.animation_source_anchor.x)) <= 1.0 and absf(float(manifest.union_crop[1]) + 58.0 * scale - float(asset.animation_source_anchor.y)) <= 1.0, "feet land on the hero's shared anchor, scaled to its reference height")
+	check(int(manifest.cell_size[0]) == roundi(40 * scale) and is_equal_approx(float(manifest.playback_fps), 10.0) and manifest.frame_durations == [1.0, 2.0], "cell size and timing")
+	var tres := FileAccess.get_file_as_string(folder.path_join("animation.tres"))
+	check(tres.contains("&\"walk\"") and tres.contains("Frame_1") and not tres.contains("Frame_2") and tres.contains("\"loop\": true"), "animation.tres written")
+	var frames: SpriteFrames = VisualConfig.asset_for("hero").walk_frames
+	check(frames == result.frames and frames.get_frame_count(&"walk") == 2, "the game uses the new walk right away (before the editor imports it)")
+	var hero: Node2D = HeroScript.new()
+	root.add_child(hero)
+	await process_frame
+	hero.visual.set_locomotion(true)
+	check(hero.visual.walk_sprite.sprite_frames == frames and hero.visual.walk_sprite.visible, "the hero walks with it")
+	hero.queue_free()
+	var still: Dictionary = HeroAnims.install(clip, "idle", 1)
+	check(bool(still.ok) and int(still.frame_count) == 1 and VisualConfig.asset_for("hero").idle_frames.get_frame_count(&"idle") == 1, "a still idle from one frame")
+	var again: Dictionary = HeroAnims.install(clip, "walk")
+	check(bool(again.ok) and DirAccess.get_directories_at(HeroAnims.backups_root).size() >= 1, "the previous art is backed up")
+	check(not bool(HeroAnims.install(clip, "run").ok), "unknown animation refused")
+	# The importer's hero purpose.
+	var lab: Node = await _new_lab()
+	lab.open_hero_importer("walk")
+	var importer: Node = lab.clip_importer
+	check(importer.purpose == "hero" and importer.visible and importer.default_align == "body" and importer._title.text.begins_with("HERO"), "Hero animations... opens the importer for the hero")
+	importer.close()
+	lab.open_clip_importer()
+	check(importer.purpose == "weapon" and importer.default_align == "feet", "the weapon importer is back to normal")
+	importer.close()
+	var dummy := Image.create_empty(60, 80, false, Image.FORMAT_RGBA8)
+	dummy.fill_rect(Rect2i(10, 0, 20, 40), Color.RED)
+	dummy.fill_rect(Rect2i(0, 40, 60, 40), Color.RED)
+	check(is_equal_approx(ClipImport.body_center_x(dummy), 20.0), "body line-up follows the torso, not the legs")
+	VisualConfig.runtime_frames.clear()
+	VisualConfig.runtime_manifests.clear()
+	HeroAnims.animations_root = HeroAnims.ANIMATIONS_ROOT
+	HeroAnims.backups_root = ""
+	lab.queue_free()

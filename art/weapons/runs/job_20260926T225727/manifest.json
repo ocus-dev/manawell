@@ -1,0 +1,74 @@
+{
+  "cutout_source": "comfy-cutout.png",
+  "gpu_work": {
+    "prompt_id": "002e3ff8-59e0-4e64-be69-d321bb230bda",
+    "reconciliation": "found",
+    "status": "complete",
+    "submitted": true,
+    "token": "weapon:job_20260926T225727"
+  },
+  "job_id": "job_20260926T225727",
+  "kind": "weapon-concept-preparation",
+  "outputs": {
+    "cropped-source.png": "2e5d12c09d7ddc73154cb2c50ea579c03be869aa431fb6bff075e92cad0958ec",
+    "grip-calibration.json": "f8a3649f551f53a219537f6cc3cf04cda647fbcd336ae6985465269f7d1115dd",
+    "original.png": "5848a16a44e886e7a004872599402e0625e24dd27dac7659d9bf9bc672365854",
+    "review-actual-size.png": "036f62568d90272696d0151210f34ec2add3e13cb57e5e665edb6ef6ab38cae7",
+    "review-dark.png": "844b67817ec36a415d6ef762c59ab610cd39910dcce5666bb24870c627effe99",
+    "review-light.png": "bb8973433c3a12fcfa746882d258d0dff0e8a9f37face7763511235dbf5c765e",
+    "rgba-master.png": "593c334e258b7fc4c63d5eb35c58778ee900db21dba03d740efca93ca9099b50",
+    "square-icon.png": "46d42369bbfeed7a34c7d44b5d0f3071d0bc07a7e3dcc6507fb6192e0c56308d",
+    "world-sprite.png": "036f62568d90272696d0151210f34ec2add3e13cb57e5e665edb6ef6ab38cae7"
+  },
+  "prepared_by": "weapon_lab",
+  "settings": {
+    "crop": null,
+    "cutout": "comfy",
+    "icon_size": 256,
+    "lab_cutout": "comfy",
+    "mask": null,
+    "mask_sha256": null,
+    "pivot": [
+      0.5,
+      0.75
+    ],
+    "source_sha256": "5848a16a44e886e7a004872599402e0625e24dd27dac7659d9bf9bc672365854",
+    "world_height": 256
+  },
+  "settings_hash": "ab6b184ca452d5c17ae5e7bc5546dd933c22460457657111c6b781b6f9b73c15",
+  "source": "C:/Users/zoids/Desktop/Game project/manawell/art/ui-items/Weapons/rare_sword.png",
+  "stages": {
+    "cutout": {
+      "outputs": {
+        "comfy-cutout.png": "593c334e258b7fc4c63d5eb35c58778ee900db21dba03d740efca93ca9099b50",
+        "cropped-source.png": "2e5d12c09d7ddc73154cb2c50ea579c03be869aa431fb6bff075e92cad0958ec",
+        "rgba-master.png": "593c334e258b7fc4c63d5eb35c58778ee900db21dba03d740efca93ca9099b50"
+      },
+      "status": "complete"
+    },
+    "prepare": {
+      "outputs": {
+        "grip-calibration.json": "f8a3649f551f53a219537f6cc3cf04cda647fbcd336ae6985465269f7d1115dd",
+        "square-icon.png": "46d42369bbfeed7a34c7d44b5d0f3071d0bc07a7e3dcc6507fb6192e0c56308d",
+        "world-sprite.png": "036f62568d90272696d0151210f34ec2add3e13cb57e5e665edb6ef6ab38cae7"
+      },
+      "status": "complete"
+    },
+    "review": {
+      "outputs": {
+        "review-actual-size.png": "036f62568d90272696d0151210f34ec2add3e13cb57e5e665edb6ef6ab38cae7",
+        "review-dark.png": "844b67817ec36a415d6ef762c59ab610cd39910dcce5666bb24870c627effe99",
+        "review-light.png": "bb8973433c3a12fcfa746882d258d0dff0e8a9f37face7763511235dbf5c765e"
+      },
+      "status": "complete"
+    },
+    "snapshot": {
+      "outputs": {
+        "original.png": "5848a16a44e886e7a004872599402e0625e24dd27dac7659d9bf9bc672365854"
+      },
+      "status": "complete"
+    }
+  },
+  "status": "complete",
+  "version": 1
+}

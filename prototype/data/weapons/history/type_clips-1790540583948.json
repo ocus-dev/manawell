@@ -1,0 +1,109 @@
+{
+	"schema_version": 1.0,
+	"types": {
+		"axe": {
+			"clip": {
+				"anchor": [
+					124.0,
+					323.0
+				],
+				"attacks": [
+					{
+						"end": 6.0,
+						"hit": 3.0,
+						"start": 0.0
+					}
+				],
+				"body_height": 259.0,
+				"cell": [
+					278.0,
+					325.0
+				],
+				"columns": 7.0,
+				"fit_hit": true,
+				"frame_count": 7.0,
+				"frame_ms": [
+					83.0,
+					83.0,
+					83.0,
+					83.0,
+					83.0,
+					83.0,
+					83.0
+				],
+				"label": "Attack",
+				"mode": "hero_weapon",
+				"scale": 1.0,
+				"sheet": "res://assets/weapons/_types/axe/5/clip.png",
+				"track": [
+					{
+						"angle": 18.3534508376127,
+						"behind": false,
+						"grip": [
+							144.572906494141,
+							196.680541992188
+						],
+						"length": 165.187454223633
+					},
+					{
+						"angle": 18.3534508376127,
+						"behind": false,
+						"grip": [
+							144.572906494141,
+							196.680541992188
+						],
+						"length": 165.187454223633
+					},
+					{
+						"angle": 18.3534508376127,
+						"behind": false,
+						"grip": [
+							144.572906494141,
+							196.680541992188
+						],
+						"length": 165.187454223633
+					},
+					{
+						"angle": 18.3534508376127,
+						"behind": false,
+						"grip": [
+							144.572906494141,
+							196.680541992188
+						],
+						"length": 165.187454223633
+					},
+					{
+						"angle": 18.3534508376127,
+						"behind": false,
+						"grip": [
+							144.572906494141,
+							196.680541992188
+						],
+						"length": 165.187454223633
+					},
+					{
+						"angle": 18.3534508376127,
+						"behind": false,
+						"grip": [
+							144.572906494141,
+							196.680541992188
+						],
+						"length": 165.187454223633
+					},
+					{
+						"angle": 18.3534508376127,
+						"behind": false,
+						"grip": [
+							144.572906494141,
+							196.680541992188
+						],
+						"length": 165.187454223633
+					}
+				]
+			},
+			"label": "Axe",
+			"project": "C:/Users/zoids/Desktop/Game project/manawell/art/weapons/clips/edf_6/hand_ax",
+			"revision": 5.0
+		}
+	}
+}

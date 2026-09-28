@@ -1,0 +1,47 @@
+{
+  "assets": {
+    "icon": "res://assets/weapons/edf_9/1/icon.png",
+    "world_sprite": "res://assets/weapons/edf_9/1/world-sprite.png"
+  },
+  "base_modifiers": [
+    {
+      "family": "designer.base.attack_damage",
+      "operation": "flat",
+      "stat": "attack_damage",
+      "value": 0.0
+    }
+  ],
+  "base_stats": {
+    "attack_damage": 10.0,
+    "attacks_per_second": 1.67
+  },
+  "behavior_id": "weapon.standard",
+  "clip_source": "type",
+  "description": "No description yet.",
+  "label": "Edf 9",
+  "pivot": {
+    "coordinate_space": "normalized",
+    "facing": "right",
+    "grip": [
+      0.02,
+      0.75
+    ],
+    "hand_offset": [
+      -19.0,
+      -33.0
+    ],
+    "origin": "top_left",
+    "rotation_degrees": 0.0,
+    "world_scale": 0.6
+  },
+  "revision": 1,
+  "schema_version": 1,
+  "source_hashes": {
+    "icon_sha256": "6ce161f225a23e9ab0a25a2e22d618d2ecf1c41ecbc31e7e1a137a6e890cd28d",
+    "job_id": "job_20260927T184426",
+    "manifest_sha256": "c28588d6904883ffc97d229777953121896a17e814bdc8d4747d80d1fbea080b",
+    "world_sprite_sha256": "72ee2f81d581304a495e064db1bb334c4fc11fdf6fc156633529bc70ac8649a0"
+  },
+  "weapon_id": "edf_9",
+  "weapon_type": "sword"
+}

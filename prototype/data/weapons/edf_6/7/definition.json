@@ -1,0 +1,171 @@
+{
+  "assets": {
+    "icon": "res://assets/weapons/edf_6/7/icon.png",
+    "world_sprite": "res://assets/weapons/edf_6/7/world-sprite.png"
+  },
+  "attack_clip": {
+    "anchor": [
+      124.0,
+      323.0
+    ],
+    "attacks": [
+      {
+        "end": 6,
+        "hit": 3,
+        "start": 0
+      }
+    ],
+    "body_height": 259.0,
+    "cell": [
+      278.0,
+      325.0
+    ],
+    "columns": 7,
+    "fit_hit": true,
+    "frame_count": 7,
+    "frame_ms": [
+      86.0,
+      83.0,
+      160.0,
+      50.0,
+      150.0,
+      83.0,
+      83.0
+    ],
+    "label": "Attack",
+    "mode": "hero_weapon",
+    "scale": 1.0,
+    "sheet": "res://assets/weapons/effect-pending.png",
+    "source": "C:/Users/zoids/Desktop/Game project/manawell/art/weapons/clips/edf_6/hand_ax_7/sheet_1074433.png",
+    "track": [
+      {
+        "angle": 43.4398050457952,
+        "behind": false,
+        "grip": [
+          201.30549621582,
+          208.179260253906
+        ],
+        "length": 120.587585449219
+      },
+      {
+        "angle": -150.193141433291,
+        "behind": true,
+        "grip": [
+          187.251358032227,
+          75.4107055664063
+        ],
+        "length": 201.18684387207
+      },
+      {
+        "angle": -154.142274849122,
+        "behind": true,
+        "grip": [
+          212.233001708984,
+          32.5026550292969
+        ],
+        "length": 210.144439697266
+      },
+      {
+        "angle": -39.5881350143253,
+        "behind": false,
+        "grip": [
+          190.19010925293,
+          153.158447265625
+        ],
+        "length": 156.56462097168
+      },
+      {
+        "angle": 65.5560395405665,
+        "behind": false,
+        "grip": [
+          258.639038085938,
+          216.966781616211
+        ],
+        "length": 98.1271667480469
+      },
+      {
+        "angle": 51.2483744181826,
+        "behind": false,
+        "grip": [
+          248.197708129883,
+          208.845718383789
+        ],
+        "length": 113.05973815918
+      },
+      {
+        "angle": 34.5741921823619,
+        "behind": false,
+        "grip": [
+          195.990875244141,
+          201.884811401367
+        ],
+        "length": 104.265312194824
+      }
+    ]
+  },
+  "base_modifiers": [
+    {
+      "family": "designer.base.attack_damage",
+      "operation": "flat",
+      "stat": "attack_damage",
+      "value": 0.0
+    },
+    {
+      "family": "designer.base.attacks_per_second",
+      "operation": "increased",
+      "stat": "attacks_per_second",
+      "value": 0.1
+    }
+  ],
+  "base_stats": {
+    "attack_damage": 10.0,
+    "attacks_per_second": 1.66
+  },
+  "behavior_id": "weapon.melee",
+  "clip_source": "type",
+  "description": "No description yet.",
+  "hand_fit": {
+    "angle": 0.0,
+    "flip": false,
+    "scale": 1.3
+  },
+  "label": "Edf 6",
+  "pivot": {
+    "coordinate_space": "normalized",
+    "facing": "right",
+    "grip": [
+      0.02,
+      0.75
+    ],
+    "hand_offset": [
+      -18.0,
+      9.0
+    ],
+    "origin": "top_left",
+    "rotation_degrees": -3.0,
+    "world_scale": 0.5
+  },
+  "revision": 7,
+  "schema_version": 1,
+  "source_hashes": {
+    "icon_sha256": "1e62aee1740ac50d14f06769de69113eb98dc72a0def3e7c668952ce9237ab2e",
+    "job_id": "job_20260927T174727",
+    "manifest_sha256": "3db36aff8e0197754ea55e41dbbf650655800fa15fa219fa5c0062c5f52b9c75",
+    "world_sprite_sha256": "0a87421e758741717d0b24bda95096d5d672410e463e99f734432e15d77105ba"
+  },
+  "swing": {
+    "duration": 0.8,
+    "preset": "test_axe",
+    "settle_angle": 0.0,
+    "snap": -0.6,
+    "strike_angle": 95.0,
+    "strike_lift": -8.0,
+    "strike_push": 6.0,
+    "strike_time": 0.5,
+    "windup_angle": -150.0,
+    "windup_push": -6.0,
+    "windup_time": 0.35
+  },
+  "weapon_id": "edf_6",
+  "weapon_type": "axe"
+}

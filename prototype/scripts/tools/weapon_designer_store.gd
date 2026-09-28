@@ -35,11 +35,19 @@ static func revision_for(draft: Dictionary) -> Dictionary:
             if not sheet.begins_with("res://") or not str(entry.get("source", "")).is_empty():
                 entry["sheet"] = sheet if sheet.begins_with("res://") and str(entry.get("source", "")).is_empty() else PENDING_EFFECT_SHEET
             revision.effects.append(entry)
+    if draft.get("hand_fit") is Dictionary and not WeaponClipScript.is_default_hand_fit(draft.hand_fit):
+        revision["hand_fit"] = WeaponClipScript.normalize_hand_fit(draft.hand_fit)
+    if not str(draft.get("weapon_type", "")).is_empty():
+        revision["weapon_type"] = str(draft.weapon_type)
+    if ["type", "own", "none"].has(str(draft.get("clip_source", ""))):
+        revision["clip_source"] = str(draft.clip_source)
     if draft.get("attack_clip") is Dictionary and not draft.attack_clip.is_empty():
         var clip: Dictionary = WeaponClipScript.normalize(draft.attack_clip)
         clip.erase("project")
         if not str(clip.get("source", "")).is_empty() or not str(clip.get("sheet", "")).begins_with("res://"):
             clip["sheet"] = PENDING_EFFECT_SHEET
+        if not str(clip.get("hand_source", "")).is_empty():
+            clip["hand_sheet"] = PENDING_EFFECT_SHEET
         revision["attack_clip"] = clip
     if draft.get("swing") is Dictionary and not draft.swing.is_empty():
         revision["swing"] = draft.swing.duplicate(true)

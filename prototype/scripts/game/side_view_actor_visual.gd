@@ -24,6 +24,8 @@ var static_offset := Vector2.ZERO
 var attack_clip: Dictionary = {}
 var attack_clip_texture: Texture2D
 var clip_sprite: Sprite2D
+## hero_weapon clips: the gripping hand, drawn over the held weapon.
+var hand_sprite: Sprite2D
 var clip_hit_seconds := 0.0
 var clip_combo_window := 1.0
 var clip_attack_index := 0
@@ -66,6 +68,14 @@ func _ready() -> void:
     clip_sprite.region_enabled = true
     clip_sprite.visible = false
     add_child(clip_sprite)
+    hand_sprite = Sprite2D.new()
+    hand_sprite.name = "HandSprite"
+    hand_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+    hand_sprite.region_enabled = true
+    hand_sprite.visible = false
+    # Above the held weapon (weapon socket z 2 on the hero, this visual z 1).
+    hand_sprite.z_index = 2
+    add_child(hand_sprite)
 
 func configure(new_asset_id: String, local_ground_y: float = 40.0) -> bool:
     if sprite == null:
@@ -100,7 +110,9 @@ func _configure_animation_sprite(animation_sprite: AnimatedSprite2D, frames: Var
         return
     animation_sprite.sprite_frames = frames
     animation_sprite.animation = StringName(animation_name)
-    var manifest := JSON.parse_string(FileAccess.get_file_as_string("res://assets/side-view/animations/%s/manifest.json" % manifest_folder)) as Dictionary
+    var manifest: Dictionary = ConfigScript.runtime_manifests.get(manifest_folder, {})
+    if manifest.is_empty():
+        manifest = JSON.parse_string(FileAccess.get_file_as_string("res://assets/side-view/animations/%s/manifest.json" % manifest_folder)) as Dictionary
     var cell: Array = manifest.get("cell_size", [0.0, 0.0])
     var crop: Array = manifest["union_crop"]
     var anchor := animation_source_anchor - Vector2(float(crop[0]), float(crop[1]))
@@ -151,7 +163,7 @@ func _on_attack_animation_finished() -> void:
 
 ## `hit_seconds`: when the game deals damage (0 for ranged). `combo_window`:
 ## an attack starting later than this after the previous one restarts the combo.
-func set_attack_clip(clip: Dictionary, texture: Texture2D, hit_seconds: float = 0.0, combo_window: float = 1.0) -> void:
+func set_attack_clip(clip: Dictionary, texture: Texture2D, hit_seconds: float = 0.0, combo_window: float = 1.0, hand_texture: Texture2D = null) -> void:
     if sprite == null:
         _ready()
     stop_attack_clip(false)
@@ -162,6 +174,8 @@ func set_attack_clip(clip: Dictionary, texture: Texture2D, hit_seconds: float = 
     clip_attack_index = 0
     clip_since_start = INF
     clip_sprite.texture = attack_clip_texture
+    hand_sprite.texture = hand_texture if not attack_clip.is_empty() else null
+    hand_sprite.visible = false
     _apply_visual_transform()
 
 func clear_attack_clip() -> void:
@@ -206,6 +220,17 @@ func _show_clip_frame(frame: int) -> void:
     clip_frame = frame
     if frame >= 0:
         clip_sprite.region_rect = WeaponClipScript.frame_rect(attack_clip, frame)
+    _update_hand(frame)
+
+## Shows the gripping hand over the weapon on frames where the weapon is in front.
+func _update_hand(frame: int) -> void:
+    if hand_sprite == null:
+        return
+    var track: Array = attack_clip.get("track", [])
+    var front := frame >= 0 and frame < track.size() and not bool(track[frame].get("behind", false))
+    hand_sprite.visible = clip_playing and front and hand_sprite.texture != null
+    if hand_sprite.visible:
+        hand_sprite.region_rect = WeaponClipScript.frame_rect(attack_clip, frame)
 
 ## Stops a playing clip attack and shows idle/walk again.
 func stop_attack_clip(emit_finished: bool = false) -> void:
@@ -213,12 +238,23 @@ func stop_attack_clip(emit_finished: bool = false) -> void:
         return
     clip_playing = false
     clip_frame = -1
+    if hand_sprite != null:
+        hand_sprite.visible = false
     _show_locomotion_sprite()
     if emit_finished:
         attack_finished.emit()
 
 func clip_hides_weapon() -> bool:
-    return clip_playing
+    return clip_playing and str(attack_clip.get("mode", "hero")) == "hero"
+
+## hero_weapon clips: the frame showing and a transform from cell pixels to
+## global space (for placing the weapon in the hands).
+func clip_places_weapon() -> bool:
+    return clip_playing and clip_frame >= 0 and WeaponClipScript.has_track(attack_clip)
+
+func clip_cell_to_global() -> Transform2D:
+    var cell: Array = attack_clip.get("cell", [1.0, 1.0])
+    return clip_sprite.global_transform * Transform2D(0.0, -Vector2(float(cell[0]), float(cell[1])) * 0.5)
 
 func set_facing(new_facing: int) -> void:
     facing = -1 if new_facing < 0 else 1
@@ -250,6 +286,8 @@ func _apply_visual_transform() -> void:
         # Put the clip's ground anchor on the actor's ground point.
         var from_center := Vector2(float(anchor[0]) - float(cell[0]) * 0.5, float(anchor[1]) - float(cell[1]) * 0.5)
         clip_sprite.position = Vector2(0.0, ground_local_y) - from_center * clip_sprite.scale
+        hand_sprite.scale = clip_sprite.scale
+        hand_sprite.position = clip_sprite.position
 
 func visible_top_local_y() -> float:
     var asset := ConfigScript.asset_for(asset_id)
