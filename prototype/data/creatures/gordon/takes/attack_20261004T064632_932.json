@@ -1,0 +1,913 @@
+{
+	"comfy": {
+		"output_prefix": "Telos/Creatures/gordon/attack_20261004T064632_932",
+		"outputs": {
+			"16": {
+				"animated": [
+					true
+				],
+				"images": [
+					{
+						"filename": "preview_00001_.mp4",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					}
+				]
+			},
+			"17": {
+				"images": [
+					{
+						"filename": "master_00001_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00002_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00003_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00004_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00005_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00006_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00007_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00008_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00009_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00010_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00011_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00012_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00013_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00014_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00015_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00016_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00017_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00018_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00019_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00020_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00021_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00022_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00023_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00024_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00025_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00026_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00027_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00028_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00029_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00030_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00031_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00032_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00033_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00034_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00035_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00036_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00037_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00038_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00039_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00040_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00041_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00042_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00043_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00044_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00045_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00046_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00047_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00048_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00049_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00050_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00051_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00052_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00053_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00054_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00055_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00056_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00057_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00058_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00059_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00060_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00061_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00062_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00063_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00064_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00065_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00066_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00067_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00068_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00069_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00070_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00071_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00072_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					},
+					{
+						"filename": "master_00073_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\attack_20261004T064632_932",
+						"type": "output"
+					}
+				]
+			}
+		},
+		"prompt_id": "ed74cec0-a1d3-40f5-9fed-9c742e446b3a",
+		"server": "http://192.168.1.102:8188",
+		"upload_name": "telos-creature-gordon-3e42e57cc574.png"
+	},
+	"completed_at": "2026-10-03T23:47:26",
+	"created_at": "2026-10-03T23:46:32",
+	"creature": "gordon",
+	"end_on_reference": true,
+	"format_version": 1,
+	"frames_requested": 73,
+	"graph": {
+		"1": {
+			"class_type": "LoadImage",
+			"inputs": {
+				"image": "telos-creature-gordon-3e42e57cc574.png"
+			}
+		},
+		"10": {
+			"class_type": "BasicScheduler",
+			"inputs": {
+				"denoise": 1.0,
+				"model": [
+					"3",
+					0
+				],
+				"scheduler": "simple",
+				"steps": 15
+			}
+		},
+		"11": {
+			"class_type": "BasicGuider",
+			"inputs": {
+				"conditioning": [
+					"7",
+					0
+				],
+				"model": [
+					"3",
+					0
+				]
+			}
+		},
+		"12": {
+			"class_type": "SamplerCustomAdvanced",
+			"inputs": {
+				"guider": [
+					"11",
+					0
+				],
+				"latent_image": [
+					"7",
+					1
+				],
+				"noise": [
+					"8",
+					0
+				],
+				"sampler": [
+					"9",
+					0
+				],
+				"sigmas": [
+					"10",
+					0
+				]
+			}
+		},
+		"13": {
+			"class_type": "VAEDecode",
+			"inputs": {
+				"samples": [
+					"12",
+					0
+				],
+				"vae": [
+					"5",
+					0
+				]
+			}
+		},
+		"14": {
+			"class_type": "VAEDecodeAudio",
+			"inputs": {
+				"samples": [
+					"12",
+					0
+				],
+				"vae": [
+					"6",
+					0
+				]
+			}
+		},
+		"15": {
+			"class_type": "CreateVideo",
+			"inputs": {
+				"audio": [
+					"14",
+					0
+				],
+				"bit_depth": 8,
+				"fps": 24.0,
+				"images": [
+					"13",
+					0
+				]
+			}
+		},
+		"16": {
+			"class_type": "SaveVideo",
+			"inputs": {
+				"codec": "auto",
+				"filename_prefix": "Telos/Creatures/gordon/attack_20261004T064632_932/preview",
+				"format": "mp4",
+				"video": [
+					"15",
+					0
+				]
+			}
+		},
+		"17": {
+			"class_type": "SaveImage",
+			"inputs": {
+				"filename_prefix": "Telos/Creatures/gordon/attack_20261004T064632_932/master",
+				"images": [
+					"13",
+					0
+				]
+			}
+		},
+		"2": {
+			"class_type": "LoadImage",
+			"inputs": {
+				"image": "telos-creature-gordon-3e42e57cc574.png"
+			}
+		},
+		"3": {
+			"class_type": "UNETLoader",
+			"inputs": {
+				"unet_name": "minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+				"weight_dtype": "default"
+			}
+		},
+		"4": {
+			"class_type": "CLIPLoader",
+			"inputs": {
+				"clip_name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+				"device": "default",
+				"type": "minimax"
+			}
+		},
+		"5": {
+			"class_type": "VAELoader",
+			"inputs": {
+				"vae_name": "minimax_h3_video_vae_fp16.safetensors"
+			}
+		},
+		"6": {
+			"class_type": "VAELoader",
+			"inputs": {
+				"vae_name": "minimax_h3_audio_vae_fp32.safetensors"
+			}
+		},
+		"7": {
+			"class_type": "MiniMaxH3ImageToVideo",
+			"inputs": {
+				"clip": [
+					"4",
+					0
+				],
+				"first_frame": [
+					"1",
+					0
+				],
+				"height": 576,
+				"last_frame": [
+					"2",
+					0
+				],
+				"length": 73,
+				"prompt": "Locked-off side-view game animation of the single reference creature facing right. Preserve its armor plates, shell pattern, anatomy, silhouette, colors, scale and screen position. Uniform neutral grey background and constant lighting. Entire body, tail and claws stay inside the canvas. No body rotation, camera movement, zoom, cuts, new limbs, particles, changing shadows or other objects. One attack only. First quarter: deliberate anticipation, rearing back and raising the forward claw or head. Middle: a distinct forward strike toward the facing direction. Final half: settle and recover to the original resting pose. Feet remain planted; no walking or extra strikes. No impact particles or target objects. No music or dialogue. The strike is a heavy downward swipe of the near claw.",
+				"vae": [
+					"5",
+					0
+				],
+				"width": 576
+			}
+		},
+		"8": {
+			"class_type": "RandomNoise",
+			"inputs": {
+				"noise_seed": 8073
+			}
+		},
+		"9": {
+			"class_type": "KSamplerSelect",
+			"inputs": {
+				"sampler_name": "res_multistep"
+			}
+		}
+	},
+	"masters": {
+		"dir": "art/creatures/animations/gordon/attack_20261004T064632_932/masters",
+		"fps": 24.0,
+		"frames": [
+			{
+				"file": "frame_0000.png",
+				"sha256": "0e99653c4d79d478719543bec7ddf7e51353a4f265c040fc39016a715702b0ce"
+			},
+			{
+				"file": "frame_0001.png",
+				"sha256": "408ddba63ba5f3db367065da001e5035b8f5c574537aecbb3344c9d8171fab5a"
+			},
+			{
+				"file": "frame_0002.png",
+				"sha256": "04056c44e3e5d9aebd4da13175ce3e98cf10fcb43bda7522761df69c75f2fda9"
+			},
+			{
+				"file": "frame_0003.png",
+				"sha256": "2fa8bcf4a5c76aaa511bdf312584870c82c3d00ab77964d03adb83eee8a0baec"
+			},
+			{
+				"file": "frame_0004.png",
+				"sha256": "eb6007dc02a626355043fe40a09a3c028f0a0a2f98dba632cefffe8e1b4a72ba"
+			},
+			{
+				"file": "frame_0005.png",
+				"sha256": "fb43ecdad898a2580143351dd8f5841b867f0c9b698f5d9cb22df839b64a40c4"
+			},
+			{
+				"file": "frame_0006.png",
+				"sha256": "0dcf04d79659c7d185d08ff1301a678dfe5b7b32419cb3d012d52e04b2308f5f"
+			},
+			{
+				"file": "frame_0007.png",
+				"sha256": "663ca73c9e366cdce911ebed9e71d5908645daf291618f0d184a26811893368c"
+			},
+			{
+				"file": "frame_0008.png",
+				"sha256": "71b568e812a0da7264c86d0703354d83458877b3e02aafae497f61584b4f0d3b"
+			},
+			{
+				"file": "frame_0009.png",
+				"sha256": "54a929b066daf523b8677c7febabcbbe6468afc2621a42cfa83951dd0bcc7ac7"
+			},
+			{
+				"file": "frame_0010.png",
+				"sha256": "dab911ba3b03c6cd0ce9eba8acf1e4fe2c10f8b573907fd311f028dc9c29b981"
+			},
+			{
+				"file": "frame_0011.png",
+				"sha256": "dc45cb64aa321b002193f88d02218abe0e790f23ea671ca1081e342e222ddb9c"
+			},
+			{
+				"file": "frame_0012.png",
+				"sha256": "4dc17a8ce32c1c35e5c09f823bbf704dcf91580bb82655803c09c0aa4368765e"
+			},
+			{
+				"file": "frame_0013.png",
+				"sha256": "598789aee7539ab644b01b0efe317252eb66745e1b046d58fab942ed24024ce0"
+			},
+			{
+				"file": "frame_0014.png",
+				"sha256": "62cf6caf6a2c3fbf0af90fc4883f6c9e45b67fd9a7aaddc7dd877065f2108814"
+			},
+			{
+				"file": "frame_0015.png",
+				"sha256": "f1e3960e03175cfd016225b73ea27565151d612b338c7fbc68202d4e53f6cc33"
+			},
+			{
+				"file": "frame_0016.png",
+				"sha256": "8e5a2f8a0ed1b4de6f0426d0a2ddbfa5448e9b1b003ec32e38ca118e1752d212"
+			},
+			{
+				"file": "frame_0017.png",
+				"sha256": "738bf426d259ebe7085b4ecee3d90f96932045dc25cd1a4ef5619071ee3fe190"
+			},
+			{
+				"file": "frame_0018.png",
+				"sha256": "f5e873abebb7c4d100fa1de3b9be46ca03eb9fa17ed8021c3a7467d1cbcef643"
+			},
+			{
+				"file": "frame_0019.png",
+				"sha256": "4c56902e45394f083572e6f4e604fcad685a56ffac30703209c4f6da47708ff7"
+			},
+			{
+				"file": "frame_0020.png",
+				"sha256": "79d4ef952a5686b5e9e180c8b685e2041f8649c8e1da9dcbd4cf1b3ec0177455"
+			},
+			{
+				"file": "frame_0021.png",
+				"sha256": "1a4f54888f6e5c07e55266ade4f9f96d18d47b0e69cc16aa26f428450c2cb54e"
+			},
+			{
+				"file": "frame_0022.png",
+				"sha256": "04f8f5838c1aa1b6e765555bd965a78a63126a48037b0bdba08a8815b5545ce4"
+			},
+			{
+				"file": "frame_0023.png",
+				"sha256": "5c2cd87431aec0e59cb2a1f7b96ca4885f187a58ff1d3daf30bb1282a6c823b3"
+			},
+			{
+				"file": "frame_0024.png",
+				"sha256": "a043aab666ef6024297ff0302d0eee8c381ac58d301801bd33fa4be490b6d7ca"
+			},
+			{
+				"file": "frame_0025.png",
+				"sha256": "279fd3861f09e84dc91f2336800d131f1c67f5e9bc7c863b0cf3fdbece1515ab"
+			},
+			{
+				"file": "frame_0026.png",
+				"sha256": "5a6f0f3c2068adc91548f604b1d60cae75f1d122dcf53ae68d95cd7358de66eb"
+			},
+			{
+				"file": "frame_0027.png",
+				"sha256": "25dfbe3d925d313528f53ae5f7300261d255921b5b77765d941b189f48e86ee3"
+			},
+			{
+				"file": "frame_0028.png",
+				"sha256": "6857ec8f0784923eb243673276201e16604896310c2eab5d014c0bcdfdfe0fba"
+			},
+			{
+				"file": "frame_0029.png",
+				"sha256": "629cb78811cb8734658f57dbf9b7fc70d93563f6376fa43479eeaef370ce3c5c"
+			},
+			{
+				"file": "frame_0030.png",
+				"sha256": "ec431e28cb027dea2792fdf24cef9661e96eb0aab095543014d14a5333b64389"
+			},
+			{
+				"file": "frame_0031.png",
+				"sha256": "94a1b6a546d724391e8679e2cfd02043178cd7e88894f7fd3e2f8ba48e6fcbb4"
+			},
+			{
+				"file": "frame_0032.png",
+				"sha256": "1b1446a7e8323541af5975d8975160876c0eb5179625100ddebb9d6786eac392"
+			},
+			{
+				"file": "frame_0033.png",
+				"sha256": "b2d15a67c2ea3dd812137bf54bd2ecc17a31aa18de4a8f256153b6787181a9da"
+			},
+			{
+				"file": "frame_0034.png",
+				"sha256": "a72e23476afa10576142e8f09b3860db7666d63cb5cd9b0f12fb2355323a42d2"
+			},
+			{
+				"file": "frame_0035.png",
+				"sha256": "f3d5152989919e6262c270b4bfecc267e224797ef9d53bab337b8007ba418de5"
+			},
+			{
+				"file": "frame_0036.png",
+				"sha256": "8d43bdb9db732840b8d3fc33b97dbeeb72207489baf4683ec4d740e92495eed0"
+			},
+			{
+				"file": "frame_0037.png",
+				"sha256": "080bc5807cb9ca846173830bf70cc589028550343564cd4c640d081f6b590b2f"
+			},
+			{
+				"file": "frame_0038.png",
+				"sha256": "215c843a6b555b68120c65be30438d80d763ed5f21f321746e42741459fef643"
+			},
+			{
+				"file": "frame_0039.png",
+				"sha256": "4ecaaa41d99b9f634cbaa6d6c4a809173cac6b98d1fff714e2b0e11904927eb4"
+			},
+			{
+				"file": "frame_0040.png",
+				"sha256": "ad28a283b824b6f8d43f1d121252db1786aa8797562252d5c2a5ac2fc00f1009"
+			},
+			{
+				"file": "frame_0041.png",
+				"sha256": "07e1a985f9f37e8c7c30f0e56a874254ed9f099c9a3cd4885cc7781ef6a17e2a"
+			},
+			{
+				"file": "frame_0042.png",
+				"sha256": "8259865be9e8aba5b37a9530b7a96c30159a5a5b429332538ec6312acb03e529"
+			},
+			{
+				"file": "frame_0043.png",
+				"sha256": "d68102b4a6ece737c304933abacc7e683126c880b297f46c74423ae501a28451"
+			},
+			{
+				"file": "frame_0044.png",
+				"sha256": "61ede5cfdc971ddf922ef9e5a33f61889835aed35a9b6780780a0331c8d72918"
+			},
+			{
+				"file": "frame_0045.png",
+				"sha256": "5755e290d160af10207b6a0c44570bd2b55829ae8275c9be90dee5115ec7726c"
+			},
+			{
+				"file": "frame_0046.png",
+				"sha256": "b18b96b191ea10e730ebf684b6498f24381f5afd835cdee20c552722bec96217"
+			},
+			{
+				"file": "frame_0047.png",
+				"sha256": "72a1a3b632b4ec7c88874198ea00b37415e266643035749aa23e69eac0e9d27b"
+			},
+			{
+				"file": "frame_0048.png",
+				"sha256": "08241f30121bc21ee77a328c6a000f2f63aaf6bbeb4e0e9043556c2cb54d58f8"
+			},
+			{
+				"file": "frame_0049.png",
+				"sha256": "2b8599d16a4ad12cc7e1fdf9aca69b48bbff8679d66cdb10ccdd4729a5731ec7"
+			},
+			{
+				"file": "frame_0050.png",
+				"sha256": "ff4f6dc0a9924e9b1ac42b379fbac2c088ec17588f35d824c167fa4e1abe3546"
+			},
+			{
+				"file": "frame_0051.png",
+				"sha256": "14fa305a706756c44496cd75abb7c6cc0600669c01e8bd66ff73b146ee480f4b"
+			},
+			{
+				"file": "frame_0052.png",
+				"sha256": "b1b07940f1f46cb19cfabe5f702ad334c2a68a4d90a17b689264b9b87dd6dc24"
+			},
+			{
+				"file": "frame_0053.png",
+				"sha256": "47a09c50ea9a917857ab733ec245023c26f1ba7284d8b77f225c5ed301cde1f1"
+			},
+			{
+				"file": "frame_0054.png",
+				"sha256": "513a766cb999923dec81237ad5a07770981cd989a3cbaa3851e818271a2d898a"
+			},
+			{
+				"file": "frame_0055.png",
+				"sha256": "e33c8d367a81af3342cba6abbb6ed59f542a97a3fc18fe9f31be2b851ad03f5d"
+			},
+			{
+				"file": "frame_0056.png",
+				"sha256": "cdbec35b2025717246779128b8c1ea6d664e461dd395cfcc9e76113e573378f3"
+			},
+			{
+				"file": "frame_0057.png",
+				"sha256": "a52450b13ad07daf18d417347acc2f5dac3a771c7114f1a21151f20a734fe868"
+			},
+			{
+				"file": "frame_0058.png",
+				"sha256": "b0aa26cc722a2baf1cb9d1cdc1f08ce78e585adb267b609d9eea9bbae5673b41"
+			},
+			{
+				"file": "frame_0059.png",
+				"sha256": "1efaecaa10d3bf8a4cbd990e6d008f57b67e09579cb3eed64e1486187c3c29e6"
+			},
+			{
+				"file": "frame_0060.png",
+				"sha256": "bab49fe1ad2bdbad2600133061e16c18206417f51f8f79dd702ad896cfc99036"
+			},
+			{
+				"file": "frame_0061.png",
+				"sha256": "386e0daf87913bccc0fef81b0f880e1747b11d9252d2356d68533821b309cecd"
+			},
+			{
+				"file": "frame_0062.png",
+				"sha256": "6f83e3803f0f7c6c29464993b2219aa39a36971bdce43fb711ad284faa7662ef"
+			},
+			{
+				"file": "frame_0063.png",
+				"sha256": "5a8b0600723bc5673052e57daef28a978469531e52e2d9bbba5376ce1906a376"
+			},
+			{
+				"file": "frame_0064.png",
+				"sha256": "5f95789f0ef0e4ad526193db01505783cb630ecc832eaf7324e836062ffd22e3"
+			},
+			{
+				"file": "frame_0065.png",
+				"sha256": "a72bc03b6a16de2a3dbd101c81302c8272df968fe1ae56724b80b80c7d43ea65"
+			},
+			{
+				"file": "frame_0066.png",
+				"sha256": "4a4438cbada5d17bccc1a812bac2bbe159a0610be07dea5d2a36322fc39fc79c"
+			},
+			{
+				"file": "frame_0067.png",
+				"sha256": "6241aeba605121ffb7975696c30363a7ac60d1fde2be0d7415e51509bff131ee"
+			},
+			{
+				"file": "frame_0068.png",
+				"sha256": "8aceb1fd459aeba501f71260abd02ebcde32073674b9ec0931f0f100b7841251"
+			},
+			{
+				"file": "frame_0069.png",
+				"sha256": "ca73076f9c7324f01f0347f795f217415924cfd272536a571b327e6d8685e095"
+			},
+			{
+				"file": "frame_0070.png",
+				"sha256": "db8ffe751f2919c74fb50c9cbd0a68bc6c232c2855664c1f1fc7a0c883dae848"
+			},
+			{
+				"file": "frame_0071.png",
+				"sha256": "35d48bd9db5accd08706da6d662a6f204aeb6dc0ae5d730fb102a21f7c628081"
+			},
+			{
+				"file": "frame_0072.png",
+				"sha256": "2d90049d5230cf088565e44fcde5dbe80f6e076ec04b8e16933496970c676ae9"
+			}
+		]
+	},
+	"models": {
+		"audio_vae": "minimax_h3_audio_vae_fp32.safetensors",
+		"clip": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+		"sampler": "res_multistep",
+		"scheduler": "simple",
+		"unet": "minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+		"video_vae": "minimax_h3_video_vae_fp16.safetensors"
+	},
+	"prompt": "Locked-off side-view game animation of the single reference creature facing right. Preserve its armor plates, shell pattern, anatomy, silhouette, colors, scale and screen position. Uniform neutral grey background and constant lighting. Entire body, tail and claws stay inside the canvas. No body rotation, camera movement, zoom, cuts, new limbs, particles, changing shadows or other objects. One attack only. First quarter: deliberate anticipation, rearing back and raising the forward claw or head. Middle: a distinct forward strike toward the facing direction. Final half: settle and recover to the original resting pose. Feet remain planted; no walking or extra strikes. No impact particles or target objects. No music or dialogue. The strike is a heavy downward swipe of the near claw.",
+	"prompt_version": 1,
+	"reference": {
+		"ground_anchor": [
+			288,
+			495
+		],
+		"path": "art/creatures/references/gordon/reference.png",
+		"sha256": "3e42e57cc5742db6b5fb0aa738b54e0f49549ccb68e2192a1e7441da4ec31a1e"
+	},
+	"seconds": 3.0,
+	"seed": 8073,
+	"size": 576,
+	"source_fps": 24.0,
+	"state": "attack",
+	"status": "complete",
+	"steps": 15,
+	"take_id": "attack_20261004T064632_932",
+	"updated_at": "2026-10-03T23:47:26"
+}

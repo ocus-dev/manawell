@@ -48,8 +48,15 @@ func _ready() -> void:
 	number_layer.draw.connect(_draw_numbers)
 	add_child(number_layer)
 
+## Built-ins have fixed colors; Creature Lab creatures get a steady color of
+## their own from their id.
 static func color_for(monster_id: String) -> Color:
-	return MONSTER_COLORS.get(monster_id, Color("ece6da"))
+	if MONSTER_COLORS.has(monster_id):
+		return MONSTER_COLORS[monster_id]
+	if monster_id.is_empty():
+		return Color("ece6da")
+	var hue := float(posmod(monster_id.hash(), 360)) / 360.0
+	return Color.from_hsv(hue, 0.5, 1.0)
 
 ## Records a hit for display. The dummy itself never takes damage.
 func show_hit(amount: float, monster_id: String = "", from_x: float = NAN) -> void:

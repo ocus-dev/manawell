@@ -1,0 +1,903 @@
+{
+	"comfy": {
+		"output_prefix": "Telos/Creatures/gordon/death_20261004T064822_626",
+		"outputs": {
+			"16": {
+				"animated": [
+					true
+				],
+				"images": [
+					{
+						"filename": "preview_00001_.mp4",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					}
+				]
+			},
+			"17": {
+				"images": [
+					{
+						"filename": "master_00001_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00002_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00003_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00004_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00005_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00006_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00007_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00008_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00009_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00010_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00011_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00012_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00013_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00014_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00015_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00016_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00017_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00018_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00019_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00020_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00021_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00022_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00023_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00024_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00025_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00026_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00027_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00028_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00029_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00030_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00031_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00032_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00033_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00034_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00035_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00036_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00037_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00038_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00039_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00040_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00041_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00042_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00043_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00044_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00045_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00046_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00047_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00048_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00049_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00050_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00051_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00052_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00053_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00054_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00055_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00056_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00057_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00058_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00059_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00060_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00061_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00062_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00063_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00064_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00065_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00066_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00067_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00068_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00069_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00070_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00071_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00072_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					},
+					{
+						"filename": "master_00073_.png",
+						"subfolder": "Telos\\Creatures\\gordon\\death_20261004T064822_626",
+						"type": "output"
+					}
+				]
+			}
+		},
+		"prompt_id": "2b394582-17c5-4d76-9d88-e77a470e11a5",
+		"server": "http://192.168.1.102:8188",
+		"upload_name": "telos-creature-gordon-3e42e57cc574.png"
+	},
+	"completed_at": "2026-10-03T23:49:12",
+	"created_at": "2026-10-03T23:48:22",
+	"creature": "gordon",
+	"end_on_reference": false,
+	"format_version": 1,
+	"frames_requested": 73,
+	"graph": {
+		"1": {
+			"class_type": "LoadImage",
+			"inputs": {
+				"image": "telos-creature-gordon-3e42e57cc574.png"
+			}
+		},
+		"10": {
+			"class_type": "BasicScheduler",
+			"inputs": {
+				"denoise": 1.0,
+				"model": [
+					"3",
+					0
+				],
+				"scheduler": "simple",
+				"steps": 15
+			}
+		},
+		"11": {
+			"class_type": "BasicGuider",
+			"inputs": {
+				"conditioning": [
+					"7",
+					0
+				],
+				"model": [
+					"3",
+					0
+				]
+			}
+		},
+		"12": {
+			"class_type": "SamplerCustomAdvanced",
+			"inputs": {
+				"guider": [
+					"11",
+					0
+				],
+				"latent_image": [
+					"7",
+					1
+				],
+				"noise": [
+					"8",
+					0
+				],
+				"sampler": [
+					"9",
+					0
+				],
+				"sigmas": [
+					"10",
+					0
+				]
+			}
+		},
+		"13": {
+			"class_type": "VAEDecode",
+			"inputs": {
+				"samples": [
+					"12",
+					0
+				],
+				"vae": [
+					"5",
+					0
+				]
+			}
+		},
+		"14": {
+			"class_type": "VAEDecodeAudio",
+			"inputs": {
+				"samples": [
+					"12",
+					0
+				],
+				"vae": [
+					"6",
+					0
+				]
+			}
+		},
+		"15": {
+			"class_type": "CreateVideo",
+			"inputs": {
+				"audio": [
+					"14",
+					0
+				],
+				"bit_depth": 8,
+				"fps": 24.0,
+				"images": [
+					"13",
+					0
+				]
+			}
+		},
+		"16": {
+			"class_type": "SaveVideo",
+			"inputs": {
+				"codec": "auto",
+				"filename_prefix": "Telos/Creatures/gordon/death_20261004T064822_626/preview",
+				"format": "mp4",
+				"video": [
+					"15",
+					0
+				]
+			}
+		},
+		"17": {
+			"class_type": "SaveImage",
+			"inputs": {
+				"filename_prefix": "Telos/Creatures/gordon/death_20261004T064822_626/master",
+				"images": [
+					"13",
+					0
+				]
+			}
+		},
+		"3": {
+			"class_type": "UNETLoader",
+			"inputs": {
+				"unet_name": "minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+				"weight_dtype": "default"
+			}
+		},
+		"4": {
+			"class_type": "CLIPLoader",
+			"inputs": {
+				"clip_name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+				"device": "default",
+				"type": "minimax"
+			}
+		},
+		"5": {
+			"class_type": "VAELoader",
+			"inputs": {
+				"vae_name": "minimax_h3_video_vae_fp16.safetensors"
+			}
+		},
+		"6": {
+			"class_type": "VAELoader",
+			"inputs": {
+				"vae_name": "minimax_h3_audio_vae_fp32.safetensors"
+			}
+		},
+		"7": {
+			"class_type": "MiniMaxH3ImageToVideo",
+			"inputs": {
+				"clip": [
+					"4",
+					0
+				],
+				"first_frame": [
+					"1",
+					0
+				],
+				"height": 576,
+				"length": 73,
+				"prompt": "Locked-off side-view game animation of the single reference creature facing right. Preserve its armor plates, shell pattern, anatomy, silhouette, colors, scale and screen position. Uniform neutral grey background and constant lighting. Entire body, tail and claws stay inside the canvas. No body rotation, camera movement, zoom, cuts, new limbs, particles, changing shadows or other objects. The creature is defeated: it staggers, its legs buckle and its body collapses onto the ground line, then lies completely still for the final third. It stays whole and inside the canvas. No blood, gore, particles or dust. No music or dialogue.",
+				"vae": [
+					"5",
+					0
+				],
+				"width": 576
+			}
+		},
+		"8": {
+			"class_type": "RandomNoise",
+			"inputs": {
+				"noise_seed": 8347
+			}
+		},
+		"9": {
+			"class_type": "KSamplerSelect",
+			"inputs": {
+				"sampler_name": "res_multistep"
+			}
+		}
+	},
+	"masters": {
+		"dir": "art/creatures/animations/gordon/death_20261004T064822_626/masters",
+		"fps": 24.0,
+		"frames": [
+			{
+				"file": "frame_0000.png",
+				"sha256": "863180251b88e43698d5865ba70d54cafbefdcaa92bcbdd38b1d9195e41158a7"
+			},
+			{
+				"file": "frame_0001.png",
+				"sha256": "12bd443cbad05b6f111054f91ecd4b833a5b0f77cde9b7f2beed89ed825e0a35"
+			},
+			{
+				"file": "frame_0002.png",
+				"sha256": "9f6e9d733950d7bde69049160d0bc8bb3b64b3a8ade2b62da0d22e17f4aaf7ff"
+			},
+			{
+				"file": "frame_0003.png",
+				"sha256": "8c324df2b1c624aa212236780144546101f19cc65476e105b2463a61aace7872"
+			},
+			{
+				"file": "frame_0004.png",
+				"sha256": "2ab568760a1a1b865284a5a8ec01295e66aed4c17c2c2c718d0eac3e8652800e"
+			},
+			{
+				"file": "frame_0005.png",
+				"sha256": "42e7a13db75392247643804ee36109eecb50d584825b2ce3e8fb47bf7df13057"
+			},
+			{
+				"file": "frame_0006.png",
+				"sha256": "99aec44893d7b5873fb5a3ec4a3b94569d41f4db277464a941cc389f6c620e37"
+			},
+			{
+				"file": "frame_0007.png",
+				"sha256": "68963e679fa18955e1d4f45614cdda2449659ba4afc7ef15782f115a3199aad9"
+			},
+			{
+				"file": "frame_0008.png",
+				"sha256": "67832b972dce7f4804838d3cf17fce5a3304ecad94b97f9c613823fd502a0401"
+			},
+			{
+				"file": "frame_0009.png",
+				"sha256": "ef839eb6c7a981594c72ebc09c71639b84a1fc1f81a99179c22b4a6f642afc11"
+			},
+			{
+				"file": "frame_0010.png",
+				"sha256": "0d2cf882521520030048d7cd332eec325c30b58acc2415ade363eb3e5912d662"
+			},
+			{
+				"file": "frame_0011.png",
+				"sha256": "29cd3bf2c78416c6d389084a21b00ac82bf65785e8f9895c6e54ab86caaedc52"
+			},
+			{
+				"file": "frame_0012.png",
+				"sha256": "d8eeb5f34c38dcfbf2b2cd0704b8fddc00f2476050d3649551920625f44c3edd"
+			},
+			{
+				"file": "frame_0013.png",
+				"sha256": "55ea45aa8587ad6a16106d1e1fc0694b2f18332a164d61ea9258d97fd5dbfca8"
+			},
+			{
+				"file": "frame_0014.png",
+				"sha256": "17f861f46ea6929cdebd64c8eb267a5f9bc531e018416eaafec9a1dcd6999f57"
+			},
+			{
+				"file": "frame_0015.png",
+				"sha256": "a3d9bb4e293c802380149bc6f21e9dc70946811fa11f5c161c71cbb6bc8f9be8"
+			},
+			{
+				"file": "frame_0016.png",
+				"sha256": "56805d1f4c0f126d8af1c28d24ead09065ea91ffb6a59bf8f3c71497f53da3f5"
+			},
+			{
+				"file": "frame_0017.png",
+				"sha256": "9218fb92c254f6337fe4b24940e2035d24b7fb1c96c92e66d0f77ab1673d5c8c"
+			},
+			{
+				"file": "frame_0018.png",
+				"sha256": "22ef6eef627fc9a581aeb055bfb0e558243376a5b43235796f6b86f7139af227"
+			},
+			{
+				"file": "frame_0019.png",
+				"sha256": "73b6add51e3b0882533f0e57cdfc44c6f9b195998a669721ba924edda4d20b30"
+			},
+			{
+				"file": "frame_0020.png",
+				"sha256": "95f76e4884b3530dfde6348e8c09e2763bbc13929a6ed636e77d2980523c5e8f"
+			},
+			{
+				"file": "frame_0021.png",
+				"sha256": "13889cf87800400a151f2e4956ec6a46491d9a5f88d235353b3523160c225ad8"
+			},
+			{
+				"file": "frame_0022.png",
+				"sha256": "7734ce63397bf37f5417c0bfe2c94a39b01066d5376563af8e3f915958ce1c30"
+			},
+			{
+				"file": "frame_0023.png",
+				"sha256": "b17bb72850782b995bb87de2d90beee40299c2cdca4054fca36f0651e8c957be"
+			},
+			{
+				"file": "frame_0024.png",
+				"sha256": "a666c443faacf6b8a8bf7a99e6ec6ac8b2e7626e506129c1bcdc9b6b889aa3eb"
+			},
+			{
+				"file": "frame_0025.png",
+				"sha256": "73faea9d6ea387716dfc62786ebe32c99a790744a9a1e0a51e020d77a1c56310"
+			},
+			{
+				"file": "frame_0026.png",
+				"sha256": "9f4dba9a7a363e008428d26d23881839d21e8fe5c6b16881f071f20996b59524"
+			},
+			{
+				"file": "frame_0027.png",
+				"sha256": "c1a606c53116b061752a6090a6dc2611b94651de6798fd85a4973b90037aedb2"
+			},
+			{
+				"file": "frame_0028.png",
+				"sha256": "cf0e10fb484cdaaef94196091eb1e9bf61b2cb95b0593c6c26c1cbecb58f27a4"
+			},
+			{
+				"file": "frame_0029.png",
+				"sha256": "699da2549af19167dfb603713cf6461f0da4c15e9a0249b568a12011bdb77455"
+			},
+			{
+				"file": "frame_0030.png",
+				"sha256": "39b05ee130d4db8375d5c502d958cf6426a5331cce53694ce6b937318f64706a"
+			},
+			{
+				"file": "frame_0031.png",
+				"sha256": "a054a0daba432bd24bb9d94c8c787af656daf4c6987f87e6602022aaa80477ca"
+			},
+			{
+				"file": "frame_0032.png",
+				"sha256": "61acc992a88b1d15f36ebffc374012cdc1054de235876ad6e29092e69fc7c148"
+			},
+			{
+				"file": "frame_0033.png",
+				"sha256": "63c8a8a020ea928c40c7342258927d4d4a40a7a0da080fb9d44bb0d99e824dbc"
+			},
+			{
+				"file": "frame_0034.png",
+				"sha256": "8899453dc3794af83ae293cc25d35ee8cac6c612af28f6802e956a13ea7bdba7"
+			},
+			{
+				"file": "frame_0035.png",
+				"sha256": "4901d1d471955cdf32ff5ee9ab4913574603567935a317d390b745790d7d7274"
+			},
+			{
+				"file": "frame_0036.png",
+				"sha256": "d14de44a5755fcee516b306e21ea4a68c4150e1a29618c432070144f27583d62"
+			},
+			{
+				"file": "frame_0037.png",
+				"sha256": "a83dc0da008e4594e54c6a18d6e81f9844d35a484f86614ed56833f8e8a29062"
+			},
+			{
+				"file": "frame_0038.png",
+				"sha256": "eede3b915bd3d57d9c475ca0430215949acddb0ec0f13406460aed8fb0f7e70c"
+			},
+			{
+				"file": "frame_0039.png",
+				"sha256": "b5ff07759c91ee2c59d30224a7101ff4c53cd7c941411dbd168a351ad855a3f3"
+			},
+			{
+				"file": "frame_0040.png",
+				"sha256": "17ddf8b41c441bd93b5ab72ac03e084ffc9aaede2473b93799dabd2155479ca8"
+			},
+			{
+				"file": "frame_0041.png",
+				"sha256": "44b63d1e1ff63b45694832181b60c47e9495753eca4a8b18c73c86b79b4b8b3c"
+			},
+			{
+				"file": "frame_0042.png",
+				"sha256": "531cd04f4bdd2ac6e691ace22725ad65924b93b0c73134756f9a475e014139e1"
+			},
+			{
+				"file": "frame_0043.png",
+				"sha256": "36b13c77e9da983ea4b9b50a74f006779cb91dd00453ac7d7e1a426e4507748d"
+			},
+			{
+				"file": "frame_0044.png",
+				"sha256": "21f38281c072932f2bb88efb7d7df4f70b32d1269df8f30a55ad250dcf995450"
+			},
+			{
+				"file": "frame_0045.png",
+				"sha256": "9379c576f8d1471e29db0868a079cf2bd6a6bc8de91e082bf96d60e82c7f6920"
+			},
+			{
+				"file": "frame_0046.png",
+				"sha256": "fd5e5d51ad4dea08b357e8b5e77c7e03b792f62a65fa0a5c3c18387f53ebfcd4"
+			},
+			{
+				"file": "frame_0047.png",
+				"sha256": "a2bc5c73092c6fe73c09069713b5f644e2de151c8113943158de8d2caba0d9b1"
+			},
+			{
+				"file": "frame_0048.png",
+				"sha256": "e3c2ff20186aefd59ecc8639c8ea10ba1d8f6a314de881b7cb6d490ef9c33640"
+			},
+			{
+				"file": "frame_0049.png",
+				"sha256": "eacffa8876e1ca0f5c02d251d628f37978d58fc7beb07e172ec51afbd8c053dd"
+			},
+			{
+				"file": "frame_0050.png",
+				"sha256": "8f7f53e0329bc3b9771d1f6bdd472b85df06ad5cddc7235c67c0ca029429e38c"
+			},
+			{
+				"file": "frame_0051.png",
+				"sha256": "1fc2213397d88d46a6797656741b27f48c2d4a4218f20c982a93685007895e42"
+			},
+			{
+				"file": "frame_0052.png",
+				"sha256": "d32ff660b113e44e3d0d2abee8de6621fb42f24aad6c95e519583d5dbef4a88d"
+			},
+			{
+				"file": "frame_0053.png",
+				"sha256": "0963b26749d4a7fe4daf743d9b19a1a58a4aaa38c7c119f47e15338fa6123d72"
+			},
+			{
+				"file": "frame_0054.png",
+				"sha256": "08f0c41f4ec47c5ba6c23aea86c8cd7059446a72e8a8e9b6f614bdca9d8a7a4f"
+			},
+			{
+				"file": "frame_0055.png",
+				"sha256": "c145dbac162170dfa24d446d60e8fd685a99b54c43b153959cc30fc13bccdc6b"
+			},
+			{
+				"file": "frame_0056.png",
+				"sha256": "371b8ef9406e8b6a70757be910065600ca9426fdc878b59c7de9fe36a95dbbc5"
+			},
+			{
+				"file": "frame_0057.png",
+				"sha256": "0838c2246e55f79f2dbf9bee325db2ca1cf76d0f4bf8e71dade109415f8ffba6"
+			},
+			{
+				"file": "frame_0058.png",
+				"sha256": "107909b17256b71f8c825eaa07801acfe0085db8f857eaba21adcd720efb36ad"
+			},
+			{
+				"file": "frame_0059.png",
+				"sha256": "d9d8b45973a5aaa46dca5c5d6272050f54804b0ed1fca4d8af65166266c0f9c5"
+			},
+			{
+				"file": "frame_0060.png",
+				"sha256": "97059abfa24c7e25c84b9143767070c2709b8cf9e6aab22bc9488e250cf00984"
+			},
+			{
+				"file": "frame_0061.png",
+				"sha256": "34fdf4acdb31bfb91b6960b0eabd6d657ffed793238f34be4d0a6e073faefb74"
+			},
+			{
+				"file": "frame_0062.png",
+				"sha256": "6fcc49a34cc80a7a94e8a0c016ef5a38aa2dbd25766e3447fd44eddb0144a830"
+			},
+			{
+				"file": "frame_0063.png",
+				"sha256": "b0fa5adc4067ad157549d4d4eadea4258b6b305343b58a801fb35535d95d3b25"
+			},
+			{
+				"file": "frame_0064.png",
+				"sha256": "374493f0f0f845b1594fdbc94f37d009fd51bb718ce78b6fbbce1e0f8507e4be"
+			},
+			{
+				"file": "frame_0065.png",
+				"sha256": "a7ed0c5e562ea13fff41606b67a4c6ee1f1af16d939e845a464a908b3d6a9af7"
+			},
+			{
+				"file": "frame_0066.png",
+				"sha256": "021b9bf1741a28f8677fe6ed10b0df19b90a92936c500a64d2c3d106350d55dd"
+			},
+			{
+				"file": "frame_0067.png",
+				"sha256": "bd507ea44d3ae28914e0f11bdbbe5a03d6d95c70936e5001b14093f0a395946d"
+			},
+			{
+				"file": "frame_0068.png",
+				"sha256": "ab69fbc0647ba089cd8e7aa1da43d736637a99d73325b054cff8ece4abe65dac"
+			},
+			{
+				"file": "frame_0069.png",
+				"sha256": "8cea931af394718488698e0afb8fdba3b5b9127c9c65438177a37612fbb61c70"
+			},
+			{
+				"file": "frame_0070.png",
+				"sha256": "a730469cdd382a42430a46d37e241cb5447cfc71118d6b920fcb27d744b53638"
+			},
+			{
+				"file": "frame_0071.png",
+				"sha256": "6477651b8eac98407509f71081a554dbded0f1bd3a0297d217c7404b0b7f087b"
+			},
+			{
+				"file": "frame_0072.png",
+				"sha256": "7fe5b97ab20c7980a8a3b79a2a1ae76410c25c23a86939b601661b4f267d0d56"
+			}
+		]
+	},
+	"models": {
+		"audio_vae": "minimax_h3_audio_vae_fp32.safetensors",
+		"clip": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+		"sampler": "res_multistep",
+		"scheduler": "simple",
+		"unet": "minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+		"video_vae": "minimax_h3_video_vae_fp16.safetensors"
+	},
+	"prompt": "Locked-off side-view game animation of the single reference creature facing right. Preserve its armor plates, shell pattern, anatomy, silhouette, colors, scale and screen position. Uniform neutral grey background and constant lighting. Entire body, tail and claws stay inside the canvas. No body rotation, camera movement, zoom, cuts, new limbs, particles, changing shadows or other objects. The creature is defeated: it staggers, its legs buckle and its body collapses onto the ground line, then lies completely still for the final third. It stays whole and inside the canvas. No blood, gore, particles or dust. No music or dialogue.",
+	"prompt_version": 1,
+	"reference": {
+		"ground_anchor": [
+			288,
+			495
+		],
+		"path": "art/creatures/references/gordon/reference.png",
+		"sha256": "3e42e57cc5742db6b5fb0aa738b54e0f49549ccb68e2192a1e7441da4ec31a1e"
+	},
+	"seconds": 3.0,
+	"seed": 8347,
+	"size": 576,
+	"source_fps": 24.0,
+	"state": "death",
+	"status": "complete",
+	"steps": 15,
+	"take_id": "death_20261004T064822_626",
+	"updated_at": "2026-10-03T23:49:12"
+}

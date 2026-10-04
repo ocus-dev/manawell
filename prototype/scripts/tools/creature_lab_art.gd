@@ -36,6 +36,44 @@ static var animations_root := ConfigScript.ANIMATIONS_ROOT
 static func has_transparency(image: Image) -> bool:
 	return WeaponArt.has_transparency(image)
 
+## Crops dark screenshot bars and frame lines off the edges: rows/columns
+## from each side where at least 90% of pixels are near-black. Stops at the
+## first line that isn't a bar, and never takes more than 15% of a side.
+static func trim_dark_border(source: Image) -> Image:
+	var image := source.duplicate() as Image
+	image.convert(Image.FORMAT_RGBA8)
+	var width := image.get_width()
+	var height := image.get_height()
+	var data := image.get_data()
+	var is_bar := func(horizontal: bool, line: int) -> bool:
+		var length := width if horizontal else height
+		var dark := 0
+		for i in range(length):
+			var pixel := (line * width + i) if horizontal else (i * width + line)
+			var offset := pixel * 4
+			if data[offset + 3] > ALPHA_THRESHOLD and data[offset] * 0.3 + data[offset + 1] * 0.59 + data[offset + 2] * 0.11 < 70.0:
+				dark += 1
+		return dark >= length * 0.9
+	var top := 0
+	while top < height * 0.15 and is_bar.call(true, top):
+		top += 1
+	var bottom := height
+	while bottom > height * 0.85 and is_bar.call(true, bottom - 1):
+		bottom -= 1
+	var left := 0
+	while left < width * 0.15 and is_bar.call(false, left):
+		left += 1
+	var right := width
+	while right > width * 0.85 and is_bar.call(false, right - 1):
+		right -= 1
+	if top == 0 and left == 0 and bottom == height and right == width:
+		return image
+	# A couple of extra pixels for the anti-aliased edge of the bar.
+	var pad := 2
+	var rect := Rect2i(left + (pad if left > 0 else 0), top + (pad if top > 0 else 0), 0, 0)
+	rect.end = Vector2i(right - (pad if right < width else 0), bottom - (pad if bottom < height else 0))
+	return image.get_region(rect)
+
 ## Removes a flat backdrop. Concept sheets often have a thin frame line or a
 ## screenshot edge, so the backdrop colour is the commonest colour on a ring
 ## a little inside the border, the band outside that ring is dropped, and the
@@ -127,6 +165,8 @@ static func keep_main_piece(image: Image, keep_fraction: float = 0.08) -> Image:
 	var sizes: Array[int] = [0]
 	## Per piece: which image sides it reaches (bit 1 left, 2 right, 4 top, 8 bottom).
 	var sides: Array[int] = [0]
+	## Per piece: bounding-box area, to tell thin frames from a big creature.
+	var boxes: Array[int] = [0]
 	var margin := maxi(2, roundi(minf(width, height) * 0.03))
 	var queue := PackedInt32Array()
 	for start in range(width * height):
@@ -135,6 +175,8 @@ static func keep_main_piece(image: Image, keep_fraction: float = 0.08) -> Image:
 		var label := sizes.size()
 		var count := 0
 		var touched := 0
+		var low := Vector2i(width, height)
+		var high := Vector2i(-1, -1)
 		queue.clear()
 		queue.append(start)
 		labels[start] = label
@@ -145,6 +187,8 @@ static func keep_main_piece(image: Image, keep_fraction: float = 0.08) -> Image:
 			count += 1
 			var x := pixel % width
 			var y := pixel / width
+			low = Vector2i(mini(low.x, x), mini(low.y, y))
+			high = Vector2i(maxi(high.x, x), maxi(high.y, y))
 			if x < margin:
 				touched |= 1
 			if x >= width - margin:
@@ -160,16 +204,19 @@ static func keep_main_piece(image: Image, keep_fraction: float = 0.08) -> Image:
 				queue.append(neighbour)
 		sizes.append(count)
 		sides.append(touched)
+		boxes.append((high.x - low.x + 1) * (high.y - low.y + 1))
 	if sizes.size() <= 2:
 		return rgba
-	# Frames and screenshot bars run along three or four sides: never the
-	# creature (unless nothing else is left).
+	# Frames and screenshot bars run along three or four sides and are thin,
+	# so they cover little of their bounding box. A creature cropped by the
+	# sheet can touch three sides too, but fills much more of its box.
 	var keep: Array[bool] = [false]
 	var biggest := 0
 	for label in range(1, sizes.size()):
 		var bits := sides[label]
 		var edges := (bits & 1) + ((bits >> 1) & 1) + ((bits >> 2) & 1) + ((bits >> 3) & 1)
-		keep.append(edges < 3)
+		var thin := float(sizes[label]) < float(boxes[label]) * 0.2
+		keep.append(edges < 3 or not thin)
 		if keep[label]:
 			biggest = maxi(biggest, sizes[label])
 	if biggest == 0:

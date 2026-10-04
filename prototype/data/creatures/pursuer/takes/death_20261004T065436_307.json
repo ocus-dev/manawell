@@ -1,0 +1,903 @@
+{
+	"comfy": {
+		"output_prefix": "Telos/Creatures/pursuer/death_20261004T065436_307",
+		"outputs": {
+			"16": {
+				"animated": [
+					true
+				],
+				"images": [
+					{
+						"filename": "preview_00001_.mp4",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					}
+				]
+			},
+			"17": {
+				"images": [
+					{
+						"filename": "master_00001_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00002_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00003_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00004_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00005_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00006_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00007_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00008_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00009_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00010_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00011_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00012_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00013_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00014_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00015_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00016_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00017_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00018_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00019_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00020_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00021_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00022_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00023_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00024_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00025_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00026_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00027_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00028_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00029_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00030_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00031_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00032_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00033_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00034_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00035_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00036_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00037_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00038_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00039_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00040_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00041_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00042_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00043_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00044_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00045_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00046_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00047_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00048_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00049_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00050_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00051_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00052_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00053_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00054_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00055_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00056_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00057_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00058_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00059_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00060_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00061_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00062_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00063_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00064_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00065_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00066_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00067_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00068_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00069_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00070_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00071_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00072_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					},
+					{
+						"filename": "master_00073_.png",
+						"subfolder": "Telos\\Creatures\\pursuer\\death_20261004T065436_307",
+						"type": "output"
+					}
+				]
+			}
+		},
+		"prompt_id": "39b72525-95b7-41fb-a449-89cd552cff2d",
+		"server": "http://192.168.1.102:8188",
+		"upload_name": "telos-creature-pursuer-6834fd4e5a8c.png"
+	},
+	"completed_at": "2026-10-03T23:55:26",
+	"created_at": "2026-10-03T23:54:36",
+	"creature": "pursuer",
+	"end_on_reference": false,
+	"format_version": 1,
+	"frames_requested": 73,
+	"graph": {
+		"1": {
+			"class_type": "LoadImage",
+			"inputs": {
+				"image": "telos-creature-pursuer-6834fd4e5a8c.png"
+			}
+		},
+		"10": {
+			"class_type": "BasicScheduler",
+			"inputs": {
+				"denoise": 1.0,
+				"model": [
+					"3",
+					0
+				],
+				"scheduler": "simple",
+				"steps": 15
+			}
+		},
+		"11": {
+			"class_type": "BasicGuider",
+			"inputs": {
+				"conditioning": [
+					"7",
+					0
+				],
+				"model": [
+					"3",
+					0
+				]
+			}
+		},
+		"12": {
+			"class_type": "SamplerCustomAdvanced",
+			"inputs": {
+				"guider": [
+					"11",
+					0
+				],
+				"latent_image": [
+					"7",
+					1
+				],
+				"noise": [
+					"8",
+					0
+				],
+				"sampler": [
+					"9",
+					0
+				],
+				"sigmas": [
+					"10",
+					0
+				]
+			}
+		},
+		"13": {
+			"class_type": "VAEDecode",
+			"inputs": {
+				"samples": [
+					"12",
+					0
+				],
+				"vae": [
+					"5",
+					0
+				]
+			}
+		},
+		"14": {
+			"class_type": "VAEDecodeAudio",
+			"inputs": {
+				"samples": [
+					"12",
+					0
+				],
+				"vae": [
+					"6",
+					0
+				]
+			}
+		},
+		"15": {
+			"class_type": "CreateVideo",
+			"inputs": {
+				"audio": [
+					"14",
+					0
+				],
+				"bit_depth": 8,
+				"fps": 24.0,
+				"images": [
+					"13",
+					0
+				]
+			}
+		},
+		"16": {
+			"class_type": "SaveVideo",
+			"inputs": {
+				"codec": "auto",
+				"filename_prefix": "Telos/Creatures/pursuer/death_20261004T065436_307/preview",
+				"format": "mp4",
+				"video": [
+					"15",
+					0
+				]
+			}
+		},
+		"17": {
+			"class_type": "SaveImage",
+			"inputs": {
+				"filename_prefix": "Telos/Creatures/pursuer/death_20261004T065436_307/master",
+				"images": [
+					"13",
+					0
+				]
+			}
+		},
+		"3": {
+			"class_type": "UNETLoader",
+			"inputs": {
+				"unet_name": "minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+				"weight_dtype": "default"
+			}
+		},
+		"4": {
+			"class_type": "CLIPLoader",
+			"inputs": {
+				"clip_name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+				"device": "default",
+				"type": "minimax"
+			}
+		},
+		"5": {
+			"class_type": "VAELoader",
+			"inputs": {
+				"vae_name": "minimax_h3_video_vae_fp16.safetensors"
+			}
+		},
+		"6": {
+			"class_type": "VAELoader",
+			"inputs": {
+				"vae_name": "minimax_h3_audio_vae_fp32.safetensors"
+			}
+		},
+		"7": {
+			"class_type": "MiniMaxH3ImageToVideo",
+			"inputs": {
+				"clip": [
+					"4",
+					0
+				],
+				"first_frame": [
+					"1",
+					0
+				],
+				"height": 576,
+				"length": 73,
+				"prompt": "Locked-off side-view game animation of the single reference creature facing right. Preserve its armor plates, shell pattern, anatomy, silhouette, colors, scale and screen position. Uniform neutral grey background and constant lighting. Entire body, tail and claws stay inside the canvas. No body rotation, camera movement, zoom, cuts, new limbs, particles, changing shadows or other objects. The creature is defeated: it staggers, its legs buckle and its body collapses onto the ground line, then lies completely still for the final third. It stays whole and inside the canvas. No blood, gore, particles or dust. No music or dialogue.",
+				"vae": [
+					"5",
+					0
+				],
+				"width": 576
+			}
+		},
+		"8": {
+			"class_type": "RandomNoise",
+			"inputs": {
+				"noise_seed": 9306
+			}
+		},
+		"9": {
+			"class_type": "KSamplerSelect",
+			"inputs": {
+				"sampler_name": "res_multistep"
+			}
+		}
+	},
+	"masters": {
+		"dir": "art/creatures/animations/pursuer/death_20261004T065436_307/masters",
+		"fps": 24.0,
+		"frames": [
+			{
+				"file": "frame_0000.png",
+				"sha256": "c51928a96d78c33eebe1caf00c96e7b7e1480dfc4a8f11f6c3c710a0e358cfbd"
+			},
+			{
+				"file": "frame_0001.png",
+				"sha256": "263afd13a0d5f68454243b989e0b66cfa342b145d8f479d1471f6585f67b2f87"
+			},
+			{
+				"file": "frame_0002.png",
+				"sha256": "3f53817dbcc65d0aa6b36014739581696979ea88ad181c36f1c9c4455d336cde"
+			},
+			{
+				"file": "frame_0003.png",
+				"sha256": "111ed94b11a9d7d72af5c487483039202ecab8d1ba014d8a38a2c7095d8198a7"
+			},
+			{
+				"file": "frame_0004.png",
+				"sha256": "f05ae393561afea0c2c325388892074456c8e582c65bae019ed87d6767e9606c"
+			},
+			{
+				"file": "frame_0005.png",
+				"sha256": "ad3d32b7bbb46261ae8f04899284d2e2a75173ed2774ba9de24a4525b0e5fed3"
+			},
+			{
+				"file": "frame_0006.png",
+				"sha256": "db4247c64325e0b89f3d893fb12848169575781e62ae68577df926e23c901b6b"
+			},
+			{
+				"file": "frame_0007.png",
+				"sha256": "c24d9062769a5518417a44ea261cb58bee3b873d47c845b1c2811916492bc0b1"
+			},
+			{
+				"file": "frame_0008.png",
+				"sha256": "c37ea5315f660ea5a273d8f83efe02aed8590c09348b6bdd3e1fd658c6d170ad"
+			},
+			{
+				"file": "frame_0009.png",
+				"sha256": "f169d9ab48fa6762a96d1589d4e6532099cf625d85399641a97dcfaf2a7f3ffb"
+			},
+			{
+				"file": "frame_0010.png",
+				"sha256": "e2a319e7a4bb6699252fea48889c5b83a85ce3b46e4aeb06f293b05f8e72d1a5"
+			},
+			{
+				"file": "frame_0011.png",
+				"sha256": "2fc8c94e9cf3d3c37af170ab5409e72917cb4e5f29b1ae39a0b85e920fc135a3"
+			},
+			{
+				"file": "frame_0012.png",
+				"sha256": "875fd7003716861c9b4205d1c51caa8c7331faf52a1b9ad700ca5ecbd6c9dc95"
+			},
+			{
+				"file": "frame_0013.png",
+				"sha256": "b7b101b4916f94e0df79e6bbe19d07dc604c9bd066b704202ee9943f146e86ef"
+			},
+			{
+				"file": "frame_0014.png",
+				"sha256": "b44a91d24630046b8a8c3f3a7d255a193fee03a2f3cd88a764627c95b7a2f923"
+			},
+			{
+				"file": "frame_0015.png",
+				"sha256": "3b7f1abef951bfb480f3e1b771b7340072980d7c00f65ed3df388134d7807d50"
+			},
+			{
+				"file": "frame_0016.png",
+				"sha256": "d40645eaa7fef93fb692c1ed35aa91bd414373195208fb0c045fc1494e2df51e"
+			},
+			{
+				"file": "frame_0017.png",
+				"sha256": "d9d5f1343db338bd4641856505b1aae33607b720a4636144294e80d1247e37cf"
+			},
+			{
+				"file": "frame_0018.png",
+				"sha256": "a5b2fb885092bce6839fe5fa5a65a8a8a8d43989d78960577fe4fbdcb79f49ab"
+			},
+			{
+				"file": "frame_0019.png",
+				"sha256": "a8b61c726c9e9f2fa4d81cabaa9df1137a608752940827dc3b21fe04ea7c373e"
+			},
+			{
+				"file": "frame_0020.png",
+				"sha256": "d915887c3580bb400cccb2c56ca113374034c0eeebb8ee5dbd5b0add215e31b6"
+			},
+			{
+				"file": "frame_0021.png",
+				"sha256": "7739758574504ad93bdcac2005302fe113f03c3be66ae87a933a0777238b3f7b"
+			},
+			{
+				"file": "frame_0022.png",
+				"sha256": "2e0f7d136f89048c2ab1c2f51bc69133884b839b76ec32a98dbf28905f77caed"
+			},
+			{
+				"file": "frame_0023.png",
+				"sha256": "0a984943aa5fd0c79931014705d9849db60b4e34dec8aba69100cd2b6893ee23"
+			},
+			{
+				"file": "frame_0024.png",
+				"sha256": "310cbebaee12f60ed8e15f20f0713c7bad289cb415860f01bf58cec99e5efe47"
+			},
+			{
+				"file": "frame_0025.png",
+				"sha256": "b41f2a64b4fc56f1ec3fe5ee8842bafb5b6cd127e804abca579365e7368d26ed"
+			},
+			{
+				"file": "frame_0026.png",
+				"sha256": "46696079a045ab624a4b36c94f6a9fa3b98505db92fd1a0021c09bf76ce096a3"
+			},
+			{
+				"file": "frame_0027.png",
+				"sha256": "20a18141ff1f13b137c8380dd41bcf65d1d61e811d0edb5c7bd11c969f70c48a"
+			},
+			{
+				"file": "frame_0028.png",
+				"sha256": "11a40e748044f8973c57bfabaa30ab67c8a29812327ac5a62fe5f0613213eed6"
+			},
+			{
+				"file": "frame_0029.png",
+				"sha256": "08329cb8c30816ecd96529bcf20a81c7d22ab73f80c5ae9d7b34ce61bea92cd5"
+			},
+			{
+				"file": "frame_0030.png",
+				"sha256": "a500335feef2d0ae40140a7060de6fd36bfbe0c89c67b20f77f2ecdc6c018c96"
+			},
+			{
+				"file": "frame_0031.png",
+				"sha256": "a46e0eeebba0f0077da03ed1176ae0a66e2192b8fb1949bc1d6caf8e508b6838"
+			},
+			{
+				"file": "frame_0032.png",
+				"sha256": "0cafac9ffed2d1cb6913b744090f09306c43a22f41a43112140acee106e6fc15"
+			},
+			{
+				"file": "frame_0033.png",
+				"sha256": "9f13d2de85084fffe22bf290ee90bc8b9dfe2677af7a096be8f72e5ae2596ea0"
+			},
+			{
+				"file": "frame_0034.png",
+				"sha256": "9d475c6d23e835f808578df849243f474ae3168a2e2d509e7fe56e235928ebd2"
+			},
+			{
+				"file": "frame_0035.png",
+				"sha256": "2a5e35359c20f6d2fbc4effb7806046c8784bd52e1c740d8f02f818c1faf589b"
+			},
+			{
+				"file": "frame_0036.png",
+				"sha256": "f3e96eb62d7197372b67466e0f150c1ef1d7e4f6f1174d85667fbe011da48d6a"
+			},
+			{
+				"file": "frame_0037.png",
+				"sha256": "c224b801d3fd7d1d78657f19260115e831b18b0566c582d14f301e12377cafb0"
+			},
+			{
+				"file": "frame_0038.png",
+				"sha256": "6eeaed000a8411cd96c71b9ff1df1da6eb548ca072af993d1564282bd7eb1632"
+			},
+			{
+				"file": "frame_0039.png",
+				"sha256": "47e51ab7f3551039f2522ce51caca8fcfbd2b2680aadd8bbd9bc595cb51a258c"
+			},
+			{
+				"file": "frame_0040.png",
+				"sha256": "abd3891975cd1234bbee36a0e1d59a534729edef10fe3403d016dfbd4fc12717"
+			},
+			{
+				"file": "frame_0041.png",
+				"sha256": "d6c479acc39413c5a210450b9fb7cc15b5d898060abc51b94263b67dffcad164"
+			},
+			{
+				"file": "frame_0042.png",
+				"sha256": "e909b31920f51662c8390d151a3d61e890b964e4a86de9a8c5b191e582196972"
+			},
+			{
+				"file": "frame_0043.png",
+				"sha256": "ecf5599e0fc7060b327bbf8a254d48d0df69e215dee2219e100658b2710584a9"
+			},
+			{
+				"file": "frame_0044.png",
+				"sha256": "7a80616a8210590268d5ac991b4f1ff70250752910a9b07d85d2ce47dfc9d364"
+			},
+			{
+				"file": "frame_0045.png",
+				"sha256": "8d6880af4e67151e2eca5cf37a6bd57d3c5aca0b287eec4c08b969633b8bac6e"
+			},
+			{
+				"file": "frame_0046.png",
+				"sha256": "de21127eca2171dbfc309356ce45d9614ce6a75203d33b1ede01c5815dc01ebe"
+			},
+			{
+				"file": "frame_0047.png",
+				"sha256": "1aca3efd3fdc8f40613234bff9ad5fd08c8f048b81db2f26ffdf1b87fed1c4bd"
+			},
+			{
+				"file": "frame_0048.png",
+				"sha256": "e3790997b95cd8630e8092fb89c62c52e2b53b75a6805f089f5feceec3f94d87"
+			},
+			{
+				"file": "frame_0049.png",
+				"sha256": "cbaa05011722edbd7c1fd22700721dabeeb442ae2fc5bc0043527ea3e8660045"
+			},
+			{
+				"file": "frame_0050.png",
+				"sha256": "df8e49dadb51439db4a0acba205759248bed8f6a81cb7afc77b9c6e7b6d64c13"
+			},
+			{
+				"file": "frame_0051.png",
+				"sha256": "a9b2cb1d3a62a71f4f44ad4b1b921fc6e30e3f8d9faabdc5339cff6f9076b288"
+			},
+			{
+				"file": "frame_0052.png",
+				"sha256": "b2fc517e16041a7bfd3921fd1bbf44fbdbcd3d8409fbe66bf5fd0ff863cf1774"
+			},
+			{
+				"file": "frame_0053.png",
+				"sha256": "6ee6fb4ff3672d428dcf3e45243a269e9dd137dc2617cc201ad245a232964aa2"
+			},
+			{
+				"file": "frame_0054.png",
+				"sha256": "83a84a5cbff1060038c3c75dfac37d4334522ccf06d5ead0b27079fa4e836edd"
+			},
+			{
+				"file": "frame_0055.png",
+				"sha256": "eb3ab38e9c2c60e558d7bb3e25801bb5b2574713e17f9c5897786297dc00287c"
+			},
+			{
+				"file": "frame_0056.png",
+				"sha256": "5c557f795d597edab92cde7b4947e4f1aff132ef2abdcaac48303c472ec8bccc"
+			},
+			{
+				"file": "frame_0057.png",
+				"sha256": "759eb1db242131b0ca9b13dd119fc78662fb407775b97acd25fbaa14ebb1089a"
+			},
+			{
+				"file": "frame_0058.png",
+				"sha256": "78e43df066f40b857f6a73109380fb6618fd2832546620737b786bbebf174906"
+			},
+			{
+				"file": "frame_0059.png",
+				"sha256": "5ab963265e8d791afb57d11753fd8f4f71a03532914da52542fcc816f6885160"
+			},
+			{
+				"file": "frame_0060.png",
+				"sha256": "4675b44e0363ec413cfc91721a733180c6e149e26e4745db0bbee445b475488d"
+			},
+			{
+				"file": "frame_0061.png",
+				"sha256": "27fa2e32d93d874e10b9c1b7f67c2d3854f852ae8683f7d95f15725a69064dea"
+			},
+			{
+				"file": "frame_0062.png",
+				"sha256": "b8c5f16039b98e64f237df3c7476eb5fc6a9429477a755c6d3e0413eca96b44e"
+			},
+			{
+				"file": "frame_0063.png",
+				"sha256": "8f0b5cafa74bd928682dc67c09ccf6d69848cdc02eef8c72545e85d1ce2c8d36"
+			},
+			{
+				"file": "frame_0064.png",
+				"sha256": "28cf6d2b37d1782e3d7581e77533e8d81669cd528872123904a2fcff7657b9be"
+			},
+			{
+				"file": "frame_0065.png",
+				"sha256": "8d7a23297b6b358a97f442a35272aba9c6a23fbb4a18ef26456d926136e62566"
+			},
+			{
+				"file": "frame_0066.png",
+				"sha256": "20bd051e476cf54b5a26de7ba792515f9cc6aa04044cb5975a004ab39f9e73d2"
+			},
+			{
+				"file": "frame_0067.png",
+				"sha256": "4256c69a7ac08e72c143b3f6a6d5b59f9769ad9674745b4566b357452d901394"
+			},
+			{
+				"file": "frame_0068.png",
+				"sha256": "da57ef70ece7f6a1711abbdd4832dc6c5a5e1c8b0e243f9798a1f276ea97fc63"
+			},
+			{
+				"file": "frame_0069.png",
+				"sha256": "8a147ea028eb06e2ad4867e2d801bf92fba7a21740899c44854102fe95875e39"
+			},
+			{
+				"file": "frame_0070.png",
+				"sha256": "36f69dd9979220a041bb35c4d13ae9047929eec2b868b31fcd57b19f615cc1e2"
+			},
+			{
+				"file": "frame_0071.png",
+				"sha256": "7636f52c1bb872e4a6c2534f17709e344f16934f200a151cc6dc4b964db4c4b2"
+			},
+			{
+				"file": "frame_0072.png",
+				"sha256": "ba6a22f8019efb82884c90fe171caeb50d245ded3e5a0c8a03c645339bc30a13"
+			}
+		]
+	},
+	"models": {
+		"audio_vae": "minimax_h3_audio_vae_fp32.safetensors",
+		"clip": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+		"sampler": "res_multistep",
+		"scheduler": "simple",
+		"unet": "minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+		"video_vae": "minimax_h3_video_vae_fp16.safetensors"
+	},
+	"prompt": "Locked-off side-view game animation of the single reference creature facing right. Preserve its armor plates, shell pattern, anatomy, silhouette, colors, scale and screen position. Uniform neutral grey background and constant lighting. Entire body, tail and claws stay inside the canvas. No body rotation, camera movement, zoom, cuts, new limbs, particles, changing shadows or other objects. The creature is defeated: it staggers, its legs buckle and its body collapses onto the ground line, then lies completely still for the final third. It stays whole and inside the canvas. No blood, gore, particles or dust. No music or dialogue.",
+	"prompt_version": 1,
+	"reference": {
+		"ground_anchor": [
+			288.0,
+			496.0
+		],
+		"path": "art/side-view/animations/references/pursuer/reference.png",
+		"sha256": "6834fd4e5a8ce227d4824745dcf3af9b8f42ec9abd8a898f1de92e4bf885ce23"
+	},
+	"seconds": 3.0,
+	"seed": 9306,
+	"size": 576,
+	"source_fps": 24.0,
+	"state": "death",
+	"status": "complete",
+	"steps": 15,
+	"take_id": "death_20261004T065436_307",
+	"updated_at": "2026-10-03T23:55:26"
+}

@@ -10,9 +10,13 @@ extends RefCounted
 ##              surge reached (never faster than `min_interval`), at most
 ##              `max_alive` on screen, creatures picked by `mix` weights
 ##   "none"     no monsters (the tutorial's default)
-## Monsters are the ones in the encyclopedia (MonsterStats.MONSTERS).
+## Monsters are the ones in the encyclopedia: the built-ins and every Creature
+## Lab creature (MonsterStats.monsters()). A creature taken out of the
+## encyclopedia (or whose art isn't on disk) keeps its saved weight and boss
+## choice but doesn't spawn until it's back.
 
 const MonsterStatsScript = preload("res://scripts/model/monster_stats.gd")
+const CreatureRegistryScript = preload("res://scripts/model/creature_registry.gd")
 const CampaignCatalogScript = preload("res://scripts/model/campaign_catalog.gd")
 
 const DATA_PATH := "res://data/level_spawns.json"
@@ -140,7 +144,7 @@ static func describe_progress(value: Dictionary) -> String:
 	var surge := int(value.get("progress_surge", 0))
 	if surge <= 0:
 		return "No boss: this level is for farming only and never unlocks anything."
-	var boss_name := str(MonsterStatsScript.monster(str(value.get("boss_monster", DEFAULT_BOSS_MONSTER))).get("name", "Boss"))
+	var boss_name := str(MonsterStatsScript.monster(boss_monster(value)).get("name", "Boss"))
 	return "Reach surge %d (about %d:%02d in) and a boss %s spawns: %s× health, %s× damage. Kill it to clear the level and unlock the next one." % [surge, surge * 20 / 60, surge * 20 % 60, boss_name, _num(float(value.boss_health)), _num(float(value.boss_damage))]
 
 static func _num(value: float) -> String:
@@ -281,11 +285,22 @@ static func _normalized(level_id: String, value: Dictionary) -> Dictionary:
 	for key in SETTING_ORDER + PROGRESS_ORDER:
 		if value.has(key) and (value[key] is float or value[key] is int):
 			result[key] = clamp_value(key, float(value[key]))
-	if MonsterStatsScript.monster_ids().has(str(value.get("boss_monster", ""))):
-		result.boss_monster = str(value.boss_monster)
+	var boss := str(value.get("boss_monster", ""))
+	if MonsterStatsScript.monster_ids().has(boss) or CreatureRegistryScript.has(boss):
+		result.boss_monster = boss
 	var mix: Variant = value.get("mix", {})
 	if mix is Dictionary:
-		for monster_id in MonsterStatsScript.monster_ids():
-			if mix.has(monster_id) and (mix[monster_id] is float or mix[monster_id] is int):
-				result.mix[monster_id] = clampf(float(mix[monster_id]), 0.0, WEIGHT_MAX)
+		for key in mix:
+			var monster_id := str(key)
+			if not (mix[key] is float or mix[key] is int):
+				continue
+			# Known monsters, plus Creature Lab creatures that are out of the
+			# encyclopedia for now (kept so their weight comes back with them).
+			if MonsterStatsScript.monster_ids().has(monster_id) or CreatureRegistryScript.has(monster_id):
+				result.mix[monster_id] = clampf(float(mix[key]), 0.0, WEIGHT_MAX)
 	return result
+
+## Boss for a level, falling back to the default when its creature is gone.
+static func boss_monster(value: Dictionary) -> String:
+	var boss := str(value.get("boss_monster", DEFAULT_BOSS_MONSTER))
+	return boss if MonsterStatsScript.monster_ids().has(boss) else DEFAULT_BOSS_MONSTER

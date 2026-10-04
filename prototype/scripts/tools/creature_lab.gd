@@ -208,7 +208,9 @@ func select_concept(path: String) -> void:
 		return
 	concept_path = path
 	creature_id = str(entry["id"])
-	if Registry.has(creature_id):
+	if is_builtin():
+		record = _builtin_record()
+	elif Registry.has(creature_id):
 		record = Registry.get_creature(creature_id)
 	else:
 		record = {
@@ -232,6 +234,34 @@ func select_concept(path: String) -> void:
 	_apply_record_to_controls()
 	select_state(state)
 
+## The original pursuer / breaker / ranged: a stage of its family. Its art,
+## calibration and reference are the existing ones (SideViewVisualConfig.ASSETS
+## and art/side-view/animations/references/<id>/); only new clips (hurt,
+## death, ...) are made here, into the same assets/side-view/animations/<id>_<state>/.
+func is_builtin() -> bool:
+	return Registry.is_builtin(creature_id)
+
+func _builtin_record() -> Dictionary:
+	var info := Registry.builtin_info(creature_id)
+	var saved := Registry.get_creature(creature_id)
+	var asset: Dictionary = ConfigScript.ASSETS[creature_id]
+	var anchor: Vector2 = asset["animation_source_anchor"]
+	var entry := MonsterStatsScript.monster(creature_id)
+	return {
+		"id": creature_id,
+		"builtin": true,
+		"name": str(info.name),
+		"family": str(info.family),
+		"stage": int(info.stage),
+		"archetype": creature_id,
+		"facing": "right",
+		"display_height": float(asset["initial_visible_height"]),
+		"desc": str(info.desc) if not str(info.desc).is_empty() else str(entry.get("desc", "")),
+		"states": saved.get("states", {}),
+		"in_encyclopedia": true,
+		"reference": {"canvas": [576, 576], "ground_anchor": [anchor.x, anchor.y], "body_height": float(asset["animation_reference_height"]), "still": Registry.BUILTIN_SPRITES[creature_id]},
+	}
+
 func _guess_archetype(family: String) -> String:
 	var lower := family.to_lower()
 	if lower.contains("breaker") or lower.contains("brute") or lower.contains("queen"):
@@ -247,6 +277,14 @@ func is_saved() -> bool:
 func save_record() -> Dictionary:
 	if creature_id.is_empty():
 		return {"ok": false, "error": "Pick a concept first."}
+	if is_builtin():
+		# Only the lab-editable parts; art and calibration stay in ASSETS.
+		var builtin := {"builtin": true, "name": str(record.get("name", "")), "family": str(record.get("family", "")), "stage": int(record.get("stage", 0)), "archetype": creature_id, "desc": str(record.get("desc", "")), "states": record.get("states", {})}
+		var stored := Registry.put_creature(creature_id, builtin)
+		if stored.ok:
+			record = _builtin_record()
+			_sync_tiles()
+		return stored
 	record["concept"] = concept_path
 	var concept_abs := Registry.repo_root().path_join(concept_path)
 	if FileAccess.file_exists(concept_abs):
@@ -262,6 +300,12 @@ func _on_field_changed() -> void:
 	if _loading or creature_id.is_empty():
 		return
 	record["name"] = name_edit.text.strip_edges() if not name_edit.text.strip_edges().is_empty() else str(record.get("name", creature_id))
+	if is_builtin():
+		record["desc"] = desc_edit.text.strip_edges()
+		save_record()
+		_refresh_meta()
+		_refresh_encyclopedia()
+		return
 	record["archetype"] = str(archetype_picker.get_item_metadata(archetype_picker.selected))
 	var new_facing := "right" if facing_picker.selected == 1 else "left"
 	var facing_changed := new_facing != str(record.get("facing", "left"))
@@ -281,6 +325,9 @@ func cutout_method() -> String:
 	return str(cutout_picker.get_item_metadata(cutout_picker.selected))
 
 func concept_image() -> Image:
+	if is_builtin():
+		var sprite := Image.load_from_file(str(concept_entry(concept_path).get("image", "")))
+		return sprite if sprite != null and not sprite.is_empty() else null
 	var image := Image.load_from_file(Registry.repo_root().path_join(concept_path))
 	return image if image != null and not image.is_empty() else null
 
@@ -289,10 +336,14 @@ func concept_image() -> Image:
 func prepare_reference(method: String = "") -> Dictionary:
 	if busy:
 		return {"ok": false, "error": "Busy."}
+	if is_builtin():
+		return _reference_fail("The original %s keeps its reference (art/side-view/animations/references/%s/) so new clips line up with its idle, walk and attack." % [MonsterStatsScript.monster(creature_id).get("legacy_name", creature_id), creature_id])
 	var chosen := method if not method.is_empty() else cutout_method()
 	var source := concept_image()
 	if source == null:
 		return _reference_fail("Couldn't read %s." % concept_path)
+	if not Art.has_transparency(source):
+		source = Art.trim_dark_border(source)
 	busy = true
 	_update_buttons()
 	_set_reference_status("Cutting out the concept...", MUTED)
@@ -350,6 +401,8 @@ func prepare_reference(method: String = "") -> Dictionary:
 	return {"ok": true, "error": ""}
 
 func reference_path() -> String:
+	if is_builtin():
+		return Registry.builtin_reference_dir(creature_id).path_join("reference.png")
 	return Registry.reference_dir(creature_id).path_join("reference.png")
 
 func has_reference() -> bool:
@@ -362,7 +415,7 @@ func ground_anchor() -> Vector2:
 ## Moves the feet line (canvas pixels). Installed clips keep the old one until
 ## they're installed again.
 func set_ground_anchor(anchor: Vector2) -> void:
-	if not has_reference():
+	if not has_reference() or is_builtin():
 		return
 	var reference: Dictionary = record["reference"]
 	var size: Array = reference.get("canvas", [576, 576])
@@ -491,7 +544,7 @@ func generate() -> Dictionary:
 		"source_fps": AnimationScript.SOURCE_FPS,
 		"end_on_reference": rest_check.button_pressed,
 		"models": {"unet": AnimationScript.UNET, "clip": AnimationScript.CLIP, "video_vae": AnimationScript.VIDEO_VAE, "audio_vae": AnimationScript.AUDIO_VAE, "sampler": AnimationScript.SAMPLER, "scheduler": AnimationScript.SCHEDULER},
-		"reference": {"path": Registry.REFERENCES_RELATIVE.path_join(creature_id).path_join("reference.png"), "sha256": FileAccess.get_sha256(reference_path()), "ground_anchor": record["reference"]["ground_anchor"]},
+		"reference": {"path": (Registry.BUILTIN_REFERENCES_RELATIVE if is_builtin() else Registry.REFERENCES_RELATIVE).path_join(creature_id).path_join("reference.png"), "sha256": FileAccess.get_sha256(reference_path()), "ground_anchor": record["reference"]["ground_anchor"]},
 		"comfy": {"server": comfy.base_url},
 		"created_at": Time.get_datetime_string_from_system(),
 	}
@@ -742,7 +795,8 @@ func install_take(take_id: String = "") -> Dictionary:
 	_set_gen_status("Packing %d frames..." % images.size())
 	await get_tree().process_frame
 	var reference: Dictionary = record["reference"]
-	var result := Art.install_clip(creature_id, state, images, ground_anchor(), float(reference.get("body_height", 1.0)), height_spin.value, fps, {
+	var display_height := float(record.get("display_height", height_spin.value)) if is_builtin() else height_spin.value
+	var result := Art.install_clip(creature_id, state, images, ground_anchor(), float(reference.get("body_height", 1.0)), display_height, fps, {
 		"take_id": str(take["take_id"]),
 		"prompt_version": int(take.get("prompt_version", 0)),
 		"seed": int(take.get("seed", 0)),
@@ -781,6 +835,8 @@ func _installed_frames() -> SpriteFrames:
 ## Lists the creature in the Monster Encyclopedia (stats start from its
 ## behavior's monster). Returns {"ok", "error"}.
 func add_to_encyclopedia() -> Dictionary:
+	if is_builtin():
+		return {"ok": true, "error": ""}
 	if not has_reference():
 		return _encyclopedia_fail("Prepare the reference first; the encyclopedia needs the creature's picture.")
 	record["in_encyclopedia"] = true
@@ -843,14 +899,27 @@ func _apply_record_to_controls() -> void:
 	height_spin.value = float(record.get("display_height", 58.0))
 	desc_edit.text = str(record.get("desc", ""))
 	concept_preview.texture = _thumb(concept_path, 360)
+	var builtin := is_builtin()
+	archetype_picker.disabled = builtin
+	facing_picker.disabled = builtin
+	height_spin.editable = not builtin
+	cutout_picker.disabled = builtin
+	tolerance_spin.editable = not builtin
 	_loading = false
 	_refresh_meta()
 	_refresh_reference()
 	_refresh_encyclopedia()
-	_set_reference_status("Reference ready. Click the picture to move the feet line." if has_reference() else "No reference yet: choose a cutout and press Prepare reference.", MUTED)
+	if is_builtin():
+		_set_reference_status("The original %s: its existing reference and calibration are used, so new clips match its idle, walk and attack." % str(MonsterStatsScript.monster(creature_id).get("legacy_name", creature_id)) if has_reference() else "The original reference is missing (art/side-view/animations/references/%s/reference.png)." % creature_id, MUTED if has_reference() else BAD)
+	else:
+		_set_reference_status("Reference ready. Click the picture to move the feet line." if has_reference() else "No reference yet: choose a cutout and press Prepare reference.", MUTED)
 
 func _refresh_meta() -> void:
 	page_title.text = str(record.get("name", creature_id))
+	if is_builtin():
+		var concept := str(concept_entry(concept_path).get("concept", ""))
+		page_meta.text = "The original %s  ·  family %s  ·  %s  ·  %s%s" % [str(MonsterStatsScript.monster(creature_id).get("legacy_name", creature_id)), str(record.get("family", "")), Registry.stage_label(int(record.get("stage", -1))), Registry.BUILTIN_SPRITES[creature_id], ("  ·  concept " + concept.get_file()) if not concept.is_empty() else ""]
+		return
 	page_meta.text = "%s  ·  family %s  ·  %s  ·  %s" % [concept_path, str(record.get("family", "")), Registry.stage_label(int(record.get("stage", -1))), "saved in data/creatures" if is_saved() else "not saved yet"]
 
 func _refresh_reference() -> void:
@@ -900,6 +969,18 @@ func _refresh_state_buttons() -> void:
 func _refresh_encyclopedia() -> void:
 	if encyclopedia_status == null:
 		return
+	if is_builtin():
+		var have: Array = []
+		for key in Registry.STATES:
+			if Art.has_clip(creature_id, key):
+				have.append(key)
+		encyclopedia_status.add_theme_color_override("font_color", GOOD)
+		encyclopedia_status.text = "An original monster: always in the encyclopedia as \"%s\". Clips: %s." % [MonsterStatsScript.monster(creature_id).get("name", creature_id), ", ".join(have)]
+		add_button.visible = false
+		remove_button.visible = false
+		_update_buttons()
+		return
+	add_button.visible = true
 	var listed := bool(record.get("in_encyclopedia", false)) and is_saved()
 	var clips: Array = []
 	for key in Registry.STATES:
@@ -919,7 +1000,7 @@ func _update_buttons() -> void:
 		return
 	var take := current_take()
 	var has_frames: bool = not take.get("masters", {}).get("frames", []).is_empty()
-	prepare_button.disabled = busy or creature_id.is_empty()
+	prepare_button.disabled = busy or creature_id.is_empty() or is_builtin()
 	generate_button.disabled = busy or not has_reference()
 	stop_button.disabled = not busy
 	install_button.disabled = busy or not has_frames
@@ -1026,14 +1107,18 @@ func _sync_tiles() -> void:
 			if Art.has_clip(id, key):
 				clips += 1
 		var parts: Array = [Registry.stage_label(int(entry.get("stage", -1)))]
-		if bool(saved.get("in_encyclopedia", false)):
+		if bool(entry.get("builtin", false)):
+			parts.append("original %s" % str(MonsterStatsScript.monster(id).get("legacy_name", id)).to_lower())
+		elif bool(saved.get("in_encyclopedia", false)):
 			parts.append("in encyclopedia")
 		elif not saved.is_empty():
 			parts.append("in progress")
 		if clips > 0:
 			parts.append("%d clip%s" % [clips, "" if clips == 1 else "s"])
 		tile.find_child("Sub", true, false).text = " · ".join(parts)
-		if not saved.is_empty():
+		if bool(entry.get("builtin", false)):
+			tile.find_child("Title", true, false).text = str(Registry.builtin_info(id).name)
+		elif not saved.is_empty():
 			tile.find_child("Title", true, false).text = str(saved.get("name", entry.get("name", id)))
 		tile.set_pressed_no_signal(path == concept_path)
 
@@ -1041,7 +1126,14 @@ func _thumb(path: String, size: int) -> Texture2D:
 	var key := "%s@%d" % [path, size]
 	if _thumbs.has(key):
 		return _thumbs[key]
-	var image := Image.load_from_file(Registry.repo_root().path_join(path))
+	var file := path
+	if path.begins_with("builtin:"):
+		file = str(concept_entry(path).get("image", ""))
+	elif not path.is_absolute_path():
+		file = Registry.repo_root().path_join(path)
+	if not FileAccess.file_exists(file):
+		return null
+	var image := Image.load_from_file(file)
 	if image == null or image.is_empty():
 		return null
 	var factor := float(size) / maxf(image.get_width(), image.get_height())

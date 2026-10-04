@@ -1,0 +1,40 @@
+{
+	"background": [
+		180,
+		180,
+		180
+	],
+	"body_height": 413.0,
+	"canvas": [
+		576,
+		576
+	],
+	"concept": "art/creatures/enemies/gordon/gordon_queen.png",
+	"cutout": "solid",
+	"ground_anchor": [
+		288,
+		495
+	],
+	"mirrored": true,
+	"note": "Same framing as tools/animation_pipeline/prepare.py reference(). The anchor is the visible bottom centre; adjust it in the lab if the feet sit elsewhere.",
+	"paste": [
+		87,
+		82
+	],
+	"prepared_at": "2026-10-03T23:18:32",
+	"reference_sha256": "34b3289a69f2e4d850361630e61e3463a373458f66ba5e5d5c1dd7cf986fbcb8",
+	"source_crop": [
+		18,
+		18,
+		841,
+		860
+	],
+	"still": "res://assets/side-view/creatures/gordon_queen.png",
+	"uniform_scale": 0.489914945321993,
+	"visible_bounds": [
+		87,
+		82,
+		403,
+		413
+	]
+}

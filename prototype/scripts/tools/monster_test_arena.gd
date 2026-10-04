@@ -6,7 +6,9 @@ extends Node2D
 ## their real AI (DefenseEnemy) and real stats (MonsterStats), and every hit
 ## they land shows up as a floating damage number plus a running damage meter.
 ## Add and remove monsters from the panel, with the keyboard, or by clicking
-## the arena. The Monster Encyclopedia (F9) edits stats live while you watch.
+## the arena. Every monster in the encyclopedia can be spawned: the three
+## built-ins and any creature added in the Creature Lab (each fights with its
+## archetype's AI, its own art and its own stats). The Monster Encyclopedia (F9) edits stats live while you watch.
 ##
 ## This node implements the slice of the encounter controller API that
 ## DefenseEnemy, DefenseProjectile and the encyclopedia call. The dummy plays
@@ -21,6 +23,8 @@ const BalanceData = preload("res://data/balance.gd")
 const MonsterStatsScript = preload("res://scripts/model/monster_stats.gd")
 const MonsterEncyclopediaScript = preload("res://scripts/tools/monster_encyclopedia.gd")
 const DummyScript = preload("res://scripts/tools/monster_test_dummy.gd")
+const VisualConfigScript = preload("res://scripts/game/side_view_visual_config.gd")
+const CreatureRegistryScript = preload("res://scripts/model/creature_registry.gd")
 const IndustrialThemeScript = preload("res://scripts/ui/industrial_theme.gd")
 
 const TITLE_SCENE := "res://scenes/title_screen.tscn"
@@ -64,7 +68,10 @@ var next_enemy_id: int = 1
 var spawn_side: int = SpawnSide.RIGHT
 var _alternate_left := false
 var surge_level: int = 0
-var place_kind: int = -1
+## Monster id the left mouse button places ("" = off).
+var place_id := ""
+## Spawner order (number keys 1-9 follow it).
+var spawn_ids: Array[String] = []
 ## Read by the encyclopedia's "hits to kill" readout.
 var weapon_damage: float = BalanceData.WEAPON_DAMAGE
 ## The encyclopedia clears this after it closes.
@@ -87,6 +94,12 @@ var _active_source_x := NAN
 # UI.
 var ui_layer: CanvasLayer
 var count_labels: Dictionary = {}
+var spawn_rows: Dictionary = {}
+var spawn_list: VBoxContainer
+var spawn_scroll: ScrollContainer
+var spawn_search: LineEdit
+var meter_rows: Dictionary = {}
+var meter_list: VBoxContainer
 var meter_labels: Dictionary = {}
 var total_label: Label
 var dps_label: Label
@@ -109,10 +122,12 @@ func _ready() -> void:
 	add_child(dummy)
 	hero = dummy
 	_build_ui()
+	refresh_monster_list()
 	monster_encyclopedia = MonsterEncyclopediaScript.new()
 	monster_encyclopedia.name = "MonsterEncyclopedia"
 	monster_encyclopedia.controller = self
 	add_child(monster_encyclopedia)
+	monster_encyclopedia.closed.connect(refresh_monster_list)
 	reset_meter()
 	_refresh_ui()
 
@@ -144,9 +159,20 @@ func _simulate_extra(_step: float) -> void:
 
 # ---------- monsters ----------
 
-## Adds a monster of `kind` (DefenseEnemy.EnemyKind). `side` is -1 (left) or
-## 1 (right); 0 uses the spawn-side setting. `x` overrides the spawn point.
+## Adds a built-in monster of `kind` (DefenseEnemy.EnemyKind). `side` is -1
+## (left) or 1 (right); 0 uses the spawn-side setting. `x` overrides the
+## spawn point.
 func spawn_monster(kind: int, side: int = 0, x: float = NAN) -> Node:
+	return spawn_creature(MonsterStatsScript.id_for_kind(kind), side, x)
+
+## Adds any encyclopedia monster by id: a built-in ("pursuer") or a Creature
+## Lab creature ("shell_walker_stage_0"), which fights with its archetype's
+## AI and its own art and stats.
+func spawn_creature(monster_id: String, side: int = 0, x: float = NAN) -> Node:
+	var entry := MonsterStatsScript.monster(monster_id)
+	if entry.is_empty():
+		_set_status("Unknown monster \"%s\"." % monster_id)
+		return null
 	_prune()
 	if enemies.size() >= MAX_MONSTERS:
 		_set_status("Monster limit reached (%d)." % MAX_MONSTERS)
@@ -157,7 +183,9 @@ func spawn_monster(kind: int, side: int = 0, x: float = NAN) -> Node:
 	var spawn_x := x if is_finite(x) else (LEFT_SPAWN_X if side < 0 else RIGHT_SPAWN_X)
 	spawn_x = clampf(spawn_x, ArenaLayoutScript.LEFT_BOUND, ArenaLayoutScript.RIGHT_BOUND)
 	var enemy: Node = EnemyScript.new()
-	enemy.setup(kind, next_enemy_id, side, self, surge_multiplier())
+	if bool(entry.get("custom", false)):
+		enemy.monster_override = monster_id
+	enemy.setup(int(entry["kind"]), next_enemy_id, side, self, surge_multiplier())
 	next_enemy_id += 1
 	enemy.position = Vector2(spawn_x, GROUND_Y - ArenaLayoutScript.HERO_FEET_OFFSET)
 	enemy.z_index = 2
@@ -173,6 +201,23 @@ func remove_monster_of_kind(kind: int) -> bool:
 			remove_monster(enemies[index])
 			return true
 	return false
+
+## Removes the most recently added monster with this id. True if one went.
+func remove_monster_of_id(monster_id: String) -> bool:
+	_prune()
+	for index in range(enemies.size() - 1, -1, -1):
+		if enemies[index].monster_id() == monster_id:
+			remove_monster(enemies[index])
+			return true
+	return false
+
+func monster_count_of(monster_id: String) -> int:
+	_prune()
+	var count := 0
+	for enemy in enemies:
+		if enemy.monster_id() == monster_id:
+			count += 1
+	return count
 
 func remove_monster(enemy: Node) -> void:
 	if enemy == null or not is_instance_valid(enemy):
@@ -299,7 +344,8 @@ func spawn_hostile_projectile(origin_x: float, target_x: float, damage: float, s
 		projectile.source_enemy_id = source_enemy.enemy_id
 		projectile.set_meta("monster_id", source_enemy.monster_id())
 	var aim_y := target_y if is_finite(target_y) else CombatGeometryScript.body_center("hero", hero.position).y
-	projectile.setup(self, origin, Vector2(target_x, aim_y), damage, MonsterStatsScript.get_stat("ranged", "projectile_speed"), BalanceData.RANGED_PROJECTILE_LIFETIME, true, facing)
+	var shooter: String = source_enemy.monster_id() if source_enemy != null and is_instance_valid(source_enemy) else "ranged"
+	projectile.setup(self, origin, Vector2(target_x, aim_y), damage, MonsterStatsScript.get_stat(shooter, "projectile_speed"), BalanceData.RANGED_PROJECTILE_LIFETIME, true, facing)
 	projectile.z_index = 3
 	add_child(projectile)
 	projectiles.append(projectile)
@@ -374,12 +420,11 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		var key: int = event.keycode
 		var index := key - KEY_1
-		if index >= 0 and index < MonsterStatsScript.MONSTERS.size():
-			var kind := int(MonsterStatsScript.MONSTERS[index]["kind"])
+		if index >= 0 and index < mini(9, spawn_ids.size()):
 			if event.shift_pressed:
-				remove_monster_of_kind(kind)
+				remove_monster_of_id(spawn_ids[index])
 			else:
-				spawn_monster(kind)
+				spawn_creature(spawn_ids[index])
 		elif key == KEY_SPACE:
 			toggle_pause()
 		elif key == KEY_DELETE or key == KEY_BACKSPACE:
@@ -398,9 +443,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			if target != null:
 				remove_monster(target)
 				get_viewport().set_input_as_handled()
-		elif event.button_index == MOUSE_BUTTON_LEFT and place_kind >= 0:
+		elif event.button_index == MOUSE_BUTTON_LEFT and not place_id.is_empty():
 			var side := 1 if point.x >= DUMMY_X else -1
-			spawn_monster(place_kind, side, point.x)
+			spawn_creature(place_id, side, point.x)
 			get_viewport().set_input_as_handled()
 
 # ---------- UI ----------
@@ -410,12 +455,15 @@ func _set_status(text: String) -> void:
 		status_label.text = text
 
 func _refresh_ui() -> void:
-	for entry in MonsterStatsScript.MONSTERS:
-		var id := str(entry["id"])
+	for id in spawn_ids:
+		var alive := monster_count_of(id)
 		if count_labels.has(id):
-			count_labels[id].text = str(monster_count(int(entry["kind"])))
+			count_labels[id].text = str(alive)
 		if meter_labels.has(id):
 			meter_labels[id].text = "%s dmg  /  %d hits" % [_fmt(float(damage_by_monster.get(id, 0.0))), int(hits_by_monster.get(id, 0))]
+		# Built-ins always have a meter row; creatures once they're around.
+		if meter_rows.has(id):
+			meter_rows[id].visible = MonsterStatsScript.DEFAULTS.has(id) or alive > 0 or hits_by_monster.has(id)
 	if total_label == null:
 		return
 	total_label.text = _fmt(total_damage)
@@ -454,7 +502,7 @@ func _build_ui() -> void:
 	root.add_child(hint)
 
 func _hint_text() -> String:
-	return "1 / 2 / 3 add   ·   Shift + number remove   ·   Right-click a monster to remove it   ·   Space pause   ·   R reset meter   ·   F9 encyclopedia   ·   Esc back"
+	return "1 - 9 add   ·   Shift + number remove   ·   Right-click a monster to remove it   ·   Space pause   ·   R reset meter   ·   F9 encyclopedia   ·   Esc back"
 
 func _back_button_text() -> String:
 	return "Back to title  (Esc)"
@@ -462,7 +510,7 @@ func _back_button_text() -> String:
 func _build_spawner() -> Control:
 	var panel := _panel("Spawner")
 	panel.position = Vector2(16, 16)
-	panel.custom_minimum_size = Vector2(330, 0)
+	panel.custom_minimum_size = Vector2(370, 0)
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 6)
 	panel.add_child(column)
@@ -471,52 +519,27 @@ func _build_spawner() -> Control:
 	title.add_theme_font_size_override("font_size", 18)
 	title.add_theme_color_override("font_color", AMBER)
 	column.add_child(title)
-	for entry in MonsterStatsScript.MONSTERS:
-		var id := str(entry["id"])
-		var kind := int(entry["kind"])
-		var row := HBoxContainer.new()
-		row.name = "Row_" + id
-		row.add_theme_constant_override("separation", 6)
-		var swatch := ColorRect.new()
-		swatch.color = DummyScript.color_for(id)
-		swatch.custom_minimum_size = Vector2(6, 22)
-		swatch.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		row.add_child(swatch)
-		var name_label := Label.new()
-		name_label.text = "%d  %s" % [MonsterStatsScript.MONSTERS.find(entry) + 1, entry["name"]]
-		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.add_child(name_label)
-		var count := Label.new()
-		count.name = "Count"
-		count.custom_minimum_size = Vector2(30, 0)
-		count.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		count.add_theme_color_override("font_color", AMBER)
-		count_labels[id] = count
-		row.add_child(count)
-		var minus := _button("-")
-		minus.name = "Remove"
-		minus.custom_minimum_size = Vector2(36, 0)
-		minus.tooltip_text = "Remove the newest %s" % entry["name"]
-		minus.pressed.connect(func() -> void: remove_monster_of_kind(kind))
-		row.add_child(minus)
-		var plus := _button("+")
-		plus.name = "Add"
-		plus.custom_minimum_size = Vector2(36, 0)
-		plus.tooltip_text = "Add a %s (Shift: add 5)" % entry["name"]
-		plus.pressed.connect(func() -> void:
-			for _i in range(5 if Input.is_key_pressed(KEY_SHIFT) else 1):
-				spawn_monster(kind))
-		row.add_child(plus)
-		column.add_child(row)
+	spawn_search = LineEdit.new()
+	spawn_search.name = "FindMonster"
+	spawn_search.placeholder_text = "Find a monster"
+	spawn_search.clear_button_enabled = true
+	spawn_search.text_changed.connect(func(_text: String) -> void: _filter_spawn_rows())
+	column.add_child(spawn_search)
+	spawn_scroll = ScrollContainer.new()
+	spawn_scroll.name = "MonsterList"
+	spawn_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	column.add_child(spawn_scroll)
+	spawn_list = VBoxContainer.new()
+	spawn_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	spawn_list.add_theme_constant_override("separation", 4)
+	spawn_scroll.add_child(spawn_list)
 	column.add_child(HSeparator.new())
 	side_picker = _picker(["Right side", "Left side", "Both sides"])
 	side_picker.item_selected.connect(set_spawn_side)
 	column.add_child(_labeled("Spawn from", side_picker))
 	place_picker = _picker(["Off"])
-	for entry in MonsterStatsScript.MONSTERS:
-		place_picker.add_item(str(entry["name"]))
 	place_picker.item_selected.connect(func(index: int) -> void:
-		place_kind = -1 if index == 0 else int(MonsterStatsScript.MONSTERS[index - 1]["kind"]))
+		place_id = "" if index <= 0 else str(place_picker.get_item_metadata(index)))
 	column.add_child(_labeled("Click to place", place_picker))
 	var surge_names: Array = []
 	for level in range(MAX_SURGE_LEVEL + 1):
@@ -587,26 +610,164 @@ func _build_meter() -> Control:
 	hits_label = _stat_row(grid, "Hits")
 	largest_label = _stat_row(grid, "Largest hit")
 	column.add_child(HSeparator.new())
-	for entry in MonsterStatsScript.MONSTERS:
-		var id := str(entry["id"])
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 6)
-		var name_label := Label.new()
-		name_label.text = str(entry["name"])
-		name_label.add_theme_color_override("font_color", DummyScript.color_for(id))
-		name_label.add_theme_font_size_override("font_size", 14)
-		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.add_child(name_label)
-		var value := Label.new()
-		value.add_theme_font_size_override("font_size", 14)
-		meter_labels[id] = value
-		row.add_child(value)
-		column.add_child(row)
+	meter_list = VBoxContainer.new()
+	meter_list.name = "PerMonster"
+	meter_list.add_theme_constant_override("separation", 2)
+	column.add_child(meter_list)
 	var reset := _button("Reset meter  (R)")
 	reset.name = "ResetMeter"
 	reset.pressed.connect(reset_meter)
 	column.add_child(reset)
 	return panel
+
+## (Re)builds the spawner rows, the click-to-place list and the per-monster
+## meter rows from the encyclopedia: the built-ins, then every Creature Lab
+## creature. Runs at start and whenever the encyclopedia closes.
+func refresh_monster_list() -> void:
+	if spawn_list == null:
+		return
+	var monsters := MonsterStatsScript.monsters()
+	spawn_ids.clear()
+	for entry in monsters:
+		spawn_ids.append(str(entry["id"]))
+	for child in spawn_list.get_children():
+		spawn_list.remove_child(child)
+		child.queue_free()
+	spawn_rows.clear()
+	count_labels.clear()
+	var headings := 0
+	var family := "\u0000"
+	for index in range(monsters.size()):
+		var entry: Dictionary = monsters[index]
+		var this_family := str(entry.get("family", ""))
+		if this_family != family:
+			family = this_family
+			headings += 1
+			var heading := Label.new()
+			heading.name = "Family_" + (family if not family.is_empty() else "other")
+			heading.text = CreatureRegistryScript.family_label(family).to_upper() if not family.is_empty() else "OTHER"
+			heading.set_meta("family", family)
+			heading.add_theme_font_size_override("font_size", 12)
+			heading.add_theme_color_override("font_color", MUTED)
+			spawn_list.add_child(heading)
+		var row := _build_spawn_row(entry, index)
+		spawn_rows[str(entry["id"])] = row
+		spawn_list.add_child(row)
+	# Tall enough for every row, up to a scroll box.
+	spawn_scroll.custom_minimum_size = Vector2(0, minf(40.0 * monsters.size() + 22.0 * headings, 290.0))
+	spawn_search.visible = monsters.size() > 4
+	var previous := place_id
+	place_picker.clear()
+	place_picker.add_item("Off")
+	place_picker.set_item_metadata(0, "")
+	place_id = ""
+	for entry in monsters:
+		place_picker.add_item(str(entry["name"]))
+		place_picker.set_item_metadata(place_picker.item_count - 1, str(entry["id"]))
+		if str(entry["id"]) == previous:
+			place_picker.select(place_picker.item_count - 1)
+			place_id = previous
+	if place_id.is_empty():
+		place_picker.select(0)
+	if meter_list != null:
+		for child in meter_list.get_children():
+			meter_list.remove_child(child)
+			child.queue_free()
+		meter_rows.clear()
+		meter_labels.clear()
+		for entry in monsters:
+			var id := str(entry["id"])
+			var line := HBoxContainer.new()
+			line.add_theme_constant_override("separation", 6)
+			var name_label := Label.new()
+			name_label.text = str(entry["name"])
+			name_label.clip_text = true
+			name_label.add_theme_color_override("font_color", DummyScript.color_for(id))
+			name_label.add_theme_font_size_override("font_size", 14)
+			name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			line.add_child(name_label)
+			var value := Label.new()
+			value.add_theme_font_size_override("font_size", 14)
+			meter_labels[id] = value
+			line.add_child(value)
+			meter_rows[id] = line
+			meter_list.add_child(line)
+	_filter_spawn_rows()
+	_refresh_ui()
+
+func _build_spawn_row(entry: Dictionary, index: int) -> Control:
+	var id := str(entry["id"])
+	var row := HBoxContainer.new()
+	row.name = "Row_" + id
+	row.add_theme_constant_override("separation", 6)
+	row.tooltip_text = "%s · %s" % [entry.get("role", ""), entry.get("target", "")]
+	var swatch := ColorRect.new()
+	swatch.color = DummyScript.color_for(id)
+	swatch.custom_minimum_size = Vector2(6, 22)
+	swatch.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(swatch)
+	var icon := TextureRect.new()
+	icon.name = "Icon"
+	icon.custom_minimum_size = Vector2(28, 28)
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.flip_h = true
+	icon.texture = _monster_icon(id)
+	row.add_child(icon)
+	var name_label := Label.new()
+	name_label.name = "Name"
+	name_label.text = ("%d  %s" % [index + 1, entry["name"]]) if index < 9 else "    %s" % entry["name"]
+	name_label.clip_text = true
+	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(name_label)
+	var count := Label.new()
+	count.name = "Count"
+	count.custom_minimum_size = Vector2(26, 0)
+	count.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	count.add_theme_color_override("font_color", AMBER)
+	count_labels[id] = count
+	row.add_child(count)
+	var minus := _button("-")
+	minus.name = "Remove"
+	minus.custom_minimum_size = Vector2(32, 0)
+	minus.tooltip_text = "Remove the newest %s" % entry["name"]
+	minus.pressed.connect(func() -> void: remove_monster_of_id(id))
+	row.add_child(minus)
+	var plus := _button("+")
+	plus.name = "Add"
+	plus.custom_minimum_size = Vector2(32, 0)
+	plus.tooltip_text = "Add a %s (Shift: add 5)" % entry["name"]
+	plus.pressed.connect(func() -> void:
+		for _i in range(5 if Input.is_key_pressed(KEY_SHIFT) else 1):
+			spawn_creature(id))
+	row.add_child(plus)
+	return row
+
+func _filter_spawn_rows() -> void:
+	var query := spawn_search.text.strip_edges().to_lower() if spawn_search != null else ""
+	for id in spawn_rows:
+		var entry := MonsterStatsScript.monster(id)
+		var haystack := ("%s %s %s %s %s %s" % [id, entry.get("name", ""), entry.get("role", ""), entry.get("target", ""), entry.get("family", ""), entry.get("legacy_name", "")]).to_lower()
+		spawn_rows[id].visible = query.is_empty() or haystack.contains(query)
+	if spawn_list == null:
+		return
+	var families := {}
+	for id in spawn_rows:
+		if spawn_rows[id].visible:
+			families[str(MonsterStatsScript.monster(id).get("family", ""))] = true
+	for child in spawn_list.get_children():
+		if child is Label and child.has_meta("family"):
+			child.visible = families.has(str(child.get_meta("family")))
+
+## The monster's still picture cropped to its visible bounds.
+func _monster_icon(monster_id: String) -> Texture2D:
+	var asset := VisualConfigScript.asset_for(monster_id)
+	if asset.is_empty() or asset.get("texture") == null:
+		return null
+	var atlas := AtlasTexture.new()
+	atlas.atlas = asset["texture"]
+	atlas.region = asset["visible_bounds"]
+	return atlas
 
 func _stat_row(grid: GridContainer, caption: String) -> Label:
 	var label := Label.new()

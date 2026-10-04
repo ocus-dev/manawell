@@ -503,7 +503,7 @@ func _draw_numbers() -> void:
 # ---------- UI ----------
 
 func _hint_text() -> String:
-	return "A / D move   ·   F flip   ·   E swing   ·   T slow motion   ·   Drag the weapon to place it   ·   1 / 2 / 3 add monsters   ·   Space pause   ·   F9 encyclopedia   ·   Esc back"
+	return "A / D move   ·   F flip   ·   E swing   ·   T slow motion   ·   Drag the weapon to place it   ·   1 - 9 add monsters   ·   Space pause   ·   F9 encyclopedia   ·   Esc back"
 
 func _back_button_text() -> String:
 	return "Back to Weapon Lab  (Esc)"

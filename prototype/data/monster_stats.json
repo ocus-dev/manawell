@@ -10,7 +10,7 @@
 		},
 		"breaker_stage_0": {
 			"attack_interval": 1.0,
-			"attack_range": 1.8,
+			"attack_range": 1.3,
 			"damage": 12.0,
 			"health": 50.0,
 			"move_speed": 1.5

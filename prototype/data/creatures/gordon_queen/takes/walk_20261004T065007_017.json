@@ -1,0 +1,913 @@
+{
+	"comfy": {
+		"output_prefix": "Telos/Creatures/gordon_queen/walk_20261004T065007_017",
+		"outputs": {
+			"16": {
+				"animated": [
+					true
+				],
+				"images": [
+					{
+						"filename": "preview_00001_.mp4",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					}
+				]
+			},
+			"17": {
+				"images": [
+					{
+						"filename": "master_00001_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00002_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00003_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00004_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00005_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00006_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00007_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00008_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00009_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00010_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00011_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00012_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00013_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00014_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00015_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00016_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00017_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00018_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00019_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00020_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00021_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00022_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00023_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00024_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00025_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00026_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00027_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00028_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00029_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00030_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00031_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00032_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00033_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00034_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00035_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00036_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00037_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00038_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00039_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00040_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00041_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00042_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00043_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00044_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00045_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00046_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00047_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00048_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00049_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00050_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00051_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00052_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00053_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00054_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00055_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00056_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00057_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00058_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00059_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00060_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00061_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00062_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00063_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00064_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00065_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00066_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00067_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00068_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00069_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00070_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00071_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00072_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					},
+					{
+						"filename": "master_00073_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\walk_20261004T065007_017",
+						"type": "output"
+					}
+				]
+			}
+		},
+		"prompt_id": "6a829cbb-5e99-43e5-b837-aee4fd23a245",
+		"server": "http://192.168.1.102:8188",
+		"upload_name": "telos-creature-gordon_queen-34b3289a69f2.png"
+	},
+	"completed_at": "2026-10-03T23:51:01",
+	"created_at": "2026-10-03T23:50:07",
+	"creature": "gordon_queen",
+	"end_on_reference": true,
+	"format_version": 1,
+	"frames_requested": 73,
+	"graph": {
+		"1": {
+			"class_type": "LoadImage",
+			"inputs": {
+				"image": "telos-creature-gordon_queen-34b3289a69f2.png"
+			}
+		},
+		"10": {
+			"class_type": "BasicScheduler",
+			"inputs": {
+				"denoise": 1.0,
+				"model": [
+					"3",
+					0
+				],
+				"scheduler": "simple",
+				"steps": 15
+			}
+		},
+		"11": {
+			"class_type": "BasicGuider",
+			"inputs": {
+				"conditioning": [
+					"7",
+					0
+				],
+				"model": [
+					"3",
+					0
+				]
+			}
+		},
+		"12": {
+			"class_type": "SamplerCustomAdvanced",
+			"inputs": {
+				"guider": [
+					"11",
+					0
+				],
+				"latent_image": [
+					"7",
+					1
+				],
+				"noise": [
+					"8",
+					0
+				],
+				"sampler": [
+					"9",
+					0
+				],
+				"sigmas": [
+					"10",
+					0
+				]
+			}
+		},
+		"13": {
+			"class_type": "VAEDecode",
+			"inputs": {
+				"samples": [
+					"12",
+					0
+				],
+				"vae": [
+					"5",
+					0
+				]
+			}
+		},
+		"14": {
+			"class_type": "VAEDecodeAudio",
+			"inputs": {
+				"samples": [
+					"12",
+					0
+				],
+				"vae": [
+					"6",
+					0
+				]
+			}
+		},
+		"15": {
+			"class_type": "CreateVideo",
+			"inputs": {
+				"audio": [
+					"14",
+					0
+				],
+				"bit_depth": 8,
+				"fps": 24.0,
+				"images": [
+					"13",
+					0
+				]
+			}
+		},
+		"16": {
+			"class_type": "SaveVideo",
+			"inputs": {
+				"codec": "auto",
+				"filename_prefix": "Telos/Creatures/gordon_queen/walk_20261004T065007_017/preview",
+				"format": "mp4",
+				"video": [
+					"15",
+					0
+				]
+			}
+		},
+		"17": {
+			"class_type": "SaveImage",
+			"inputs": {
+				"filename_prefix": "Telos/Creatures/gordon_queen/walk_20261004T065007_017/master",
+				"images": [
+					"13",
+					0
+				]
+			}
+		},
+		"2": {
+			"class_type": "LoadImage",
+			"inputs": {
+				"image": "telos-creature-gordon_queen-34b3289a69f2.png"
+			}
+		},
+		"3": {
+			"class_type": "UNETLoader",
+			"inputs": {
+				"unet_name": "minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+				"weight_dtype": "default"
+			}
+		},
+		"4": {
+			"class_type": "CLIPLoader",
+			"inputs": {
+				"clip_name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+				"device": "default",
+				"type": "minimax"
+			}
+		},
+		"5": {
+			"class_type": "VAELoader",
+			"inputs": {
+				"vae_name": "minimax_h3_video_vae_fp16.safetensors"
+			}
+		},
+		"6": {
+			"class_type": "VAELoader",
+			"inputs": {
+				"vae_name": "minimax_h3_audio_vae_fp32.safetensors"
+			}
+		},
+		"7": {
+			"class_type": "MiniMaxH3ImageToVideo",
+			"inputs": {
+				"clip": [
+					"4",
+					0
+				],
+				"first_frame": [
+					"1",
+					0
+				],
+				"height": 576,
+				"last_frame": [
+					"2",
+					0
+				],
+				"length": 73,
+				"prompt": "Locked-off side-view game animation of the single reference creature facing right. Preserve its armor plates, shell pattern, anatomy, silhouette, colors, scale and screen position. Uniform neutral grey background and constant lighting. Entire body, tail and claws stay inside the canvas. No body rotation, camera movement, zoom, cuts, new limbs, particles, changing shadows or other objects. One complete slow in-place walking stride, with alternating planted feet, clear weight transfer and small natural torso motion. Body stays centered with no net forward travel. Return to the initial stride phase by the end with continuous cyclic motion. No attack or claw strike. No music or dialogue. It walks on its two hind legs in a hunched crouch, arms hanging low; tail sways with each step.",
+				"vae": [
+					"5",
+					0
+				],
+				"width": 576
+			}
+		},
+		"8": {
+			"class_type": "RandomNoise",
+			"inputs": {
+				"noise_seed": 8621
+			}
+		},
+		"9": {
+			"class_type": "KSamplerSelect",
+			"inputs": {
+				"sampler_name": "res_multistep"
+			}
+		}
+	},
+	"masters": {
+		"dir": "art/creatures/animations/gordon_queen/walk_20261004T065007_017/masters",
+		"fps": 24.0,
+		"frames": [
+			{
+				"file": "frame_0000.png",
+				"sha256": "5ab1c632c66032e3f637e01336e784280fc5f6a5900dc701a64c861648d0bfc1"
+			},
+			{
+				"file": "frame_0001.png",
+				"sha256": "c6b5c2f4c40c2c3b86aed2ab83f47786cc669422d75ae10a8d0034afd1105cb5"
+			},
+			{
+				"file": "frame_0002.png",
+				"sha256": "994f2c4c38efc1878751238c977eb1a370bcdf978eaf42454a5aef7fd2dad2df"
+			},
+			{
+				"file": "frame_0003.png",
+				"sha256": "7e09aad3a2f19e1f4ed96f7bc6e75dbee134b30997ba10c6b93b080a3482d6e2"
+			},
+			{
+				"file": "frame_0004.png",
+				"sha256": "10f92006f23ce8949618053bddcc185d00b4044abbd64ce10a9560ede1be3dd7"
+			},
+			{
+				"file": "frame_0005.png",
+				"sha256": "e357e06998fede6d4fdd4336ba422d4ae9b2c41c56bd326a69a91596383ba0ce"
+			},
+			{
+				"file": "frame_0006.png",
+				"sha256": "e587de960e233e6ffe8efdeb083494f510d2392f6ca26f7b109a0272621a7bab"
+			},
+			{
+				"file": "frame_0007.png",
+				"sha256": "b0212fc38674489a8255cfc6181ddd3422c5c2008b0726488d8882269c589535"
+			},
+			{
+				"file": "frame_0008.png",
+				"sha256": "3bb75aa9ed8789e793bddc070d043619ed53b61a290a6cb0022d29bd28a6d6de"
+			},
+			{
+				"file": "frame_0009.png",
+				"sha256": "b9afab09ade25e5ed0ae3a342b6bdca9bf3ef95728b93b79f06df503c05c4d15"
+			},
+			{
+				"file": "frame_0010.png",
+				"sha256": "60f9165fdfa830e511c29acbe7abb0f3e47db4b52c79d9777f550d10193ca214"
+			},
+			{
+				"file": "frame_0011.png",
+				"sha256": "181e88e0a35ec3098ec634f52c032aa3a63ba1ce35e4a68b9457116d65fc76c2"
+			},
+			{
+				"file": "frame_0012.png",
+				"sha256": "262a6bb6bed983f4f8ce7f3ef64a6dbc2bdf2cad5defb1b7bb9c17f1cd37f3ea"
+			},
+			{
+				"file": "frame_0013.png",
+				"sha256": "17b8846e592013b6dad65a93b9c37bc01532e21e3129f17f5a315183272065af"
+			},
+			{
+				"file": "frame_0014.png",
+				"sha256": "f4a62b67a26a7ee51b2f17e6e7829a787b4dc5ec71003cfbf9d4d6407d4ea60f"
+			},
+			{
+				"file": "frame_0015.png",
+				"sha256": "86b43a4f0bef6e8c087e7bd021bffe23265affd8c511ccc640315bf20e1ee4e7"
+			},
+			{
+				"file": "frame_0016.png",
+				"sha256": "f815c44c25f8178c180bea4f391c09b3281efea3e42e7aa8f5c9ab6fdb32b0df"
+			},
+			{
+				"file": "frame_0017.png",
+				"sha256": "238e6df47d04dcf61ccfc09233ddfcc6a15d2728444645a41fdfd06dcd7bc410"
+			},
+			{
+				"file": "frame_0018.png",
+				"sha256": "324fd7282825b7697455df9d1a5b124bb4b3aa3b4a667301f1633b767be8d89b"
+			},
+			{
+				"file": "frame_0019.png",
+				"sha256": "f972c7bb0de560dca996727304d4a6a8b249eddafc93506d4b0020c14e6b3b6e"
+			},
+			{
+				"file": "frame_0020.png",
+				"sha256": "0ee21e298c94460ae22e91b12f2b82706313426f55091646b741315c447b1cba"
+			},
+			{
+				"file": "frame_0021.png",
+				"sha256": "7e0e3f2a6d75426ae1f14db1c3acd60ee05e8426c69ebef32d98ce387ffda55a"
+			},
+			{
+				"file": "frame_0022.png",
+				"sha256": "fe82e83dc3f28780633bb463f4feec7f168cd2f46beee59b56f179003da75275"
+			},
+			{
+				"file": "frame_0023.png",
+				"sha256": "027d34754b9abb472c86579857cd08d1b22d6ae98ba0093331d28789b6871bff"
+			},
+			{
+				"file": "frame_0024.png",
+				"sha256": "31a972a34dcab19dac3ddebd492477ca78f511c32d76f8694bb654a2c56f83b1"
+			},
+			{
+				"file": "frame_0025.png",
+				"sha256": "0a9b6f8cbbfcfd98e3959a0142d4fa4469abfbbc3796a96862be3c1e74472c97"
+			},
+			{
+				"file": "frame_0026.png",
+				"sha256": "ed330eff38e627b1e67661010e1c96507e38a22ce47e1d780b2c755d2e526968"
+			},
+			{
+				"file": "frame_0027.png",
+				"sha256": "87d24da15edaf1ee039cfb81744e9b0c6c3af6c969d491d46f74743a0d18dd26"
+			},
+			{
+				"file": "frame_0028.png",
+				"sha256": "2973967db404b1b2756aba39fd22f8f10536cda99b7ccb192da3040e75b54129"
+			},
+			{
+				"file": "frame_0029.png",
+				"sha256": "ae1ad96ee11f3297b5499828e2b8f917906e5b329d017e9a275f802590d20490"
+			},
+			{
+				"file": "frame_0030.png",
+				"sha256": "2ba84e243b7f950b5d63f9b17875d28587d2a4f9baba72f984d2162f7b9f4433"
+			},
+			{
+				"file": "frame_0031.png",
+				"sha256": "d3f949e3ddf796a2dcd67f474a188762ceb84bee938c970746860bcafdc43392"
+			},
+			{
+				"file": "frame_0032.png",
+				"sha256": "54616b280458223f34ed35449cd10e0d2978e7bf8ebd27d18637f05d8d4892ca"
+			},
+			{
+				"file": "frame_0033.png",
+				"sha256": "c6bf6f8696255b42c62bd3525e4328e4ad866b595361f1dc34b930bad65ca138"
+			},
+			{
+				"file": "frame_0034.png",
+				"sha256": "27d66acbba8a2a055a37f2aa7d077b5d48d925cb4e6f1bb9677edd041c5d83ce"
+			},
+			{
+				"file": "frame_0035.png",
+				"sha256": "4e41ea862a1632f374d18c6961d06d851760e5529ae57a942145ed53ae46217c"
+			},
+			{
+				"file": "frame_0036.png",
+				"sha256": "2cab1479a14be35fdab92e7afb808ad00b49c4d1b77b1283ad543e2df4d07962"
+			},
+			{
+				"file": "frame_0037.png",
+				"sha256": "da7694a5c8fe7c0cb7f9e8ccc841e1d36fda4cfcf10d2c2845015c8f748d74e7"
+			},
+			{
+				"file": "frame_0038.png",
+				"sha256": "cdf4149502ecccdfa72fa60c5c53473b54b5026ec346ff5e30feb794ae9fee96"
+			},
+			{
+				"file": "frame_0039.png",
+				"sha256": "306f07202db2ea83bf70c7a151f45155e5f44f8c67ed27d05acb3e0937f570e6"
+			},
+			{
+				"file": "frame_0040.png",
+				"sha256": "79b55227816818cf1c0d33597beaa0589f62678f469fd517567223de8e60d068"
+			},
+			{
+				"file": "frame_0041.png",
+				"sha256": "1155f1d1d6d27dfbb5cceb3ac158bd99f1a8b03c887c25b29d5bf9f958831672"
+			},
+			{
+				"file": "frame_0042.png",
+				"sha256": "c12ed7c260cd676fca12b0e43eface07591ea7830a8efa7f37cddbecdb984b4b"
+			},
+			{
+				"file": "frame_0043.png",
+				"sha256": "14d5ffa26a43bba56a559bad42cc4414cd07bab1104830ce1ba9c19eeb906424"
+			},
+			{
+				"file": "frame_0044.png",
+				"sha256": "d585ba585b2351dd9dcad84ecdc44ada644e20d6e1d87c4686065cf70ce883ec"
+			},
+			{
+				"file": "frame_0045.png",
+				"sha256": "ccadc0f28f012f6d07e1fbce6e2245b5ff51d44fbe3597e0c607e020f31fba2a"
+			},
+			{
+				"file": "frame_0046.png",
+				"sha256": "a00206a61aefc1afba769335c75bc6d03d7fc606c8eaa5a50a9c8de748bc2fff"
+			},
+			{
+				"file": "frame_0047.png",
+				"sha256": "10772898aeb062949cc7999f6bcfa116805c40f8a60d42c7bf765287ed572b8f"
+			},
+			{
+				"file": "frame_0048.png",
+				"sha256": "2df4951f8ad52ef44fd8ab084da4f437b83e249f2134ab0295fb71ee4c113e05"
+			},
+			{
+				"file": "frame_0049.png",
+				"sha256": "d8095bee159edf6cc13ab27d2f9ac7e899597df8b94b2947bc11de2ecffa8131"
+			},
+			{
+				"file": "frame_0050.png",
+				"sha256": "d83dd8b7edb149672887837a62754bc8a6b306dc412584a301676d612a578e39"
+			},
+			{
+				"file": "frame_0051.png",
+				"sha256": "c248966dc66a2f40d2b523d5ee7480768e2264781924c4bef83228494132c141"
+			},
+			{
+				"file": "frame_0052.png",
+				"sha256": "6236d3c3a1cff0c6edb8d1e3271f700bc5ede73d1be2e0a721a320c74d7dad65"
+			},
+			{
+				"file": "frame_0053.png",
+				"sha256": "be8b14732f6fb84f7792c49d8186f7e24df0a85fabdf02f8b306b399b2f734b6"
+			},
+			{
+				"file": "frame_0054.png",
+				"sha256": "2e85d67e5aa2983a7118507ee9ccc76e79560e5780ee3d1f939b2a7dd5415805"
+			},
+			{
+				"file": "frame_0055.png",
+				"sha256": "228bb8793298b05eb2fcfe3cd23434452c18a05819c3000ec626e225d0c9a750"
+			},
+			{
+				"file": "frame_0056.png",
+				"sha256": "de98f007001d9703162a697225c57b7e4c4e115e4c1cb97859e0cb42a480ea9b"
+			},
+			{
+				"file": "frame_0057.png",
+				"sha256": "f166f8104dffb2c8163aea4339ce9db97301e768be1cd2cb8c90180997d7bc13"
+			},
+			{
+				"file": "frame_0058.png",
+				"sha256": "61e0ce9863a2c7dbb96c6c4ce497191e3b24f227ad5759c20b1021d42f3c3f3b"
+			},
+			{
+				"file": "frame_0059.png",
+				"sha256": "e868d92af32839e7285328bcec0aa7d7c7a409b9feb490551c6132bc70c3aba9"
+			},
+			{
+				"file": "frame_0060.png",
+				"sha256": "07852b0d1f935d490180d52048e96b30cace5fe144a47dd0090c525a12bac148"
+			},
+			{
+				"file": "frame_0061.png",
+				"sha256": "8f17709d584c6e1a1d2461e7aad66087fa3ab7c1d37d577f193ee6c69cf3ac23"
+			},
+			{
+				"file": "frame_0062.png",
+				"sha256": "a1bb17420b9b39cfeac7bedc061e6342ff10e241567c6d95e980ffc79bec5df0"
+			},
+			{
+				"file": "frame_0063.png",
+				"sha256": "ac6213cbc11b5b65c545ec5636d07cb89a110835bcc599daa3a770c218c754d8"
+			},
+			{
+				"file": "frame_0064.png",
+				"sha256": "adbc9026ce29d519341c0666c5a7ea1880ad290145137797a99e266a79bf6d54"
+			},
+			{
+				"file": "frame_0065.png",
+				"sha256": "7c7f65e1972c222940d5115703ec73ccde34c1c85ab272139af4a3870ce80a25"
+			},
+			{
+				"file": "frame_0066.png",
+				"sha256": "0b76aea7edb4df899b70d7260a4a73cc98c35fe1da5d119921dba7156cfe0e20"
+			},
+			{
+				"file": "frame_0067.png",
+				"sha256": "54b57ee66b4e2f326cfc800b60de53f8c7301ba6a52b8b21df038f684f9d5568"
+			},
+			{
+				"file": "frame_0068.png",
+				"sha256": "9465c7801b0bc5e3cd54079d2bb1dc5088ebe101322bdd646d3b1d1d30b1da62"
+			},
+			{
+				"file": "frame_0069.png",
+				"sha256": "ce4b6cf4be0c784a3de698d50c70000dbe2de5d07f77827cbc1b2ffc2e610c39"
+			},
+			{
+				"file": "frame_0070.png",
+				"sha256": "99587638eb6b7395dbe7d3c45710358c00b5d486d7bc6f30663731a5ae75e460"
+			},
+			{
+				"file": "frame_0071.png",
+				"sha256": "054c748347a25377837f767ee67f197da94aa663c2dde928c72d01680f995a3e"
+			},
+			{
+				"file": "frame_0072.png",
+				"sha256": "137feac560d7168bbc43ffb69368826f005fac93dd2fbe82af37fbb0ed2a6d35"
+			}
+		]
+	},
+	"models": {
+		"audio_vae": "minimax_h3_audio_vae_fp32.safetensors",
+		"clip": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+		"sampler": "res_multistep",
+		"scheduler": "simple",
+		"unet": "minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+		"video_vae": "minimax_h3_video_vae_fp16.safetensors"
+	},
+	"prompt": "Locked-off side-view game animation of the single reference creature facing right. Preserve its armor plates, shell pattern, anatomy, silhouette, colors, scale and screen position. Uniform neutral grey background and constant lighting. Entire body, tail and claws stay inside the canvas. No body rotation, camera movement, zoom, cuts, new limbs, particles, changing shadows or other objects. One complete slow in-place walking stride, with alternating planted feet, clear weight transfer and small natural torso motion. Body stays centered with no net forward travel. Return to the initial stride phase by the end with continuous cyclic motion. No attack or claw strike. No music or dialogue. It walks on its two hind legs in a hunched crouch, arms hanging low; tail sways with each step.",
+	"prompt_version": 1,
+	"reference": {
+		"ground_anchor": [
+			288,
+			495
+		],
+		"path": "art/creatures/references/gordon_queen/reference.png",
+		"sha256": "34b3289a69f2e4d850361630e61e3463a373458f66ba5e5d5c1dd7cf986fbcb8"
+	},
+	"seconds": 3.0,
+	"seed": 8621,
+	"size": 576,
+	"source_fps": 24.0,
+	"state": "walk",
+	"status": "complete",
+	"steps": 15,
+	"take_id": "walk_20261004T065007_017",
+	"updated_at": "2026-10-03T23:51:01"
+}

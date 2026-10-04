@@ -9,6 +9,7 @@ extends CanvasLayer
 
 const MonsterStatsScript = preload("res://scripts/model/monster_stats.gd")
 const VisualConfigScript = preload("res://scripts/game/side_view_visual_config.gd")
+const CreatureRegistryScript = preload("res://scripts/model/creature_registry.gd")
 const IndustrialThemeScript = preload("res://scripts/ui/industrial_theme.gd")
 const BalanceData = preload("res://data/balance.gd")
 const LevelSpawnsPageScript = preload("res://scripts/tools/level_spawns_page.gd")
@@ -325,10 +326,6 @@ func _build_index() -> Control:
 	tile_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	tile_list.add_theme_constant_override("separation", 8)
 	scroll.add_child(tile_list)
-	for entry in MonsterStatsScript.monsters():
-		var tile := _build_tile(entry)
-		tiles[entry["id"]] = tile
-		tile_list.add_child(tile)
 	var empty := Label.new()
 	empty.name = "Empty"
 	empty.text = "No monsters match. Try a name or role."
@@ -336,27 +333,47 @@ func _build_index() -> Control:
 	empty.add_theme_color_override("font_color", MUTED)
 	empty.hide()
 	tile_list.add_child(empty)
+	_sync_monster_tiles()
 	return panel
 
-## Adds tiles for creatures added since the list was built (Creature Lab) and
-## drops tiles for ones taken out.
+## (Re)builds the monster list when the encyclopedia's monsters change (a
+## Creature Lab creature added or taken out): one heading per family, its
+## monsters in evolution order.
+var _tile_ids: Array = []
+
 func _sync_monster_tiles() -> void:
 	if tile_list == null:
 		return
-	var wanted: Array = MonsterStatsScript.monster_ids()
-	for id in tiles.keys():
-		if not wanted.has(id):
-			tiles[id].queue_free()
-			tiles.erase(id)
-	for entry in MonsterStatsScript.monsters():
-		var id := str(entry["id"])
-		if tiles.has(id):
-			continue
+	var monsters: Array = MonsterStatsScript.monsters()
+	var wanted: Array = []
+	for entry in monsters:
+		wanted.append("%s|%s" % [entry["id"], entry["name"]])
+	if wanted == _tile_ids:
+		return
+	_tile_ids = wanted
+	for child in tile_list.get_children():
+		if child.name != "Empty":
+			tile_list.remove_child(child)
+			child.queue_free()
+	tiles.clear()
+	var family := "\u0000"
+	for entry in monsters:
+		var this_family := str(entry.get("family", ""))
+		if this_family != family:
+			family = this_family
+			var heading := Label.new()
+			heading.name = "Family_" + (family if not family.is_empty() else "other")
+			heading.text = (CreatureRegistryScript.family_label(family) if not family.is_empty() else "Other").to_upper()
+			heading.set_meta("family", family)
+			heading.add_theme_font_size_override("font_size", 12)
+			heading.add_theme_color_override("font_color", MUTED)
+			tile_list.add_child(heading)
 		var tile := _build_tile(entry)
-		tiles[id] = tile
+		tile.set_meta("family", this_family)
+		tiles[str(entry["id"])] = tile
 		tile_list.add_child(tile)
-		tile_list.move_child(tile, tile_list.get_node("Empty").get_index())
-	if not wanted.has(selected_id):
+	tile_list.move_child(tile_list.get_node("Empty"), tile_list.get_child_count() - 1)
+	if not tiles.has(selected_id):
 		selected_id = "pursuer"
 
 func _build_tile(entry: Dictionary) -> Button:
@@ -366,7 +383,7 @@ func _build_tile(entry: Dictionary) -> Button:
 	tile.toggle_mode = true
 	tile.button_group = tile_group
 	tile.custom_minimum_size = Vector2(0, 76)
-	tile.tooltip_text = entry["name"]
+	tile.tooltip_text = str(entry["name"]) + ("\nThe original %s" % entry["legacy_name"] if entry.has("legacy_name") else "")
 	tile.add_theme_stylebox_override("normal", _box(PLATE_2, EDGE, 1, 4, 0))
 	tile.add_theme_stylebox_override("hover", _box(Color("343b42"), Color("6b747d"), 1, 4, 0))
 	tile.add_theme_stylebox_override("pressed", _box(Color("2f2a20"), AMBER, 2, 4, 0))
@@ -560,14 +577,19 @@ func _build_dialogs() -> void:
 func _render_tiles() -> void:
 	var query := search.text.strip_edges().to_lower() if search != null else ""
 	var shown := 0
+	var families_shown := {}
 	for entry in MonsterStatsScript.monsters():
 		if not tiles.has(entry["id"]):
 			continue
-		var haystack := ("%s %s %s" % [entry["name"], entry["role"], entry["target"]]).to_lower()
+		var haystack := ("%s %s %s %s %s" % [entry["name"], entry["role"], entry["target"], entry.get("legacy_name", ""), entry.get("family", "")]).to_lower()
 		var matches := query.is_empty() or haystack.contains(query)
 		tiles[entry["id"]].visible = matches
 		if matches:
 			shown += 1
+			families_shown[str(entry.get("family", ""))] = true
+	for child in tile_list.get_children():
+		if child is Label and child.has_meta("family"):
+			child.visible = families_shown.has(str(child.get_meta("family")))
 	tile_list.get_node("Empty").visible = shown == 0
 	_sync_tile_selection()
 	_refresh_marks()
@@ -579,7 +601,7 @@ func _sync_tile_selection() -> void:
 func _render_entry() -> void:
 	var entry := MonsterStatsScript.monster(selected_id)
 	name_label.text = entry["name"]
-	meta_label.text = "%s · %s" % [str(entry["role"]).to_upper(), str(entry["target"]).to_upper()]
+	meta_label.text = "%s · %s%s" % [str(entry["role"]).to_upper(), str(entry["target"]).to_upper(), ("  ·  THE ORIGINAL %s" % str(entry["legacy_name"]).to_upper()) if entry.has("legacy_name") else ""]
 	desc_label.text = entry["desc"]
 	var asset := VisualConfigScript.asset_for(selected_id)
 	for animation in anim_buttons.keys():

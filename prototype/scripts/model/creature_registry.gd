@@ -31,11 +31,32 @@ const TAKES_RELATIVE := "art/creatures/animations"
 ## built-in monster's id (its stats are the starting point), kind is
 ## DefenseEnemy.EnemyKind.
 const ARCHETYPES := {
-	"pursuer": {"kind": 0, "label": "Hunter (melee, chases the hero)", "role": "Melee", "target": "Hunts the hero", "display_height": 58.0},
-	"breaker": {"kind": 1, "label": "Breaker (melee, attacks the harvester)", "role": "Melee", "target": "Attacks the harvester", "display_height": 112.0},
-	"ranged": {"kind": 2, "label": "Ranged (keeps distance, shoots the hero)", "role": "Ranged", "target": "Shoots the hero", "display_height": 90.0},
+	"pursuer": {"kind": 0, "short": "Hunter", "label": "Hunter (melee, chases the hero)", "role": "Melee", "target": "Hunts the hero", "display_height": 58.0},
+	"breaker": {"kind": 1, "short": "Breaker", "label": "Breaker (melee, attacks the harvester)", "role": "Melee", "target": "Attacks the harvester", "display_height": 112.0},
+	"ranged": {"kind": 2, "short": "Ranged", "label": "Ranged (keeps distance, shoots the hero)", "role": "Ranged", "target": "Shoots the hero", "display_height": 90.0},
 }
 const ARCHETYPE_ORDER := ["pursuer", "breaker", "ranged"]
+
+## The three original monsters ARE stages of Creature Lab families: their
+## sprites are the in-game versions of these concepts (2026-10-03). Their ids,
+## art (SideViewVisualConfig.ASSETS), stats and saves are unchanged; the
+## concept image of the same family and stage is folded into them (one tile in
+## the lab, never a second creature). An index record with "builtin": true can
+## rename them or move them in their family.
+const BUILTIN_IDS := ["pursuer", "breaker", "ranged"]
+const BUILTIN_DEFAULTS := {
+	"pursuer": {"family": "voidstalker", "stage": 1},
+	"breaker": {"family": "breaker", "stage": 2},
+	"ranged": {"family": "shellwalker", "stage": 4},
+}
+## The original sprite of each built-in (shown as its concept in the lab).
+const BUILTIN_SPRITES := {
+	"pursuer": "res://assets/side-view/pursuer.png",
+	"breaker": "res://assets/side-view/breaker.png",
+	"ranged": "res://assets/side-view/ranged.png",
+}
+## Where the original H3 references live (tools/animation_pipeline).
+const BUILTIN_REFERENCES_RELATIVE := "art/side-view/animations/references"
 
 ## The animation states the lab makes for monsters (a subset of
 ## SideViewVisualConfig.STATES; jump/fall/dash are hero-only).
@@ -116,13 +137,112 @@ static func list_concepts() -> Array:
 				"name": name_from_name(stem),
 				"family": str(folder),
 			})
-		files.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-			if int(a.stage) != int(b.stage):
-				return int(a.stage) < int(b.stage)
-			return str(a.path) < str(b.path))
+		_sort_stages(files)
 		if not files.is_empty():
 			families.append({"family": str(folder), "files": files})
+	# The original monsters join their families (a family of their own when
+	# its concept folder is missing).
+	for builtin_id in BUILTIN_IDS:
+		var info := builtin_info(builtin_id)
+		var entry := {"path": "builtin:" + builtin_id, "stage": int(info.stage), "id": builtin_id, "name": str(info.family_label), "family": str(info.family), "builtin": true, "image": _abs(str(BUILTIN_SPRITES[builtin_id]))}
+		var placed := false
+		for family in families:
+			if str(family.family) == str(info.family):
+				# The concept for this stage is the original's concept: one tile.
+				for index in range(family.files.size() - 1, -1, -1):
+					var file: Dictionary = family.files[index]
+					if int(file.stage) == int(info.stage) and not bool(file.get("builtin", false)):
+						entry["concept"] = str(file.path)
+						entry["concept_id"] = str(file.id)
+						family.files.remove_at(index)
+				family.files.append(entry)
+				_sort_stages(family.files)
+				placed = true
+		if not placed:
+			families.append({"family": str(info.family), "files": [entry]})
+	families.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return str(a.family) < str(b.family))
 	return families
+
+static func _sort_stages(files: Array) -> void:
+	files.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if int(a.stage) != int(b.stage):
+			return int(a.stage) < int(b.stage)
+		return str(a.path) < str(b.path))
+
+# ---------- the original monsters ----------
+
+static func is_builtin(monster_id: String) -> bool:
+	return BUILTIN_IDS.has(monster_id)
+
+## {"family", "stage", "family_label", "name", "desc"} for an original monster:
+## BUILTIN_DEFAULTS, overridden by its index record.
+static func builtin_info(monster_id: String) -> Dictionary:
+	var info: Dictionary = (BUILTIN_DEFAULTS.get(monster_id, {"family": monster_id, "stage": 0}) as Dictionary).duplicate()
+	var record := get_creature(monster_id)
+	if not str(record.get("family", "")).is_empty():
+		info.family = str(record.family)
+	if record.has("stage"):
+		info.stage = int(record.stage)
+	info.family_label = family_label(str(info.family))
+	info.name = str(record.get("name", "")) if not str(record.get("name", "")).is_empty() else str(info.family_label)
+	info.desc = str(record.get("desc", ""))
+	return info
+
+## The original monster that is `family`'s `stage` ("" when none). A Creature
+## Lab creature made from that stage's concept is the same creature, so it's
+## never listed separately.
+static func builtin_for_stage(family: String, stage: int) -> String:
+	for builtin_id in BUILTIN_IDS:
+		var info := builtin_info(builtin_id)
+		if str(info.family) == family and int(info.stage) == stage:
+			return builtin_id
+	return ""
+
+static var _family_labels: Dictionary = {}
+
+## A family's display name from its concept files ("void_stalker_stage_1" ->
+## "Void Stalker"), else the folder name capitalised.
+static func family_label(family: String) -> String:
+	if _family_labels.has(family):
+		return _family_labels[family]
+	var label := family.capitalize()
+	var directory := DirAccess.open(concepts_dir().path_join(family))
+	if directory != null:
+		var names := Array(directory.get_files())
+		names.sort()
+		for filename in names:
+			var lower := str(filename).to_lower()
+			if lower.ends_with(".png") or lower.ends_with(".jpg") or lower.ends_with(".jpeg") or lower.ends_with(".webp"):
+				if stage_from_name(str(filename).get_basename()) >= 0:
+					label = name_from_name(str(filename).get_basename())
+					break
+	_family_labels[family] = label
+	return label
+
+## Where an original monster's H3 reference is (art/side-view/animations/references/<id>/).
+static func builtin_reference_dir(monster_id: String) -> String:
+	return repo_root().path_join(BUILTIN_REFERENCES_RELATIVE).path_join(monster_id)
+
+## Family and stage of any monster (original or Creature Lab), for sorting.
+static func lineage(monster_id: String) -> Dictionary:
+	if is_builtin(monster_id):
+		var info := builtin_info(monster_id)
+		return {"family": str(info.family), "stage": int(info.stage)}
+	var record := get_creature(monster_id)
+	return {"family": str(record.get("family", "")), "stage": int(record.get("stage", -1))}
+
+## Sorts monster ids by family, then evolution stage.
+static func sort_by_lineage(monster_ids: Array) -> Array:
+	var sorted := monster_ids.duplicate()
+	sorted.sort_custom(func(a: String, b: String) -> bool:
+		var left := lineage(a)
+		var right := lineage(b)
+		if str(left.family) != str(right.family):
+			return str(left.family) < str(right.family)
+		if int(left.stage) != int(right.stage):
+			return int(left.stage) < int(right.stage)
+		return a < b)
+	return sorted
 
 ## "shell_walker_stage_2" -> 2. Images without a stage number are stage -1
 ## (listed first, shown as "base").
@@ -151,6 +271,7 @@ static func stage_label(stage: int) -> String:
 # ---------- index ----------
 
 static func reload_index() -> void:
+	_family_labels.clear()
 	_loaded = false
 	_ensure_loaded()
 
@@ -213,7 +334,7 @@ static func encyclopedia_ids() -> Array:
 	var result: Array = []
 	for creature_id in ids():
 		var record := get_creature(creature_id)
-		if not bool(record.get("in_encyclopedia", false)):
+		if not bool(record.get("in_encyclopedia", false)) or is_builtin(creature_id) or bool(record.get("builtin", false)) or not builtin_for_stage(str(record.get("family", "")), int(record.get("stage", -1))).is_empty():
 			continue
 		var still := str(record.get("reference", {}).get("still", ""))
 		if still.is_empty() or not FileAccess.file_exists(_abs(still)):
@@ -245,6 +366,8 @@ static func monster_entry(creature_id: String, stat_keys: Array) -> Dictionary:
 	return {
 		"id": creature_id,
 		"name": title,
+		"family": str(record.get("family", "")),
+		"stage": stage,
 		"kind": int(type["kind"]),
 		"role": str(type["role"]),
 		"target": str(type["target"]),

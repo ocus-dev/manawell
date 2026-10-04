@@ -1,0 +1,385 @@
+{
+ "comfy_url": "http://192.168.1.102:8188",
+ "jobs": [
+  {
+   "type": "prepare",
+   "concept": "art/creatures/enemies/shellwalker/shell_walker_stage_0.png",
+   "archetype": "pursuer",
+   "display_height": 54,
+   "facing": "left",
+   "desc": "A small young shell-walker: a squat four-legged hatchling under a domed purple shell plate.",
+   "cutout": "solid"
+  },
+  {
+   "type": "prepare",
+   "concept": "art/creatures/enemies/shellwalker/shell_walker_stage_1.png",
+   "archetype": "pursuer",
+   "display_height": 68,
+   "facing": "left",
+   "desc": "A four-legged armored shell-walker with a long neck and a plated purple carapace.",
+   "cutout": "solid"
+  },
+  {
+   "type": "prepare",
+   "concept": "art/creatures/enemies/shellwalker/shell_walker_stage_2.png",
+   "archetype": "pursuer",
+   "display_height": 78,
+   "facing": "left",
+   "desc": "A long-legged four-legged shell-walker, high-stepping under a heavy plated carapace.",
+   "cutout": "solid"
+  },
+  {
+   "type": "prepare",
+   "concept": "art/creatures/enemies/shellwalker/shell_walker_stage_3.png",
+   "archetype": "ranged",
+   "display_height": 86,
+   "facing": "left",
+   "desc": "A four-legged shell-walker carrying a cannon on its back, firing on the hero from range.",
+   "cutout": "solid"
+  },
+  {
+   "type": "prepare",
+   "concept": "art/creatures/enemies/breaker/breaker_stage_1.png",
+   "archetype": "breaker",
+   "display_height": 116,
+   "facing": "left",
+   "desc": "A hulking four-legged rock-shelled breaker that batters the harvester with its armored head.",
+   "cutout": "solid"
+  },
+  {
+   "type": "prepare",
+   "concept": "art/creatures/enemies/gordon/gordon.png",
+   "archetype": "breaker",
+   "display_height": 150,
+   "facing": "right",
+   "desc": "Gordon: a towering upright reptilian brute in cracked ember-veined armor with huge claws.",
+   "cutout": "solid"
+  },
+  {
+   "type": "prepare",
+   "concept": "art/creatures/enemies/gordon/gordon_queen.png",
+   "archetype": "breaker",
+   "display_height": 170,
+   "facing": "left",
+   "desc": "The Gordon Queen: a hunched, winged, horned matriarch in crimson-veined armor; a boss.",
+   "cutout": "solid"
+  },
+  {
+   "type": "generate",
+   "id": "shell_walker_stage_0",
+   "state": "idle",
+   "seed": 4237,
+   "seconds": 3
+  },
+  {
+   "type": "generate",
+   "id": "shell_walker_stage_0",
+   "state": "walk",
+   "seed": 4374,
+   "seconds": 3,
+   "prompt_extra": "It walks on four legs, diagonal legs stepping together; the shell stays level."
+  },
+  {
+   "type": "generate",
+   "id": "shell_walker_stage_0",
+   "state": "attack",
+   "seed": 4511,
+   "seconds": 3,
+   "prompt_extra": "The strike is a quick snapping bite with the head and neck."
+  },
+  {
+   "type": "generate",
+   "id": "shell_walker_stage_0",
+   "state": "hurt",
+   "seed": 4648,
+   "seconds": 3
+  },
+  {
+   "type": "generate",
+   "id": "shell_walker_stage_0",
+   "state": "death",
+   "seed": 4785,
+   "seconds": 3
+  },
+  {
+   "type": "generate",
+   "id": "shell_walker_stage_1",
+   "state": "idle",
+   "seed": 4922,
+   "seconds": 3
+  },
+  {
+   "type": "generate",
+   "id": "shell_walker_stage_1",
+   "state": "walk",
+   "seed": 5059,
+   "seconds": 3,
+   "prompt_extra": "It walks on four legs, diagonal legs stepping together; the shell stays level."
+  },
+  {
+   "type": "generate",
+   "id": "shell_walker_stage_1",
+   "state": "attack",
+   "seed": 5196,
+   "seconds": 3,
+   "prompt_extra": "The strike is a quick snapping bite with the head and neck."
+  },
+  {
+   "type": "generate",
+   "id": "shell_walker_stage_1",
+   "state": "hurt",
+   "seed": 5333,
+   "seconds": 3
+  },
+  {
+   "type": "generate",
+   "id": "shell_walker_stage_1",
+   "state": "death",
+   "seed": 5470,
+   "seconds": 3
+  },
+  {
+   "type": "generate",
+   "id": "shell_walker_stage_2",
+   "state": "idle",
+   "seed": 5607,
+   "seconds": 3
+  },
+  {
+   "type": "generate",
+   "id": "shell_walker_stage_2",
+   "state": "walk",
+   "seed": 5744,
+   "seconds": 3,
+   "prompt_extra": "It walks on four legs, diagonal legs stepping together; the shell stays level."
+  },
+  {
+   "type": "generate",
+   "id": "shell_walker_stage_2",
+   "state": "attack",
+   "seed": 5881,
+   "seconds": 3,
+   "prompt_extra": "The strike is a quick snapping bite with the head and neck."
+  },
+  {
+   "type": "generate",
+   "id": "shell_walker_stage_2",
+   "state": "hurt",
+   "seed": 6018,
+   "seconds": 3
+  },
+  {
+   "type": "generate",
+   "id": "shell_walker_stage_2",
+   "state": "death",
+   "seed": 6155,
+   "seconds": 3
+  },
+  {
+   "type": "generate",
+   "id": "shell_walker_stage_3",
+   "state": "idle",
+   "seed": 6292,
+   "seconds": 3
+  },
+  {
+   "type": "generate",
+   "id": "shell_walker_stage_3",
+   "state": "walk",
+   "seed": 6429,
+   "seconds": 3,
+   "prompt_extra": "It walks on four legs, diagonal legs stepping together; the shell stays level."
+  },
+  {
+   "type": "generate",
+   "id": "shell_walker_stage_3",
+   "state": "attack",
+   "seed": 6566,
+   "seconds": 3,
+   "prompt_extra": "Instead of a melee strike, the cannon on its back recoils sharply as it fires toward the facing direction; the body braces. No projectile, muzzle flash or smoke."
+  },
+  {
+   "type": "generate",
+   "id": "shell_walker_stage_3",
+   "state": "hurt",
+   "seed": 6703,
+   "seconds": 3
+  },
+  {
+   "type": "generate",
+   "id": "shell_walker_stage_3",
+   "state": "death",
+   "seed": 6840,
+   "seconds": 3
+  },
+  {
+   "type": "generate",
+   "id": "shell_walker_stage_3",
+   "state": "windup",
+   "seed": 6977,
+   "seconds": 3,
+   "prompt": "Locked-off side-view game animation of the single reference creature facing right. Preserve its armor plates, shell pattern, anatomy, silhouette, colors, scale and screen position. Uniform neutral grey background and constant lighting. Entire body, tail and claws stay inside the canvas. No body rotation, camera movement, zoom, cuts, new limbs, particles, changing shadows or other objects. A telegraph before firing: the body crouches and braces, the cannon on its back swings to aim toward the facing direction and holds steady for the final third. Nothing is fired. Feet remain planted. No particles. No music or dialogue."
+  },
+  {
+   "type": "generate",
+   "id": "breaker_stage_1",
+   "state": "idle",
+   "seed": 7114,
+   "seconds": 3
+  },
+  {
+   "type": "generate",
+   "id": "breaker_stage_1",
+   "state": "walk",
+   "seed": 7251,
+   "seconds": 3,
+   "prompt_extra": "It walks on four legs, diagonal legs stepping together; the shell stays level."
+  },
+  {
+   "type": "generate",
+   "id": "breaker_stage_1",
+   "state": "attack",
+   "seed": 7388,
+   "seconds": 3,
+   "prompt_extra": "The strike is a heavy ram forward with its armored head and shoulders."
+  },
+  {
+   "type": "generate",
+   "id": "breaker_stage_1",
+   "state": "hurt",
+   "seed": 7525,
+   "seconds": 3
+  },
+  {
+   "type": "generate",
+   "id": "breaker_stage_1",
+   "state": "death",
+   "seed": 7662,
+   "seconds": 3
+  },
+  {
+   "type": "generate",
+   "id": "gordon",
+   "state": "idle",
+   "seed": 7799,
+   "seconds": 3
+  },
+  {
+   "type": "generate",
+   "id": "gordon",
+   "state": "walk",
+   "seed": 7936,
+   "seconds": 3,
+   "prompt_extra": "It walks upright on its two hind legs with heavy lumbering steps; arms and tail sway with each step."
+  },
+  {
+   "type": "generate",
+   "id": "gordon",
+   "state": "attack",
+   "seed": 8073,
+   "seconds": 3,
+   "prompt_extra": "The strike is a heavy downward swipe of the near claw."
+  },
+  {
+   "type": "generate",
+   "id": "gordon",
+   "state": "hurt",
+   "seed": 8210,
+   "seconds": 3
+  },
+  {
+   "type": "generate",
+   "id": "gordon",
+   "state": "death",
+   "seed": 8347,
+   "seconds": 3
+  },
+  {
+   "type": "generate",
+   "id": "gordon_queen",
+   "state": "idle",
+   "seed": 8484,
+   "seconds": 3
+  },
+  {
+   "type": "generate",
+   "id": "gordon_queen",
+   "state": "walk",
+   "seed": 8621,
+   "seconds": 3,
+   "prompt_extra": "It walks on its two hind legs in a hunched crouch, arms hanging low; tail sways with each step."
+  },
+  {
+   "type": "generate",
+   "id": "gordon_queen",
+   "state": "attack",
+   "seed": 8758,
+   "seconds": 3,
+   "prompt_extra": "The strike is a lunging slash of both claws with the head thrust forward."
+  },
+  {
+   "type": "generate",
+   "id": "gordon_queen",
+   "state": "hurt",
+   "seed": 8895,
+   "seconds": 3
+  },
+  {
+   "type": "generate",
+   "id": "gordon_queen",
+   "state": "death",
+   "seed": 9032,
+   "seconds": 3
+  },
+  {
+   "type": "generate",
+   "id": "pursuer",
+   "state": "hurt",
+   "seed": 9169,
+   "seconds": 3
+  },
+  {
+   "type": "generate",
+   "id": "pursuer",
+   "state": "death",
+   "seed": 9306,
+   "seconds": 3
+  },
+  {
+   "type": "generate",
+   "id": "breaker",
+   "state": "hurt",
+   "seed": 9443,
+   "seconds": 3
+  },
+  {
+   "type": "generate",
+   "id": "breaker",
+   "state": "death",
+   "seed": 9580,
+   "seconds": 3
+  },
+  {
+   "type": "generate",
+   "id": "ranged",
+   "state": "hurt",
+   "seed": 9717,
+   "seconds": 3
+  },
+  {
+   "type": "generate",
+   "id": "ranged",
+   "state": "death",
+   "seed": 9854,
+   "seconds": 3
+  },
+  {
+   "type": "generate",
+   "id": "ranged",
+   "state": "windup",
+   "seed": 9991,
+   "seconds": 3,
+   "prompt": "Locked-off side-view game animation of the single reference creature facing right. Preserve its armor plates, shell pattern, anatomy, silhouette, colors, scale and screen position. Uniform neutral grey background and constant lighting. Entire body, tail and claws stay inside the canvas. No body rotation, camera movement, zoom, cuts, new limbs, particles, changing shadows or other objects. A telegraph before spitting: the body lowers and braces, the head draws back and aims the tube in its mouth toward the facing direction, then holds that aimed pose steady for the final third. Nothing is fired. Feet remain planted. No particles. No music or dialogue."
+  }
+ ]
+}

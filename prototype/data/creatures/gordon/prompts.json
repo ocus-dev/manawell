@@ -1,0 +1,66 @@
+{
+	"creature": "gordon",
+	"format_version": 1,
+	"states": {
+		"attack": {
+			"current": 1.0,
+			"versions": [
+				{
+					"created_at": "2026-10-03T23:46:32",
+					"note": "",
+					"sha256": "1bab8668669f4d8113b0383ba01ba1d41e464b85477ebcdb75daa9a3153de166",
+					"text": "Locked-off side-view game animation of the single reference creature facing right. Preserve its armor plates, shell pattern, anatomy, silhouette, colors, scale and screen position. Uniform neutral grey background and constant lighting. Entire body, tail and claws stay inside the canvas. No body rotation, camera movement, zoom, cuts, new limbs, particles, changing shadows or other objects. One attack only. First quarter: deliberate anticipation, rearing back and raising the forward claw or head. Middle: a distinct forward strike toward the facing direction. Final half: settle and recover to the original resting pose. Feet remain planted; no walking or extra strikes. No impact particles or target objects. No music or dialogue. The strike is a heavy downward swipe of the near claw.",
+					"version": 1.0
+				}
+			]
+		},
+		"death": {
+			"current": 1,
+			"versions": [
+				{
+					"created_at": "2026-10-03T23:48:22",
+					"note": "",
+					"sha256": "72567c40822e89b74ec9fea8b389f10934a179cf36e9556a85f07b91f4f7bf1b",
+					"text": "Locked-off side-view game animation of the single reference creature facing right. Preserve its armor plates, shell pattern, anatomy, silhouette, colors, scale and screen position. Uniform neutral grey background and constant lighting. Entire body, tail and claws stay inside the canvas. No body rotation, camera movement, zoom, cuts, new limbs, particles, changing shadows or other objects. The creature is defeated: it staggers, its legs buckle and its body collapses onto the ground line, then lies completely still for the final third. It stays whole and inside the canvas. No blood, gore, particles or dust. No music or dialogue.",
+					"version": 1
+				}
+			]
+		},
+		"hurt": {
+			"current": 1.0,
+			"versions": [
+				{
+					"created_at": "2026-10-03T23:47:27",
+					"note": "",
+					"sha256": "74690385791dd135f6e7c20a206ad81283b5a2f8290e1f88b6e9476093f5cbcf",
+					"text": "Locked-off side-view game animation of the single reference creature facing right. Preserve its armor plates, shell pattern, anatomy, silhouette, colors, scale and screen position. Uniform neutral grey background and constant lighting. Entire body, tail and claws stay inside the canvas. No body rotation, camera movement, zoom, cuts, new limbs, particles, changing shadows or other objects. One flinch: the creature recoils backward from a blow to its front, shudders briefly, then recovers to the original resting pose. Feet stay on the same ground line; no stepping or falling. No blood or particles. No music or dialogue.",
+					"version": 1.0
+				}
+			]
+		},
+		"idle": {
+			"current": 1.0,
+			"versions": [
+				{
+					"created_at": "2026-10-03T23:44:42",
+					"note": "",
+					"sha256": "899cb4c330854788c8ae027ea879fe5f53c90c637739b36e5250fa623ff79777",
+					"text": "Locked-off side-view game animation of the single reference creature facing right. Preserve its armor plates, shell pattern, anatomy, silhouette, colors, scale and screen position. Uniform neutral grey background and constant lighting. Entire body, tail and claws stay inside the canvas. No body rotation, camera movement, zoom, cuts, new limbs, particles, changing shadows or other objects. Feet remain planted on the same ground line; the torso subtly breathes and the head and forward claw slowly shift once, then return to the original resting pose. One gentle complete cycle over the clip, smooth movement across the loop boundary. No walking or foot shuffling. No music or dialogue.",
+					"version": 1.0
+				}
+			]
+		},
+		"walk": {
+			"current": 1.0,
+			"versions": [
+				{
+					"created_at": "2026-10-03T23:45:37",
+					"note": "",
+					"sha256": "838f28e4bc04c942bc387535ce33f5cb3b05ebdf8c45b5d9382d19d704bce67a",
+					"text": "Locked-off side-view game animation of the single reference creature facing right. Preserve its armor plates, shell pattern, anatomy, silhouette, colors, scale and screen position. Uniform neutral grey background and constant lighting. Entire body, tail and claws stay inside the canvas. No body rotation, camera movement, zoom, cuts, new limbs, particles, changing shadows or other objects. One complete slow in-place walking stride, with alternating planted feet, clear weight transfer and small natural torso motion. Body stays centered with no net forward travel. Return to the initial stride phase by the end with continuous cyclic motion. No attack or claw strike. No music or dialogue. It walks upright on its two hind legs with heavy lumbering steps; arms and tail sway with each step.",
+					"version": 1.0
+				}
+			]
+		}
+	}
+}

@@ -1,0 +1,913 @@
+{
+	"comfy": {
+		"output_prefix": "Telos/Creatures/shell_walker_stage_3/walk_20261004T063541_658",
+		"outputs": {
+			"16": {
+				"animated": [
+					true
+				],
+				"images": [
+					{
+						"filename": "preview_00001_.mp4",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					}
+				]
+			},
+			"17": {
+				"images": [
+					{
+						"filename": "master_00001_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00002_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00003_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00004_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00005_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00006_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00007_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00008_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00009_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00010_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00011_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00012_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00013_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00014_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00015_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00016_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00017_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00018_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00019_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00020_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00021_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00022_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00023_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00024_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00025_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00026_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00027_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00028_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00029_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00030_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00031_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00032_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00033_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00034_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00035_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00036_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00037_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00038_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00039_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00040_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00041_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00042_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00043_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00044_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00045_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00046_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00047_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00048_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00049_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00050_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00051_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00052_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00053_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00054_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00055_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00056_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00057_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00058_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00059_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00060_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00061_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00062_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00063_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00064_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00065_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00066_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00067_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00068_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00069_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00070_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00071_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00072_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					},
+					{
+						"filename": "master_00073_.png",
+						"subfolder": "Telos\\Creatures\\shell_walker_stage_3\\walk_20261004T063541_658",
+						"type": "output"
+					}
+				]
+			}
+		},
+		"prompt_id": "ee9af279-2e76-4b0e-b648-db8753b61a6b",
+		"server": "http://192.168.1.102:8188",
+		"upload_name": "telos-creature-shell_walker_stage_3-ecee4b0841d1.png"
+	},
+	"completed_at": "2026-10-03T23:36:35",
+	"created_at": "2026-10-03T23:35:41",
+	"creature": "shell_walker_stage_3",
+	"end_on_reference": true,
+	"format_version": 1,
+	"frames_requested": 73,
+	"graph": {
+		"1": {
+			"class_type": "LoadImage",
+			"inputs": {
+				"image": "telos-creature-shell_walker_stage_3-ecee4b0841d1.png"
+			}
+		},
+		"10": {
+			"class_type": "BasicScheduler",
+			"inputs": {
+				"denoise": 1.0,
+				"model": [
+					"3",
+					0
+				],
+				"scheduler": "simple",
+				"steps": 15
+			}
+		},
+		"11": {
+			"class_type": "BasicGuider",
+			"inputs": {
+				"conditioning": [
+					"7",
+					0
+				],
+				"model": [
+					"3",
+					0
+				]
+			}
+		},
+		"12": {
+			"class_type": "SamplerCustomAdvanced",
+			"inputs": {
+				"guider": [
+					"11",
+					0
+				],
+				"latent_image": [
+					"7",
+					1
+				],
+				"noise": [
+					"8",
+					0
+				],
+				"sampler": [
+					"9",
+					0
+				],
+				"sigmas": [
+					"10",
+					0
+				]
+			}
+		},
+		"13": {
+			"class_type": "VAEDecode",
+			"inputs": {
+				"samples": [
+					"12",
+					0
+				],
+				"vae": [
+					"5",
+					0
+				]
+			}
+		},
+		"14": {
+			"class_type": "VAEDecodeAudio",
+			"inputs": {
+				"samples": [
+					"12",
+					0
+				],
+				"vae": [
+					"6",
+					0
+				]
+			}
+		},
+		"15": {
+			"class_type": "CreateVideo",
+			"inputs": {
+				"audio": [
+					"14",
+					0
+				],
+				"bit_depth": 8,
+				"fps": 24.0,
+				"images": [
+					"13",
+					0
+				]
+			}
+		},
+		"16": {
+			"class_type": "SaveVideo",
+			"inputs": {
+				"codec": "auto",
+				"filename_prefix": "Telos/Creatures/shell_walker_stage_3/walk_20261004T063541_658/preview",
+				"format": "mp4",
+				"video": [
+					"15",
+					0
+				]
+			}
+		},
+		"17": {
+			"class_type": "SaveImage",
+			"inputs": {
+				"filename_prefix": "Telos/Creatures/shell_walker_stage_3/walk_20261004T063541_658/master",
+				"images": [
+					"13",
+					0
+				]
+			}
+		},
+		"2": {
+			"class_type": "LoadImage",
+			"inputs": {
+				"image": "telos-creature-shell_walker_stage_3-ecee4b0841d1.png"
+			}
+		},
+		"3": {
+			"class_type": "UNETLoader",
+			"inputs": {
+				"unet_name": "minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+				"weight_dtype": "default"
+			}
+		},
+		"4": {
+			"class_type": "CLIPLoader",
+			"inputs": {
+				"clip_name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+				"device": "default",
+				"type": "minimax"
+			}
+		},
+		"5": {
+			"class_type": "VAELoader",
+			"inputs": {
+				"vae_name": "minimax_h3_video_vae_fp16.safetensors"
+			}
+		},
+		"6": {
+			"class_type": "VAELoader",
+			"inputs": {
+				"vae_name": "minimax_h3_audio_vae_fp32.safetensors"
+			}
+		},
+		"7": {
+			"class_type": "MiniMaxH3ImageToVideo",
+			"inputs": {
+				"clip": [
+					"4",
+					0
+				],
+				"first_frame": [
+					"1",
+					0
+				],
+				"height": 576,
+				"last_frame": [
+					"2",
+					0
+				],
+				"length": 73,
+				"prompt": "Locked-off side-view game animation of the single reference creature facing right. Preserve its armor plates, shell pattern, anatomy, silhouette, colors, scale and screen position. Uniform neutral grey background and constant lighting. Entire body, tail and claws stay inside the canvas. No body rotation, camera movement, zoom, cuts, new limbs, particles, changing shadows or other objects. One complete slow in-place walking stride, with alternating planted feet, clear weight transfer and small natural torso motion. Body stays centered with no net forward travel. Return to the initial stride phase by the end with continuous cyclic motion. No attack or claw strike. No music or dialogue. It walks on four legs, diagonal legs stepping together; the shell stays level.",
+				"vae": [
+					"5",
+					0
+				],
+				"width": 576
+			}
+		},
+		"8": {
+			"class_type": "RandomNoise",
+			"inputs": {
+				"noise_seed": 6429
+			}
+		},
+		"9": {
+			"class_type": "KSamplerSelect",
+			"inputs": {
+				"sampler_name": "res_multistep"
+			}
+		}
+	},
+	"masters": {
+		"dir": "art/creatures/animations/shell_walker_stage_3/walk_20261004T063541_658/masters",
+		"fps": 24.0,
+		"frames": [
+			{
+				"file": "frame_0000.png",
+				"sha256": "dd1d6016b1fd89c16314630a3f4d53f3ae9eeca75419a163d4431f167b870ad0"
+			},
+			{
+				"file": "frame_0001.png",
+				"sha256": "ccf275c1f5b83c2cb8a74446caecb8c04c783c5559596bf1803748a3d35ec381"
+			},
+			{
+				"file": "frame_0002.png",
+				"sha256": "6ab5487c5b1ee4c3b1241f39f9f5bc817ff8791d2dc7d18f0cbf3220dddb22f9"
+			},
+			{
+				"file": "frame_0003.png",
+				"sha256": "134c44f815598d35fd7483bac302e0d6934a84cf103061439df694d7663ee04b"
+			},
+			{
+				"file": "frame_0004.png",
+				"sha256": "b07042fa65144fefa3b8f8e9f5d886b5520629b48120ac17a147f60dfad2447d"
+			},
+			{
+				"file": "frame_0005.png",
+				"sha256": "7d1aa822714c6f102e058d2e82e0b259c8d88d56090fcc51091cf704c579cefb"
+			},
+			{
+				"file": "frame_0006.png",
+				"sha256": "cc074f891a099c309f938f4a34fcefd8adf2a5ee6e3f8612da33175037471bfe"
+			},
+			{
+				"file": "frame_0007.png",
+				"sha256": "77693cfbd876deec5f2e8abf1b4ea420003bf4b047f467e908023cc4ca219f8d"
+			},
+			{
+				"file": "frame_0008.png",
+				"sha256": "6e527fa7c57a89b8594ff5e540b108ab1212143e1339994de0f0e61ff2a16bcb"
+			},
+			{
+				"file": "frame_0009.png",
+				"sha256": "b257f3ec73e021eb7c29d9733ef1f0300386736886cb34ac2e3bfb4656e9a38b"
+			},
+			{
+				"file": "frame_0010.png",
+				"sha256": "fc09bd2d6a5ac5099ac7effbd2dac2e2a97bd95aac91d200ae15f844b9981ad3"
+			},
+			{
+				"file": "frame_0011.png",
+				"sha256": "89124432a2d6d8605c2e837f47cf4aaceb99620bcdaafa100263150875cdc057"
+			},
+			{
+				"file": "frame_0012.png",
+				"sha256": "25170ed99ac933578ed8189e7b95904ab21d1681aa249f8fb0dc8e7d43e25eeb"
+			},
+			{
+				"file": "frame_0013.png",
+				"sha256": "7bac88c3f48e50d9bb4daf398683371e18f4e4decf7c3c5718944720c33ccef9"
+			},
+			{
+				"file": "frame_0014.png",
+				"sha256": "b063f9208d584babf74167d3483d0e17b0a0bcbe9041323944d076ac00f7becd"
+			},
+			{
+				"file": "frame_0015.png",
+				"sha256": "915bace76a3be8824322d562bad38216a0aa2157cba8fc2c259bd33917edd46e"
+			},
+			{
+				"file": "frame_0016.png",
+				"sha256": "04dd27dc0958625b3253093d9a6e9ce2d9a22cad8fa1bdb17a686c99ffe1d7c2"
+			},
+			{
+				"file": "frame_0017.png",
+				"sha256": "cf252c8f32a2805c18dbf5aa74ec5045f85def6d0c8ce9d4a1e332e62cf8cb0d"
+			},
+			{
+				"file": "frame_0018.png",
+				"sha256": "ef1de8252b6aa43d669715ceaacefa94c0755c2385084b3ef435aa9d17fc16d9"
+			},
+			{
+				"file": "frame_0019.png",
+				"sha256": "848757acd0fe519f030bc7dd323c7b5c3afdb5db0d3450c7065fb06bb5562608"
+			},
+			{
+				"file": "frame_0020.png",
+				"sha256": "14df7516c1a77ac16eed7af6957f4452b4a5ce5bad1f7d013bac7b9dc5c4ac12"
+			},
+			{
+				"file": "frame_0021.png",
+				"sha256": "f648b825bcd99fd90117fa618f42517abf44b89127e03a69dc1d52a9dfbcdce9"
+			},
+			{
+				"file": "frame_0022.png",
+				"sha256": "16e1b139bada892d111c77a45b8a193ecca4dd3bbfd227ab9d9673aaade31616"
+			},
+			{
+				"file": "frame_0023.png",
+				"sha256": "5940d628bb778b3102c92ea088964010247a84a612555a6f9e06e659ba7e68a9"
+			},
+			{
+				"file": "frame_0024.png",
+				"sha256": "2e72af420899695998e83fc91fa5a07a9e1c3631f5ffc6a7fd459029524a12c7"
+			},
+			{
+				"file": "frame_0025.png",
+				"sha256": "d3237a05de93282eb4d8335b8c61546d1e4081a84e21bb4fb9ea2276de30fee7"
+			},
+			{
+				"file": "frame_0026.png",
+				"sha256": "054f3658a8efa9b92620aac3530b44bb9b2373346585ee7e5be0044381f3cd41"
+			},
+			{
+				"file": "frame_0027.png",
+				"sha256": "54484335cb3f0c3e717a2da804f9e55b2c39cab92c08b06d4463770eadef9772"
+			},
+			{
+				"file": "frame_0028.png",
+				"sha256": "f506a20bf529ca99e3a0d69284f77f414faf59a3adbc0109590825a6b94e5c0e"
+			},
+			{
+				"file": "frame_0029.png",
+				"sha256": "b612cd59c52e4ca947d297e95b0cbe9dec7a24643ceea88ee80356cbba1b4f93"
+			},
+			{
+				"file": "frame_0030.png",
+				"sha256": "249552572c499bd4a52e5bd9396641b45680dc2de127d296afe441d9b037f957"
+			},
+			{
+				"file": "frame_0031.png",
+				"sha256": "b772afb152ab0f67fd5c9cd83f0e0bab5d02b48898960aef09b2c86470a15425"
+			},
+			{
+				"file": "frame_0032.png",
+				"sha256": "c068873b7eb91c0a89182cc32b679eaec3ed27d377b344ffc4ea46f412b8801f"
+			},
+			{
+				"file": "frame_0033.png",
+				"sha256": "c20bf32c3d1a344733360848f11381be75113637ccb3b2207d0b5a831ac3867d"
+			},
+			{
+				"file": "frame_0034.png",
+				"sha256": "1d7400ae16fa8bfb5ec24280553b73924d9d4c02da3c4f42569eb86ae23c10e7"
+			},
+			{
+				"file": "frame_0035.png",
+				"sha256": "174917cfdf3af09115c6ab2b53ab89945e34c7b90a2a9a15f1133bc6857fc3c7"
+			},
+			{
+				"file": "frame_0036.png",
+				"sha256": "9583cfbadc25fc5d1459f869c3dbd2270a13be1343f90de82f0273d1dc9e531b"
+			},
+			{
+				"file": "frame_0037.png",
+				"sha256": "3a92d24456123000723c67b0975df6a213c3ec05ed7c954495f6da395b1d4c21"
+			},
+			{
+				"file": "frame_0038.png",
+				"sha256": "671d6a629334171ac32330090bc7e40fc10d09ebec5a9d3f4550d28d2aac7465"
+			},
+			{
+				"file": "frame_0039.png",
+				"sha256": "8768f87526c8cb31846cdefac68afaa8c340bd2c95296241f48d20577e25d603"
+			},
+			{
+				"file": "frame_0040.png",
+				"sha256": "74d740426661c8dee8552439abd8209e0ab60d414a9a3b6efa2c4c7ce8b7d166"
+			},
+			{
+				"file": "frame_0041.png",
+				"sha256": "c9ed7c8be59f064b4dfe54e6a48d8e7cd5353a52cfb2515fd1c0e914120c9497"
+			},
+			{
+				"file": "frame_0042.png",
+				"sha256": "0f4dabf56882cef21e8cacd6298c925cca72e6d0c8bd6e676e9f0937e2e24fb6"
+			},
+			{
+				"file": "frame_0043.png",
+				"sha256": "3e0cbedf61ef5d107ad98793712fe3dab24ea0f87f1d9fb317ed713faa1eb0c5"
+			},
+			{
+				"file": "frame_0044.png",
+				"sha256": "dff90f04ee2f8e7af0a6da7666812b81fd8b1e0bbe579d5b52a396cc4137df3a"
+			},
+			{
+				"file": "frame_0045.png",
+				"sha256": "c806283eb43d0d06359856e3d17e8bfad6b4b436e77c361d928b4701d6d2d58d"
+			},
+			{
+				"file": "frame_0046.png",
+				"sha256": "5475313fe89f4a28379181d3cddb9a6620b6d20237fb85bcb7d5605667b18da7"
+			},
+			{
+				"file": "frame_0047.png",
+				"sha256": "4a7be163d84329886da0edc3db9c103ec61c6f2fc7cbb6d736a3c56797ac7219"
+			},
+			{
+				"file": "frame_0048.png",
+				"sha256": "1513f755dd47220fbc26d5b04e14cc2ae6598f52a8779baf13b9abce5c9ad353"
+			},
+			{
+				"file": "frame_0049.png",
+				"sha256": "9a4462b85e8c2de673fc04a2c4014f7b4263f985e718897d2aac14ee124b48e3"
+			},
+			{
+				"file": "frame_0050.png",
+				"sha256": "7d6952b48bca997f8cbec3338725d10955eb51a910120c52d91b766931ebad0e"
+			},
+			{
+				"file": "frame_0051.png",
+				"sha256": "37ed9675a7669adf86e5310ea2a2c8766efc0e7f28ed0a1916191e58f2e3bd2e"
+			},
+			{
+				"file": "frame_0052.png",
+				"sha256": "6d8fa993cd209c50ebcec75daa1d265b43d2081ce0c46c2bf51ab066d7080c70"
+			},
+			{
+				"file": "frame_0053.png",
+				"sha256": "c0a120e8d6925ec3f6b72c9904eadb3ce88a35bfb892d87cae8c7806bb1d2446"
+			},
+			{
+				"file": "frame_0054.png",
+				"sha256": "39b78d9b647db21ccf80c40389ac776b2d07ed52a22cbd74798a1ae3c9a16b91"
+			},
+			{
+				"file": "frame_0055.png",
+				"sha256": "8859f894395df36fdae041399b6b106130db5137dd4dc6cf91defe0dc1862433"
+			},
+			{
+				"file": "frame_0056.png",
+				"sha256": "6b1827051cc6eeae51b004fb251fe23d70d12864d9b5c5034ad6b399c3b4b744"
+			},
+			{
+				"file": "frame_0057.png",
+				"sha256": "23f271e2ec36a3c653817baa7065f6c1fe3466b44654cda0c18b7798acadd65d"
+			},
+			{
+				"file": "frame_0058.png",
+				"sha256": "409333c78fd5a446ec6c0ebf49a866c3501d0dcfcdb8d78cc8c549dc01189a2b"
+			},
+			{
+				"file": "frame_0059.png",
+				"sha256": "abf3f6e375c149642acc3e2fcaba5dfefb51b795229ce68f7820c622c9671163"
+			},
+			{
+				"file": "frame_0060.png",
+				"sha256": "93ca0cc901f360c41d157a36dfa23c61e993e6efeee810bd05945ecb673322cd"
+			},
+			{
+				"file": "frame_0061.png",
+				"sha256": "970492266801f655e9fece324a87136fd233f2ccce3f3fc268e21e5819be9518"
+			},
+			{
+				"file": "frame_0062.png",
+				"sha256": "d7ea78f445974f381412d378cb1cdddc0b0b4de9e48431e74a29ccf32235d0da"
+			},
+			{
+				"file": "frame_0063.png",
+				"sha256": "fc5be688e8ece4e8f8c7730d3786fe375155fbeeea711253b4db244684256e97"
+			},
+			{
+				"file": "frame_0064.png",
+				"sha256": "91da839d4027bfbdc60150fdb06830e797e8d71fe6da20acef5d117cef069eca"
+			},
+			{
+				"file": "frame_0065.png",
+				"sha256": "c3645235a8966440c1ec1fd9d2e8aa1e9f88775cd60013a55a11099742e3352e"
+			},
+			{
+				"file": "frame_0066.png",
+				"sha256": "20f773672b88088bea680b05e9d2673e4d514dbf707d55b4d123130e4048e509"
+			},
+			{
+				"file": "frame_0067.png",
+				"sha256": "4dfb0aab70d4c4552f5b818531f066600cd85663ad3b8db564e7ff89a8379e45"
+			},
+			{
+				"file": "frame_0068.png",
+				"sha256": "9e7da305598c9b144c128b85f066101b1174959d72ce3032c11df596137d43a9"
+			},
+			{
+				"file": "frame_0069.png",
+				"sha256": "c0813e5ace1723b16859318b77115a6c6c7466c3206db7285771396d3d008cbf"
+			},
+			{
+				"file": "frame_0070.png",
+				"sha256": "277ab11fce9507902fd188ab8d2363f17d9c11647451081a83003ef203b8c5d1"
+			},
+			{
+				"file": "frame_0071.png",
+				"sha256": "8748494112d915e963824a2c90984736f51c1f66959c1bd8b94797e41ba0ade2"
+			},
+			{
+				"file": "frame_0072.png",
+				"sha256": "4493464069849d8f96f62bf103f5400e72b26e073120f2d8e631dd5fb5642992"
+			}
+		]
+	},
+	"models": {
+		"audio_vae": "minimax_h3_audio_vae_fp32.safetensors",
+		"clip": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+		"sampler": "res_multistep",
+		"scheduler": "simple",
+		"unet": "minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+		"video_vae": "minimax_h3_video_vae_fp16.safetensors"
+	},
+	"prompt": "Locked-off side-view game animation of the single reference creature facing right. Preserve its armor plates, shell pattern, anatomy, silhouette, colors, scale and screen position. Uniform neutral grey background and constant lighting. Entire body, tail and claws stay inside the canvas. No body rotation, camera movement, zoom, cuts, new limbs, particles, changing shadows or other objects. One complete slow in-place walking stride, with alternating planted feet, clear weight transfer and small natural torso motion. Body stays centered with no net forward travel. Return to the initial stride phase by the end with continuous cyclic motion. No attack or claw strike. No music or dialogue. It walks on four legs, diagonal legs stepping together; the shell stays level.",
+	"prompt_version": 1,
+	"reference": {
+		"ground_anchor": [
+			288,
+			495
+		],
+		"path": "art/creatures/references/shell_walker_stage_3/reference.png",
+		"sha256": "ecee4b0841d1852a957d9177902ee39ecbe8e1a62b2f4f978e73d422b656e4b6"
+	},
+	"seconds": 3.0,
+	"seed": 6429,
+	"size": 576,
+	"source_fps": 24.0,
+	"state": "walk",
+	"status": "complete",
+	"steps": 15,
+	"take_id": "walk_20261004T063541_658",
+	"updated_at": "2026-10-03T23:36:35"
+}

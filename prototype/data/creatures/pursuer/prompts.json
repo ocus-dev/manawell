@@ -1,0 +1,30 @@
+{
+	"creature": "pursuer",
+	"format_version": 1,
+	"states": {
+		"death": {
+			"current": 1,
+			"versions": [
+				{
+					"created_at": "2026-10-03T23:54:36",
+					"note": "",
+					"sha256": "72567c40822e89b74ec9fea8b389f10934a179cf36e9556a85f07b91f4f7bf1b",
+					"text": "Locked-off side-view game animation of the single reference creature facing right. Preserve its armor plates, shell pattern, anatomy, silhouette, colors, scale and screen position. Uniform neutral grey background and constant lighting. Entire body, tail and claws stay inside the canvas. No body rotation, camera movement, zoom, cuts, new limbs, particles, changing shadows or other objects. The creature is defeated: it staggers, its legs buckle and its body collapses onto the ground line, then lies completely still for the final third. It stays whole and inside the canvas. No blood, gore, particles or dust. No music or dialogue.",
+					"version": 1
+				}
+			]
+		},
+		"hurt": {
+			"current": 1.0,
+			"versions": [
+				{
+					"created_at": "2026-10-03T23:53:42",
+					"note": "",
+					"sha256": "74690385791dd135f6e7c20a206ad81283b5a2f8290e1f88b6e9476093f5cbcf",
+					"text": "Locked-off side-view game animation of the single reference creature facing right. Preserve its armor plates, shell pattern, anatomy, silhouette, colors, scale and screen position. Uniform neutral grey background and constant lighting. Entire body, tail and claws stay inside the canvas. No body rotation, camera movement, zoom, cuts, new limbs, particles, changing shadows or other objects. One flinch: the creature recoils backward from a blow to its front, shudders briefly, then recovers to the original resting pose. Feet stay on the same ground line; no stepping or falling. No blood or particles. No music or dialogue.",
+					"version": 1.0
+				}
+			]
+		}
+	}
+}

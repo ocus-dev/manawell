@@ -7,6 +7,7 @@ extends HBoxContainer
 const LevelSpawnsScript = preload("res://scripts/model/level_spawns.gd")
 const MonsterStatsScript = preload("res://scripts/model/monster_stats.gd")
 const GameFlowScript = preload("res://scripts/model/game_flow.gd")
+const CreatureRegistryScript = preload("res://scripts/model/creature_registry.gd")
 
 const MAIN_SCENE := "res://scenes/main.tscn"
 ## Width of the label column, so every slider lines up.
@@ -36,6 +37,11 @@ var progress_box: VBoxContainer
 var progress_summary: Label
 var boss_picker: OptionButton
 var boss_rows: Array[Control] = []
+## Creature rows: built-ins, then Creature Lab creatures (rebuilt when the
+## encyclopedia's monsters change).
+var mix_list: VBoxContainer
+var mix_filter: LineEdit
+var _row_ids: Array = []
 var _syncing := false
 
 func _init(encyclopedia: Node) -> void:
@@ -111,6 +117,7 @@ func _after_change() -> void:
 # ---------- view ----------
 
 func refresh() -> void:
+	_sync_monster_rows()
 	_syncing = true
 	var profile := LevelSpawnsScript.profile(selected_level)
 	var entry := _level_entry(selected_level)
@@ -122,7 +129,7 @@ func refresh() -> void:
 		mode_buttons[mode].button_pressed = true
 	custom_box.visible = mode == LevelSpawnsScript.MODE_CUSTOM
 	mode_note.visible = mode != LevelSpawnsScript.MODE_CUSTOM
-	mode_note.text = "The game's built-in spawning: pursuers first, then breakers and ranged join as surges build, getting faster from surge 4. Pick Custom to set this level's own rate and creatures." if mode == LevelSpawnsScript.MODE_DEFAULT else "Nothing spawns on this level. Pick Custom to add creatures."
+	mode_note.text = "The game's built-in spawning: %s first, then %s and %s join as surges build, getting faster from surge 4." % [MonsterStatsScript.monster("pursuer").name, MonsterStatsScript.monster("breaker").name, MonsterStatsScript.monster("ranged").name] + " Pick Custom to set this level's own rate and creatures (Creature Lab creatures only spawn in Custom levels, or as the boss)." if mode == LevelSpawnsScript.MODE_DEFAULT else "Nothing spawns on this level. Pick Custom to add creatures."
 	for key in setting_rows:
 		setting_rows[key].slider.value = float(profile[key])
 		setting_rows[key].spin.value = float(profile[key])
@@ -136,8 +143,9 @@ func refresh() -> void:
 	var gated := int(profile.progress_surge) > 0
 	for row in boss_rows:
 		row.visible = gated
+	var boss := LevelSpawnsScript.boss_monster(profile)
 	for index in boss_picker.item_count:
-		if str(boss_picker.get_item_metadata(index)) == str(profile.boss_monster):
+		if str(boss_picker.get_item_metadata(index)) == boss:
 			boss_picker.select(index)
 	progress_summary.text = LevelSpawnsScript.describe_progress(profile)
 	_refresh_level_list()
@@ -266,10 +274,7 @@ func _build_editor() -> Control:
 	boss_row.add_child(boss_caption)
 	boss_picker = OptionButton.new()
 	boss_picker.name = "BossPicker"
-	boss_picker.custom_minimum_size = Vector2(220, 36)
-	for monster_id in MonsterStatsScript.monster_ids():
-		boss_picker.add_item(str(MonsterStatsScript.monster(monster_id).get("name", monster_id)))
-		boss_picker.set_item_metadata(boss_picker.item_count - 1, monster_id)
+	boss_picker.custom_minimum_size = Vector2(260, 36)
 	boss_picker.item_selected.connect(func(index: int) -> void: set_boss_monster(str(boss_picker.get_item_metadata(index))))
 	boss_row.add_child(boss_picker)
 	progress_box.add_child(boss_row)
@@ -320,9 +325,18 @@ func _build_editor() -> Control:
 	custom_box.add_child(_section("SPAWN RATE"))
 	for key in LevelSpawnsScript.SETTING_ORDER:
 		custom_box.add_child(_setting_row(str(key)))
-	custom_box.add_child(_section("CREATURES  (from the encyclopedia; weights, shown as a share of spawns)"))
-	for monster_id in MonsterStatsScript.monster_ids():
-		custom_box.add_child(_mix_row(monster_id))
+	custom_box.add_child(_section("CREATURES  (every encyclopedia monster by family and stage; weights, shown as a share of spawns)"))
+	mix_filter = LineEdit.new()
+	mix_filter.name = "CreatureFilter"
+	mix_filter.placeholder_text = "Find a creature (name, family, role)"
+	mix_filter.clear_button_enabled = true
+	mix_filter.text_changed.connect(func(_text: String) -> void: _filter_mix_rows())
+	custom_box.add_child(mix_filter)
+	mix_list = VBoxContainer.new()
+	mix_list.name = "CreatureRows"
+	mix_list.add_theme_constant_override("separation", 4)
+	custom_box.add_child(mix_list)
+	_sync_monster_rows()
 
 	outer.add_child(_build_footer())
 	return outer
@@ -409,6 +423,57 @@ func _setting_row(key: String) -> Control:
 	setting_rows[key] = {"slider": slider, "spin": spin}
 	return row
 
+## Builds the creature rows and the boss list again when the encyclopedia's
+## monsters changed (a creature added in the Creature Lab, say).
+func _sync_monster_rows() -> void:
+	if mix_list == null:
+		return
+	var ids: Array = MonsterStatsScript.monster_ids()
+	if ids == _row_ids:
+		return
+	_row_ids = ids.duplicate()
+	for child in mix_list.get_children():
+		mix_list.remove_child(child)
+		child.queue_free()
+	mix_rows.clear()
+	var family := "\u0000"
+	for monster_id in ids:
+		var entry := MonsterStatsScript.monster(monster_id)
+		var this_family := str(entry.get("family", ""))
+		if this_family.is_empty():
+			this_family = "creatures"
+		if this_family != family:
+			family = this_family
+			var heading := _section(CreatureRegistryScript.family_label(family).to_upper())
+			heading.name = "Family_" + family
+			heading.set_meta("family", family)
+			mix_list.add_child(heading)
+		mix_list.add_child(_mix_row(monster_id))
+	mix_filter.visible = ids.size() > 4
+	boss_picker.clear()
+	for monster_id in ids:
+		var entry := MonsterStatsScript.monster(monster_id)
+		boss_picker.add_item(str(entry.get("name", monster_id)))
+		boss_picker.set_item_metadata(boss_picker.item_count - 1, monster_id)
+	_filter_mix_rows()
+
+func _filter_mix_rows() -> void:
+	if mix_list == null:
+		return
+	var query := mix_filter.text.strip_edges().to_lower() if mix_filter != null else ""
+	var shown_families := {}
+	for monster_id in mix_rows:
+		var entry := MonsterStatsScript.monster(monster_id)
+		var family := str(entry.get("family", "")) if not str(entry.get("family", "")).is_empty() else "creatures"
+		var haystack := ("%s %s %s %s %s %s" % [monster_id, entry.get("name", ""), entry.get("role", ""), entry.get("target", ""), family, entry.get("legacy_name", "")]).to_lower()
+		var shown := query.is_empty() or haystack.contains(query)
+		mix_rows[monster_id].row.visible = shown
+		if shown:
+			shown_families[family] = true
+	for child in mix_list.get_children():
+		if child.has_meta("family"):
+			child.visible = shown_families.has(str(child.get_meta("family")))
+
 func _mix_row(monster_id: String) -> Control:
 	var entry: Dictionary = MonsterStatsScript.monster(monster_id)
 	var row := HBoxContainer.new()
@@ -433,6 +498,12 @@ func _mix_row(monster_id: String) -> Control:
 	role.clip_text = true
 	role.custom_minimum_size = Vector2(LABEL_WIDTH - 40 - 14, 0)
 	role.text = "%s · %s" % [str(entry.get("role", "")), str(entry.get("target", ""))]
+	if bool(entry.get("custom", false)):
+		role.text = "%s · %s" % [str(CreatureRegistryScript.ARCHETYPES[MonsterStatsScript.archetype(monster_id)]["short"]), str(entry.get("target", ""))]
+	elif entry.has("legacy_name"):
+		role.text += " · the original %s" % str(entry["legacy_name"])
+	role.tooltip_text = role.text
+	role.mouse_filter = Control.MOUSE_FILTER_PASS
 	role.add_theme_font_size_override("font_size", 12)
 	role.add_theme_color_override("font_color", book.MUTED)
 	labels.add_child(role)
@@ -450,5 +521,5 @@ func _mix_row(monster_id: String) -> Control:
 	share.add_theme_color_override("font_color", book.AMBER)
 	row.add_child(share)
 	slider.value_changed.connect(func(value: float) -> void: set_weight(monster_id, value))
-	mix_rows[monster_id] = {"slider": slider, "share": share}
+	mix_rows[monster_id] = {"slider": slider, "share": share, "row": row}
 	return row

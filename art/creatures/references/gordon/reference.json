@@ -1,0 +1,40 @@
+{
+	"background": [
+		180,
+		180,
+		180
+	],
+	"body_height": 413.0,
+	"canvas": [
+		576,
+		576
+	],
+	"concept": "art/creatures/enemies/gordon/gordon.png",
+	"cutout": "solid",
+	"ground_anchor": [
+		288,
+		495
+	],
+	"mirrored": false,
+	"note": "Same framing as tools/animation_pipeline/prepare.py reference(). The anchor is the visible bottom centre; adjust it in the lab if the feet sit elsewhere.",
+	"paste": [
+		87,
+		82
+	],
+	"prepared_at": "2026-10-03T23:18:32",
+	"reference_sha256": "3e42e57cc5742db6b5fb0aa738b54e0f49549ccb68e2192a1e7441da4ec31a1e",
+	"source_crop": [
+		52,
+		20,
+		1000,
+		992
+	],
+	"still": "res://assets/side-view/creatures/gordon.png",
+	"uniform_scale": 0.425316455696203,
+	"visible_bounds": [
+		87,
+		82,
+		403,
+		413
+	]
+}

@@ -11,8 +11,11 @@
 			"min_interval": 0.6,
 			"mix": {
 				"breaker": 0.0,
-				"pursuer": 100.0,
-				"ranged": 0.0
+				"breaker_stage_0": 56.0,
+				"pursuer": 12.0,
+				"ranged": 0.0,
+				"shell_walker_stage_0": 57.0,
+				"shell_walker_stage_1": 0.0
 			},
 			"mode": "custom",
 			"progress_surge": 3.0,
@@ -28,8 +31,11 @@
 			"min_interval": 0.6,
 			"mix": {
 				"breaker": 0.0,
+				"breaker_stage_0": 0.0,
 				"pursuer": 100.0,
-				"ranged": 0.0
+				"ranged": 0.0,
+				"shell_walker_stage_0": 0.0,
+				"shell_walker_stage_1": 0.0
 			},
 			"mode": "custom",
 			"progress_surge": 3.0,
@@ -45,8 +51,11 @@
 			"min_interval": 0.6,
 			"mix": {
 				"breaker": 0.0,
+				"breaker_stage_0": 0.0,
 				"pursuer": 100.0,
-				"ranged": 0.0
+				"ranged": 0.0,
+				"shell_walker_stage_0": 0.0,
+				"shell_walker_stage_1": 0.0
 			},
 			"mode": "custom",
 			"progress_surge": 3.0,
@@ -62,8 +71,11 @@
 			"min_interval": 0.6,
 			"mix": {
 				"breaker": 0.0,
+				"breaker_stage_0": 0.0,
 				"pursuer": 100.0,
-				"ranged": 0.0
+				"ranged": 0.0,
+				"shell_walker_stage_0": 0.0,
+				"shell_walker_stage_1": 0.0
 			},
 			"mode": "custom",
 			"progress_surge": 3.0,
@@ -79,8 +91,11 @@
 			"min_interval": 0.6,
 			"mix": {
 				"breaker": 0.0,
+				"breaker_stage_0": 0.0,
 				"pursuer": 100.0,
-				"ranged": 0.0
+				"ranged": 0.0,
+				"shell_walker_stage_0": 0.0,
+				"shell_walker_stage_1": 0.0
 			},
 			"mode": "custom",
 			"progress_surge": 3.0,
@@ -96,8 +111,11 @@
 			"min_interval": 0.6,
 			"mix": {
 				"breaker": 0.0,
+				"breaker_stage_0": 0.0,
 				"pursuer": 100.0,
-				"ranged": 0.0
+				"ranged": 0.0,
+				"shell_walker_stage_0": 0.0,
+				"shell_walker_stage_1": 0.0
 			},
 			"mode": "custom",
 			"progress_surge": 3.0,
@@ -113,8 +131,11 @@
 			"min_interval": 0.6,
 			"mix": {
 				"breaker": 0.0,
+				"breaker_stage_0": 0.0,
 				"pursuer": 100.0,
-				"ranged": 0.0
+				"ranged": 0.0,
+				"shell_walker_stage_0": 0.0,
+				"shell_walker_stage_1": 0.0
 			},
 			"mode": "custom",
 			"progress_surge": 3.0,
@@ -130,8 +151,11 @@
 			"min_interval": 0.6,
 			"mix": {
 				"breaker": 0.0,
+				"breaker_stage_0": 0.0,
 				"pursuer": 100.0,
-				"ranged": 0.0
+				"ranged": 0.0,
+				"shell_walker_stage_0": 0.0,
+				"shell_walker_stage_1": 0.0
 			},
 			"mode": "custom",
 			"progress_surge": 3.0,

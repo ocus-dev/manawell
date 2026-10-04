@@ -94,13 +94,19 @@ static var last_load_message := ""
 
 # ---------- lookup ----------
 
-## Built-in monsters, then the Creature Lab's encyclopedia creatures
-## (data/creatures/index.json).
+## Every encyclopedia monster, grouped by family and sorted by evolution
+## stage: the three originals (now stages of Creature Lab families, named
+## after them) and the Creature Lab's creatures (data/creatures/index.json).
 static func monsters() -> Array:
-	var result: Array = MONSTERS.duplicate()
+	var by_id := {}
+	for entry in MONSTERS:
+		by_id[entry["id"]] = _builtin_entry(str(entry["id"]))
 	for creature_id in CreatureRegistryScript.encyclopedia_ids():
 		var base_id := CreatureRegistryScript.archetype(creature_id)
-		result.append(CreatureRegistryScript.monster_entry(creature_id, monster(base_id).get("stats", [])))
+		by_id[creature_id] = CreatureRegistryScript.monster_entry(creature_id, _builtin(base_id).get("stats", []))
+	var result: Array = []
+	for id in CreatureRegistryScript.sort_by_lineage(by_id.keys()):
+		result.append(by_id[id])
 	return result
 
 static func monster_ids() -> Array[String]:
@@ -110,13 +116,30 @@ static func monster_ids() -> Array[String]:
 	return ids
 
 static func monster(monster_id: String) -> Dictionary:
+	if not _builtin(monster_id).is_empty():
+		return _builtin_entry(monster_id)
+	if CreatureRegistryScript.has(monster_id) and CreatureRegistryScript.encyclopedia_ids().has(monster_id):
+		return CreatureRegistryScript.monster_entry(monster_id, _builtin(CreatureRegistryScript.archetype(monster_id)).get("stats", []))
+	return {}
+
+static func _builtin(monster_id: String) -> Dictionary:
 	for entry in MONSTERS:
 		if entry["id"] == monster_id:
 			return entry
-	if CreatureRegistryScript.has(monster_id) and CreatureRegistryScript.encyclopedia_ids().has(monster_id):
-		var base: Dictionary = monster(CreatureRegistryScript.archetype(monster_id))
-		return CreatureRegistryScript.monster_entry(monster_id, base.get("stats", []))
 	return {}
+
+## An original monster's entry with its family name and stage
+## ("Void Stalker (Stage 2)"); "legacy_name" keeps the old one ("Pursuer").
+static func _builtin_entry(monster_id: String) -> Dictionary:
+	var entry: Dictionary = _builtin(monster_id).duplicate()
+	var info := CreatureRegistryScript.builtin_info(monster_id)
+	entry["legacy_name"] = entry["name"]
+	entry["name"] = "%s (%s)" % [info.name, CreatureRegistryScript.stage_label(int(info.stage))]
+	entry["family"] = info.family
+	entry["stage"] = int(info.stage)
+	if not str(info.desc).is_empty():
+		entry["desc"] = info.desc
+	return entry
 
 ## The built-in monster whose behavior (and starting stats) a monster uses:
 ## itself for built-ins, the archetype for Creature Lab creatures.
@@ -125,6 +148,7 @@ static func archetype(monster_id: String) -> String:
 		return monster_id
 	return CreatureRegistryScript.archetype(monster_id)
 
+## The original monster for a DefenseEnemy kind (0 pursuer, 1 breaker, 2 ranged).
 static func id_for_kind(kind: int) -> String:
 	for entry in MONSTERS:
 		if int(entry["kind"]) == kind:

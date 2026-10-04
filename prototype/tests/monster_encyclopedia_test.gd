@@ -5,6 +5,7 @@ const MonsterStatsScript = preload("res://scripts/model/monster_stats.gd")
 const EnemyScript = preload("res://scripts/game/melee_enemy.gd")
 const EncyclopediaScript = preload("res://scripts/tools/monster_encyclopedia.gd")
 const TestCheckScript = preload("res://tests/test_check.gd")
+const RegistryScript = preload("res://scripts/model/creature_registry.gd")
 
 const TEMP_PATH := "user://monster_stats_test.json"
 
@@ -34,8 +35,12 @@ func _run() -> void:
 		quit(1)
 
 func _check_defaults_and_clamping() -> void:
-	# Creature Lab creatures (data/creatures/index.json) follow the built-ins.
-	check(MonsterStatsScript.monster_ids().slice(0, 3) == ["pursuer", "breaker", "ranged"], "monster order")
+	# Every monster (the originals included) is listed by family, then stage.
+	var ids := MonsterStatsScript.monster_ids()
+	check(ids.has("pursuer") and ids.has("breaker") and ids.has("ranged"), "originals listed")
+	check(ids == RegistryScript.sort_by_lineage(ids), "monster order: by family, then stage")
+	check(MonsterStatsScript.monster("pursuer").legacy_name == "Pursuer" and MonsterStatsScript.monster("pursuer").family == "voidstalker", "pursuer is a void stalker stage")
+	check(str(MonsterStatsScript.monster("breaker").name).ends_with("(Stage 2)") and int(MonsterStatsScript.monster("ranged").stage) == 4 and int(MonsterStatsScript.monster("pursuer").stage) == 1, "originals are the stages their concepts show")
 	check(is_equal_approx(MonsterStatsScript.get_stat("pursuer", "health"), BalanceData.PURSUER_HEALTH), "pursuer health default")
 	check(is_equal_approx(MonsterStatsScript.get_stat("breaker", "damage"), BalanceData.BREAKER_DAMAGE), "breaker damage default")
 	check(is_equal_approx(MonsterStatsScript.get_stat("ranged", "windup"), BalanceData.RANGED_WINDUP), "ranged windup default")

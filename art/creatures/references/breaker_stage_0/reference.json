@@ -1,0 +1,40 @@
+{
+	"background": [
+		180.0,
+		180.0,
+		180.0
+	],
+	"body_height": 268.0,
+	"canvas": [
+		576.0,
+		576.0
+	],
+	"concept": "art/creatures/enemies/breaker/breaker_stage_0.png",
+	"cutout": "solid",
+	"ground_anchor": [
+		288,
+		496
+	],
+	"mirrored": true,
+	"note": "Same framing as tools/animation_pipeline/prepare.py reference(). The anchor is the visible bottom centre; adjust it in the lab if the feet sit elsewhere.",
+	"paste": [
+		87.0,
+		227.0
+	],
+	"prepared_at": "2026-10-03T20:10:28",
+	"reference_sha256": "786c4388772e7d50e4c9eac4fe512e1cbf008f1a6fe505e64482318e96a3f66b",
+	"source_crop": [
+		66.0,
+		161.0,
+		597.0,
+		514.0
+	],
+	"still": "res://assets/side-view/creatures/breaker_stage_0.png",
+	"uniform_scale": 0.759322033898305,
+	"visible_bounds": [
+		87.0,
+		227.0,
+		403.0,
+		268.0
+	]
+}

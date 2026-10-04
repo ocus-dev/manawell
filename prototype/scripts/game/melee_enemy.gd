@@ -117,7 +117,7 @@ func _simulate_melee(_delta: float) -> void:
 		var direction := signf(target_x - position.x)
 		position.x += direction * speed_pixels * controller.FIXED_STEP
 	else:
-		if cooldown_remaining <= 0.0 and CombatGeometryScript.melee_hits("pursuer" if enemy_kind == EnemyKind.PURSUER else "breaker", position, target_kind, target_position, attack_range_pixels):
+		if cooldown_remaining <= 0.0 and CombatGeometryScript.melee_hits(geometry_id(), position, target_kind, target_position, attack_range_pixels):
 			controller.apply_enemy_damage(RunStateScript.DamageTarget.HERO if enemy_kind == EnemyKind.PURSUER else RunStateScript.DamageTarget.MACHINE, attack_damage)
 			if visual != null:
 				visual.play_attack()
@@ -143,6 +143,13 @@ func _simulate_ranged(delta: float) -> void:
 		warning_remaining = windup_duration
 		if visual != null:
 			visual.play_windup()
+
+## The hurtbox this enemy uses (CombatGeometry): its creature id (archetype
+## hurtbox scaled to its height) or the built-in melee kind.
+func geometry_id() -> String:
+	if not monster_override.is_empty():
+		return monster_override
+	return "pursuer" if enemy_kind == EnemyKind.PURSUER else "breaker"
 
 func monster_id() -> String:
 	if not monster_override.is_empty() and not MonsterStatsScript.monster(monster_override).is_empty():
@@ -193,7 +200,7 @@ func refresh_stats() -> void:
 	queue_redraw()
 
 func capture_snapshot_state() -> Dictionary:
-	return {"boss": is_boss, "boss_health_multiplier": boss_health_multiplier, "boss_damage_multiplier": boss_damage_multiplier, "boss_size": boss_size, "side": side, "enemy_id": enemy_id, "damage_multiplier": damage_multiplier, "locked_target_point": [locked_target_point.x, locked_target_point.y], "warning_remaining": warning_remaining, "warning_visible": warning_visible, "damage_feedback_remaining": damage_feedback_remaining, "damage_feedback_amount": damage_feedback_amount}
+	return {"monster": monster_override, "boss": is_boss, "boss_health_multiplier": boss_health_multiplier, "boss_damage_multiplier": boss_damage_multiplier, "boss_size": boss_size, "side": side, "enemy_id": enemy_id, "damage_multiplier": damage_multiplier, "locked_target_point": [locked_target_point.x, locked_target_point.y], "warning_remaining": warning_remaining, "warning_visible": warning_visible, "damage_feedback_remaining": damage_feedback_remaining, "damage_feedback_amount": damage_feedback_amount}
 
 func restore_snapshot_state(state: Dictionary) -> void:
 	side = -1 if int(state.get("side", side)) < 0 else 1

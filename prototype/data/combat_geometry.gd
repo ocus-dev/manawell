@@ -3,6 +3,7 @@ extends RefCounted
 
 const ArenaLayoutScript = preload("res://data/arena_layout.gd")
 const VisualConfigScript = preload("res://scripts/game/side_view_visual_config.gd")
+const CreatureRegistryScript = preload("res://scripts/model/creature_registry.gd")
 
 const HERO_HURTBOX := Rect2(-18.0, -78.0, 36.0, 78.0)
 const PURSUER_HURTBOX := Rect2(-18.0, -58.0, 36.0, 58.0)
@@ -22,7 +23,19 @@ static func hurtbox_for_kind(kind: String) -> Rect2:
 			return RANGED_HURTBOX
 		"machine":
 			return MACHINE_HURTBOX
+	if CreatureRegistryScript.has(kind):
+		return creature_hurtbox(kind)
 	return Rect2()
+
+## A Creature Lab creature uses its archetype's hurtbox, scaled by how tall
+## it's drawn compared with that monster (feet stay at the origin).
+static func creature_hurtbox(creature_id: String) -> Rect2:
+	var archetype := CreatureRegistryScript.archetype(creature_id)
+	var base := hurtbox_for_kind(archetype)
+	var standard := float(CreatureRegistryScript.ARCHETYPES[archetype]["display_height"])
+	var height := float(CreatureRegistryScript.get_creature(creature_id).get("display_height", standard))
+	var factor := clampf(height / maxf(1.0, standard), 0.25, 4.0)
+	return Rect2(base.position * factor, base.size * factor)
 
 static func hurtbox_rect(kind: String, feet_position: Vector2) -> Rect2:
 	var local := hurtbox_for_kind(kind)

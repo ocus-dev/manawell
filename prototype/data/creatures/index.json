@@ -1,5 +1,16 @@
 {
 	"creatures": {
+		"breaker": {
+			"archetype": "breaker",
+			"builtin": true,
+			"desc": "",
+			"family": "breaker",
+			"id": "breaker",
+			"name": "",
+			"stage": 2.0,
+			"states": {},
+			"updated_at": "2026-10-03T21:00:00"
+		},
 		"breaker_stage_0": {
 			"archetype": "breaker",
 			"concept": "art/creatures/enemies/breaker/breaker_stage_0.png",
@@ -14,71 +25,381 @@
 			"reference": {
 				"body_height": 268.0,
 				"canvas": [
-					576,
-					576
+					576.0,
+					576.0
 				],
 				"cutout": "solid",
 				"dir": "art/creatures/references/breaker_stage_0",
 				"ground_anchor": [
-					288,
-					496
+					288.0,
+					496.0
 				],
 				"mirrored": true,
 				"sha256": "786c4388772e7d50e4c9eac4fe512e1cbf008f1a6fe505e64482318e96a3f66b",
 				"still": "res://assets/side-view/creatures/breaker_stage_0.png",
 				"visible_bounds": [
-					87,
-					227,
-					403,
-					268
+					87.0,
+					227.0,
+					403.0,
+					268.0
 				]
 			},
-			"stage": 0,
+			"stage": 0.0,
 			"states": {
 				"attack": {
 					"fps": 12.0,
-					"frames": 37,
+					"frames": 37.0,
 					"installed_at": "2026-10-03T20:20:02",
-					"prompt_version": 1,
+					"prompt_version": 1.0,
 					"take": "attack_20261004T031447_727"
 				},
 				"death": {
 					"fps": 12.0,
-					"frames": 37,
+					"frames": 37.0,
 					"installed_at": "2026-10-03T20:23:10",
-					"prompt_version": 1,
+					"prompt_version": 1.0,
 					"take": "death_20261004T032035_332"
 				},
 				"hurt": {
 					"fps": 12.0,
-					"frames": 37,
+					"frames": 37.0,
 					"installed_at": "2026-10-03T20:20:25",
-					"prompt_version": 1,
+					"prompt_version": 1.0,
 					"take": "hurt_20261004T031814_469"
 				},
 				"idle": {
 					"fps": 12.0,
-					"frames": 37,
+					"frames": 37.0,
 					"installed_at": "2026-10-03T20:19:43",
-					"prompt_version": 1,
+					"prompt_version": 1.0,
 					"take": "idle_20261004T031100_652"
 				},
 				"walk": {
 					"fps": 12.0,
-					"frames": 37,
+					"frames": 37.0,
 					"installed_at": "2026-10-03T20:19:52",
-					"prompt_version": 1,
+					"prompt_version": 1.0,
 					"take": "walk_20261004T031241_348"
 				},
 				"windup": {
 					"fps": 12.0,
-					"frames": 37,
+					"frames": 37.0,
 					"installed_at": "2026-10-03T20:20:15",
-					"prompt_version": 1,
+					"prompt_version": 1.0,
 					"take": "windup_20261004T031658_575"
 				}
 			},
 			"updated_at": "2026-10-03T20:23:34"
+		},
+		"breaker_stage_1": {
+			"archetype": "breaker",
+			"concept": "art/creatures/enemies/breaker/breaker_stage_1.png",
+			"concept_sha256": "2bcbb5765e3d3969cd3ed3a97a43f7db79d959fcca56825a4e4d6437a3e345f1",
+			"desc": "A hulking four-legged rock-shelled breaker that batters the harvester with its armored head.",
+			"display_height": 116.0,
+			"facing": "left",
+			"family": "breaker",
+			"id": "breaker_stage_1",
+			"in_encyclopedia": false,
+			"name": "Breaker",
+			"reference": {
+				"body_height": 310.0,
+				"canvas": [
+					576.0,
+					576.0
+				],
+				"cutout": "solid",
+				"dir": "art/creatures/references/breaker_stage_1",
+				"ground_anchor": [
+					288.0,
+					495.0
+				],
+				"mirrored": true,
+				"sha256": "fe0890505b1d1103d77a225439f133812ff988192498a85cc47e1f1010eaca85",
+				"still": "res://assets/side-view/creatures/breaker_stage_1.png",
+				"visible_bounds": [
+					87.0,
+					185.0,
+					403.0,
+					310.0
+				]
+			},
+			"stage": 1.0,
+			"states": {},
+			"updated_at": "2026-10-03T23:18:31"
+		},
+		"gordon": {
+			"archetype": "breaker",
+			"concept": "art/creatures/enemies/gordon/gordon.png",
+			"concept_sha256": "37a190de41aa37c1e8863a91a5ea0b1f656175e503d8a639ab1c788fa1ac23d1",
+			"desc": "Gordon: a towering upright reptilian brute in cracked ember-veined armor with huge claws.",
+			"display_height": 150.0,
+			"facing": "right",
+			"family": "gordon",
+			"id": "gordon",
+			"in_encyclopedia": false,
+			"name": "Gordon",
+			"reference": {
+				"body_height": 413.0,
+				"canvas": [
+					576.0,
+					576.0
+				],
+				"cutout": "solid",
+				"dir": "art/creatures/references/gordon",
+				"ground_anchor": [
+					288.0,
+					495.0
+				],
+				"mirrored": false,
+				"sha256": "3e42e57cc5742db6b5fb0aa738b54e0f49549ccb68e2192a1e7441da4ec31a1e",
+				"still": "res://assets/side-view/creatures/gordon.png",
+				"visible_bounds": [
+					87.0,
+					82.0,
+					403.0,
+					413.0
+				]
+			},
+			"stage": -1.0,
+			"states": {},
+			"updated_at": "2026-10-03T23:18:32"
+		},
+		"gordon_queen": {
+			"archetype": "breaker",
+			"concept": "art/creatures/enemies/gordon/gordon_queen.png",
+			"concept_sha256": "d333715747c4d4854a4ce16c06342de67d12c51e6aa7b1d9e0aef6d6190c3375",
+			"desc": "The Gordon Queen: a hunched, winged, horned matriarch in crimson-veined armor; a boss.",
+			"display_height": 170.0,
+			"facing": "left",
+			"family": "gordon",
+			"id": "gordon_queen",
+			"in_encyclopedia": false,
+			"name": "Gordon Queen",
+			"reference": {
+				"body_height": 413.0,
+				"canvas": [
+					576.0,
+					576.0
+				],
+				"cutout": "solid",
+				"dir": "art/creatures/references/gordon_queen",
+				"ground_anchor": [
+					288.0,
+					495.0
+				],
+				"mirrored": true,
+				"sha256": "34b3289a69f2e4d850361630e61e3463a373458f66ba5e5d5c1dd7cf986fbcb8",
+				"still": "res://assets/side-view/creatures/gordon_queen.png",
+				"visible_bounds": [
+					87.0,
+					82.0,
+					403.0,
+					413.0
+				]
+			},
+			"stage": -1.0,
+			"states": {},
+			"updated_at": "2026-10-03T23:18:32"
+		},
+		"pursuer": {
+			"archetype": "pursuer",
+			"builtin": true,
+			"desc": "",
+			"family": "voidstalker",
+			"id": "pursuer",
+			"name": "",
+			"stage": 1.0,
+			"states": {},
+			"updated_at": "2026-10-03T21:00:00"
+		},
+		"ranged": {
+			"archetype": "ranged",
+			"builtin": true,
+			"desc": "",
+			"family": "shellwalker",
+			"id": "ranged",
+			"name": "",
+			"stage": 4.0,
+			"states": {},
+			"updated_at": "2026-10-03T21:00:00"
+		},
+		"shell_walker_stage_0": {
+			"archetype": "pursuer",
+			"concept": "art/creatures/enemies/shellwalker/shell_walker_stage_0.png",
+			"concept_sha256": "0c6813c74209b171069b5395321d2d6c191e6bcc455543ccafaa59ac51bd6e6c",
+			"desc": "A small young shell-walker: a squat four-legged hatchling under a domed purple shell plate.",
+			"display_height": 54.0,
+			"facing": "left",
+			"family": "shellwalker",
+			"id": "shell_walker_stage_0",
+			"in_encyclopedia": true,
+			"name": "Shell Walker",
+			"reference": {
+				"body_height": 268.0,
+				"canvas": [
+					576.0,
+					576.0
+				],
+				"cutout": "solid",
+				"dir": "art/creatures/references/shell_walker_stage_0",
+				"ground_anchor": [
+					288.0,
+					495.0
+				],
+				"mirrored": true,
+				"sha256": "7f453bcf800ebaa3413c333a1e981259a857ce8c1f3cafba19f465ce3df41a4f",
+				"still": "res://assets/side-view/creatures/shell_walker_stage_0.png",
+				"visible_bounds": [
+					87.0,
+					227.0,
+					403.0,
+					268.0
+				]
+			},
+			"stage": 0.0,
+			"states": {
+				"attack": {
+					"fps": 12.0,
+					"frames": 37,
+					"installed_at": "2026-10-04T01:02:47",
+					"prompt_version": 1,
+					"take": "attack_20261004T062103_047"
+				},
+				"death": {
+					"fps": 12.0,
+					"frames": 37,
+					"installed_at": "2026-10-04T01:03:02",
+					"prompt_version": 1,
+					"take": "death_20261004T062316_992"
+				},
+				"hurt": {
+					"fps": 12.0,
+					"frames": 37,
+					"installed_at": "2026-10-04T01:02:37",
+					"prompt_version": 1,
+					"take": "hurt_20261004T062222_748"
+				},
+				"walk": {
+					"fps": 12.0,
+					"frames": 37,
+					"installed_at": "2026-10-04T01:00:50",
+					"prompt_version": 1,
+					"take": "walk_20261004T061942_421"
+				}
+			},
+			"updated_at": "2026-10-04T01:03:02"
+		},
+		"shell_walker_stage_1": {
+			"archetype": "pursuer",
+			"concept": "art/creatures/enemies/shellwalker/shell_walker_stage_1.png",
+			"concept_sha256": "7dbee1aeea904f6d38ffa76889785bc93b6365dc6a251f1fa9e6568b68e7f425",
+			"desc": "A four-legged armored shell-walker with a long neck and a plated purple carapace.",
+			"display_height": 68.0,
+			"facing": "left",
+			"family": "shellwalker",
+			"id": "shell_walker_stage_1",
+			"in_encyclopedia": true,
+			"name": "Shell Walker",
+			"reference": {
+				"body_height": 218.0,
+				"canvas": [
+					576.0,
+					576.0
+				],
+				"cutout": "solid",
+				"dir": "art/creatures/references/shell_walker_stage_1",
+				"ground_anchor": [
+					288.0,
+					495.0
+				],
+				"mirrored": true,
+				"sha256": "33cbfc23505be68fedd00a635e622f7fc05140f28b2b7a53c9be4c78041a5372",
+				"still": "res://assets/side-view/creatures/shell_walker_stage_1.png",
+				"visible_bounds": [
+					87.0,
+					277.0,
+					403.0,
+					218.0
+				]
+			},
+			"stage": 1.0,
+			"states": {},
+			"updated_at": "2026-10-04T01:00:59"
+		},
+		"shell_walker_stage_2": {
+			"archetype": "pursuer",
+			"concept": "art/creatures/enemies/shellwalker/shell_walker_stage_2.png",
+			"concept_sha256": "2d3a3388df98ff714105db34122c1233a26619eaf818a1a298f8fd7037be7323",
+			"desc": "A long-legged four-legged shell-walker, high-stepping under a heavy plated carapace.",
+			"display_height": 78.0,
+			"facing": "left",
+			"family": "shellwalker",
+			"id": "shell_walker_stage_2",
+			"in_encyclopedia": false,
+			"name": "Shell Walker",
+			"reference": {
+				"body_height": 280.0,
+				"canvas": [
+					576.0,
+					576.0
+				],
+				"cutout": "solid",
+				"dir": "art/creatures/references/shell_walker_stage_2",
+				"ground_anchor": [
+					288.0,
+					495.0
+				],
+				"mirrored": true,
+				"sha256": "61e2100236fce97b5c8c851ad31e143029c500bfcf9282b27c701b05f6b9f6b0",
+				"still": "res://assets/side-view/creatures/shell_walker_stage_2.png",
+				"visible_bounds": [
+					87.0,
+					215.0,
+					403.0,
+					280.0
+				]
+			},
+			"stage": 2.0,
+			"states": {},
+			"updated_at": "2026-10-03T23:18:30"
+		},
+		"shell_walker_stage_3": {
+			"archetype": "ranged",
+			"concept": "art/creatures/enemies/shellwalker/shell_walker_stage_3.png",
+			"concept_sha256": "430c0c467ea0ea8d0d1320e4e3d2a264534480957934d67b9132c6bea5f98c4d",
+			"desc": "A four-legged shell-walker carrying a cannon on its back, firing on the hero from range.",
+			"display_height": 86.0,
+			"facing": "left",
+			"family": "shellwalker",
+			"id": "shell_walker_stage_3",
+			"in_encyclopedia": false,
+			"name": "Shell Walker",
+			"reference": {
+				"body_height": 373.0,
+				"canvas": [
+					576.0,
+					576.0
+				],
+				"cutout": "solid",
+				"dir": "art/creatures/references/shell_walker_stage_3",
+				"ground_anchor": [
+					288.0,
+					495.0
+				],
+				"mirrored": true,
+				"sha256": "ecee4b0841d1852a957d9177902ee39ecbe8e1a62b2f4f978e73d422b656e4b6",
+				"still": "res://assets/side-view/creatures/shell_walker_stage_3.png",
+				"visible_bounds": [
+					87.0,
+					122.0,
+					403.0,
+					373.0
+				]
+			},
+			"stage": 3.0,
+			"states": {},
+			"updated_at": "2026-10-03T23:18:30"
 		}
 	},
 	"format_version": 1

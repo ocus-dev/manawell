@@ -1,0 +1,40 @@
+{
+	"background": [
+		180,
+		180,
+		180
+	],
+	"body_height": 218.0,
+	"canvas": [
+		576,
+		576
+	],
+	"concept": "art/creatures/enemies/shellwalker/shell_walker_stage_1.png",
+	"cutout": "solid",
+	"ground_anchor": [
+		288,
+		495
+	],
+	"mirrored": true,
+	"note": "Same framing as tools/animation_pipeline/prepare.py reference(). The anchor is the visible bottom centre; adjust it in the lab if the feet sit elsewhere.",
+	"paste": [
+		87,
+		277
+	],
+	"prepared_at": "2026-10-03T23:18:29",
+	"reference_sha256": "33cbfc23505be68fedd00a635e622f7fc05140f28b2b7a53c9be4c78041a5372",
+	"source_crop": [
+		25,
+		197,
+		720,
+		573
+	],
+	"still": "res://assets/side-view/creatures/shell_walker_stage_1.png",
+	"uniform_scale": 0.580143884892086,
+	"visible_bounds": [
+		87,
+		277,
+		403,
+		218
+	]
+}

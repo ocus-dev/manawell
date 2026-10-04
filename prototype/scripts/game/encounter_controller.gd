@@ -924,7 +924,10 @@ func _restore_saved_snapshot() -> void:
 		if actor["kind"] == "hero" or actor["kind"] == "machine":
 			continue
 		var kind: int = EnemyScript.EnemyKind.RANGED if actor["kind"] == "ranged" else EnemyScript.EnemyKind.BREAKER if actor["kind"] == "breaker" else EnemyScript.EnemyKind.PURSUER
-		var restored_enemy: Node = spawn_enemy(kind, int(actor["component_state"].get("side", 1)))
+		# Creature Lab creatures are saved under their archetype's kind plus their id.
+		var saved_monster := str(actor["component_state"].get("monster", ""))
+		var override := saved_monster if not saved_monster.is_empty() and bool(MonsterStatsScript.monster(saved_monster).get("custom", false)) else ""
+		var restored_enemy: Node = spawn_enemy(kind, int(actor["component_state"].get("side", 1)), override)
 		if restored_enemy != null:
 			restored_enemy.enemy_id = int(actor["component_state"].get("enemy_id", restored_enemy.enemy_id))
 			restored_enemy.position = Vector2(actor["position"][0], actor["position"][1])
@@ -1346,11 +1349,13 @@ func _fire_burst_shot() -> void:
 ## pass a side still work; it is ignored.)
 const ENEMY_SPAWN_X := 1240.0
 
-func spawn_enemy(kind: int, _side: int = 1) -> Node:
+## `monster_override`: a Creature Lab creature id (its art and stats, `kind`'s AI).
+func spawn_enemy(kind: int, _side: int = 1, monster_override: String = "") -> Node:
 	_prune_enemies()
 	if enemies.size() >= BalanceData.MAX_LIVE_ENEMIES:
 		return null
 	var enemy: Node = EnemyScript.new()
+	enemy.monster_override = monster_override
 	enemy.setup(kind, next_enemy_id, 1, self, _enemy_damage_multiplier())
 	next_enemy_id += 1
 	enemy.position = Vector2(ENEMY_SPAWN_X, GROUND_Y - 40.0)
@@ -1360,6 +1365,14 @@ func spawn_enemy(kind: int, _side: int = 1) -> Node:
 	if not spawned_kinds.has(kind):
 		spawned_kinds.append(kind)
 	return enemy
+
+## Spawns any encyclopedia monster by id: a built-in ("breaker") or a Creature
+## Lab creature, which fights with its archetype's AI. null if unknown or full.
+func spawn_monster_id(monster_id: String, side: int = 1) -> Node:
+	var entry := MonsterStatsScript.monster(monster_id)
+	if entry.is_empty():
+		return null
+	return spawn_enemy(int(entry.get("kind", 0)), side, monster_id if bool(entry.get("custom", false)) else "")
 
 func spawn_hostile_projectile(origin_x: float, target_x: float, damage: float, source_enemy: Node = null, target_y: float = INF) -> void:
 	var projectile: Node = ProjectileScript.new()
@@ -1374,7 +1387,9 @@ func spawn_hostile_projectile(origin_x: float, target_x: float, damage: float, s
 	if source_enemy != null:
 		origin = CombatGeometryScript.muzzle_position(source_kind, source_position, facing)
 	var locked_target_y := target_y if is_finite(target_y) else CombatGeometryScript.body_center("hero", hero.position).y
-	projectile.setup(self, origin, Vector2(target_x, locked_target_y), damage, MonsterStatsScript.get_stat("ranged", "projectile_speed"), BalanceData.RANGED_PROJECTILE_LIFETIME, true, facing)
+	# A ranged creature fires at its own projectile speed.
+	var shooter: String = source_enemy.monster_id() if source_enemy != null and source_enemy.has_method("monster_id") and source_enemy.enemy_kind == EnemyScript.EnemyKind.RANGED else "ranged"
+	projectile.setup(self, origin, Vector2(target_x, locked_target_y), damage, MonsterStatsScript.get_stat(shooter, "projectile_speed"), BalanceData.RANGED_PROJECTILE_LIFETIME, true, facing)
 	projectile.source_enemy_id = source_enemy.enemy_id if source_enemy != null else 0
 	add_child(projectile)
 	projectile.z_index = 3
@@ -1497,7 +1512,7 @@ func _spawn_next_enemy() -> void:
 	if _custom_spawns():
 		var monster_id := LevelSpawnsScript.pick(spawn_profile, spawn_index)
 		if not monster_id.is_empty():
-			spawn_enemy(int(MonsterStatsScript.monster(monster_id).get("kind", 0)))
+			spawn_monster_id(monster_id)
 	else:
 		spawn_enemy(_next_enemy_kind())
 	spawn_index += 1
@@ -1525,8 +1540,8 @@ func _update_zone_boss() -> void:
 				_on_zone_boss_defeated()
 
 func _spawn_zone_boss() -> void:
-	var monster_id := str(spawn_profile.get("boss_monster", LevelSpawnsScript.DEFAULT_BOSS_MONSTER))
-	var boss: Node = spawn_enemy(int(MonsterStatsScript.monster(monster_id).get("kind", 1)))
+	var monster_id := LevelSpawnsScript.boss_monster(spawn_profile)
+	var boss: Node = spawn_monster_id(monster_id)
 	if boss == null:
 		return # arena full: try again next step
 	boss.make_boss(float(spawn_profile.get("boss_health", 8.0)), float(spawn_profile.get("boss_damage", 1.5)), float(spawn_profile.get("boss_size", 1.5)))

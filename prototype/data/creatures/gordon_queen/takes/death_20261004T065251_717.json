@@ -1,0 +1,903 @@
+{
+	"comfy": {
+		"output_prefix": "Telos/Creatures/gordon_queen/death_20261004T065251_717",
+		"outputs": {
+			"16": {
+				"animated": [
+					true
+				],
+				"images": [
+					{
+						"filename": "preview_00001_.mp4",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					}
+				]
+			},
+			"17": {
+				"images": [
+					{
+						"filename": "master_00001_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00002_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00003_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00004_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00005_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00006_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00007_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00008_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00009_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00010_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00011_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00012_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00013_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00014_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00015_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00016_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00017_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00018_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00019_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00020_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00021_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00022_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00023_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00024_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00025_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00026_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00027_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00028_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00029_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00030_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00031_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00032_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00033_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00034_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00035_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00036_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00037_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00038_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00039_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00040_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00041_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00042_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00043_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00044_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00045_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00046_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00047_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00048_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00049_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00050_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00051_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00052_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00053_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00054_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00055_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00056_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00057_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00058_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00059_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00060_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00061_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00062_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00063_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00064_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00065_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00066_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00067_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00068_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00069_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00070_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00071_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00072_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					},
+					{
+						"filename": "master_00073_.png",
+						"subfolder": "Telos\\Creatures\\gordon_queen\\death_20261004T065251_717",
+						"type": "output"
+					}
+				]
+			}
+		},
+		"prompt_id": "043c5ac8-3e5f-44ba-87c7-e5a539a287fc",
+		"server": "http://192.168.1.102:8188",
+		"upload_name": "telos-creature-gordon_queen-34b3289a69f2.png"
+	},
+	"completed_at": "2026-10-03T23:53:42",
+	"created_at": "2026-10-03T23:52:51",
+	"creature": "gordon_queen",
+	"end_on_reference": false,
+	"format_version": 1,
+	"frames_requested": 73,
+	"graph": {
+		"1": {
+			"class_type": "LoadImage",
+			"inputs": {
+				"image": "telos-creature-gordon_queen-34b3289a69f2.png"
+			}
+		},
+		"10": {
+			"class_type": "BasicScheduler",
+			"inputs": {
+				"denoise": 1.0,
+				"model": [
+					"3",
+					0
+				],
+				"scheduler": "simple",
+				"steps": 15
+			}
+		},
+		"11": {
+			"class_type": "BasicGuider",
+			"inputs": {
+				"conditioning": [
+					"7",
+					0
+				],
+				"model": [
+					"3",
+					0
+				]
+			}
+		},
+		"12": {
+			"class_type": "SamplerCustomAdvanced",
+			"inputs": {
+				"guider": [
+					"11",
+					0
+				],
+				"latent_image": [
+					"7",
+					1
+				],
+				"noise": [
+					"8",
+					0
+				],
+				"sampler": [
+					"9",
+					0
+				],
+				"sigmas": [
+					"10",
+					0
+				]
+			}
+		},
+		"13": {
+			"class_type": "VAEDecode",
+			"inputs": {
+				"samples": [
+					"12",
+					0
+				],
+				"vae": [
+					"5",
+					0
+				]
+			}
+		},
+		"14": {
+			"class_type": "VAEDecodeAudio",
+			"inputs": {
+				"samples": [
+					"12",
+					0
+				],
+				"vae": [
+					"6",
+					0
+				]
+			}
+		},
+		"15": {
+			"class_type": "CreateVideo",
+			"inputs": {
+				"audio": [
+					"14",
+					0
+				],
+				"bit_depth": 8,
+				"fps": 24.0,
+				"images": [
+					"13",
+					0
+				]
+			}
+		},
+		"16": {
+			"class_type": "SaveVideo",
+			"inputs": {
+				"codec": "auto",
+				"filename_prefix": "Telos/Creatures/gordon_queen/death_20261004T065251_717/preview",
+				"format": "mp4",
+				"video": [
+					"15",
+					0
+				]
+			}
+		},
+		"17": {
+			"class_type": "SaveImage",
+			"inputs": {
+				"filename_prefix": "Telos/Creatures/gordon_queen/death_20261004T065251_717/master",
+				"images": [
+					"13",
+					0
+				]
+			}
+		},
+		"3": {
+			"class_type": "UNETLoader",
+			"inputs": {
+				"unet_name": "minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+				"weight_dtype": "default"
+			}
+		},
+		"4": {
+			"class_type": "CLIPLoader",
+			"inputs": {
+				"clip_name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+				"device": "default",
+				"type": "minimax"
+			}
+		},
+		"5": {
+			"class_type": "VAELoader",
+			"inputs": {
+				"vae_name": "minimax_h3_video_vae_fp16.safetensors"
+			}
+		},
+		"6": {
+			"class_type": "VAELoader",
+			"inputs": {
+				"vae_name": "minimax_h3_audio_vae_fp32.safetensors"
+			}
+		},
+		"7": {
+			"class_type": "MiniMaxH3ImageToVideo",
+			"inputs": {
+				"clip": [
+					"4",
+					0
+				],
+				"first_frame": [
+					"1",
+					0
+				],
+				"height": 576,
+				"length": 73,
+				"prompt": "Locked-off side-view game animation of the single reference creature facing right. Preserve its armor plates, shell pattern, anatomy, silhouette, colors, scale and screen position. Uniform neutral grey background and constant lighting. Entire body, tail and claws stay inside the canvas. No body rotation, camera movement, zoom, cuts, new limbs, particles, changing shadows or other objects. The creature is defeated: it staggers, its legs buckle and its body collapses onto the ground line, then lies completely still for the final third. It stays whole and inside the canvas. No blood, gore, particles or dust. No music or dialogue.",
+				"vae": [
+					"5",
+					0
+				],
+				"width": 576
+			}
+		},
+		"8": {
+			"class_type": "RandomNoise",
+			"inputs": {
+				"noise_seed": 9032
+			}
+		},
+		"9": {
+			"class_type": "KSamplerSelect",
+			"inputs": {
+				"sampler_name": "res_multistep"
+			}
+		}
+	},
+	"masters": {
+		"dir": "art/creatures/animations/gordon_queen/death_20261004T065251_717/masters",
+		"fps": 24.0,
+		"frames": [
+			{
+				"file": "frame_0000.png",
+				"sha256": "a7475c4528ca50d79509cae04ead67feb5cc1c85ea741d8de301abbee20a96bd"
+			},
+			{
+				"file": "frame_0001.png",
+				"sha256": "4cae4d162df7fcbf7f9a35218487e54ae5d43ab135fa837aabc85dcda1e8e7d5"
+			},
+			{
+				"file": "frame_0002.png",
+				"sha256": "d347cbdbd1462579842cf78f0b9ed1069bd274094b697d6c2130fc1a2a8d47d7"
+			},
+			{
+				"file": "frame_0003.png",
+				"sha256": "427dd96687f86984c547f56b86330232fbdcdb38e536d4b1c53b12e0a39861c1"
+			},
+			{
+				"file": "frame_0004.png",
+				"sha256": "56c96e10ffb346b188909fa63feb226a93bc1d7b36a40a778120320ab97ee051"
+			},
+			{
+				"file": "frame_0005.png",
+				"sha256": "57ba2c197a85798444eeff770538f5cb7f1a1603c7d5627ae5090690cfe52dbe"
+			},
+			{
+				"file": "frame_0006.png",
+				"sha256": "b8ec6595624ceee18c54a8748f464746556794d77865fa1a7da02e00746dc5d1"
+			},
+			{
+				"file": "frame_0007.png",
+				"sha256": "9c6db298ab4915e5ed476cc2d537f0d9206b8ee5e6fece15fd5500f24758c202"
+			},
+			{
+				"file": "frame_0008.png",
+				"sha256": "f2325c658eab4277c64f4b953ec0817e162100bf19ed154f2a3ba5b38379132a"
+			},
+			{
+				"file": "frame_0009.png",
+				"sha256": "62ed3d14c4144b415349d3f98b99292d4fca1f30d38ebdbc8b0ae125ae0b8272"
+			},
+			{
+				"file": "frame_0010.png",
+				"sha256": "73f0164493764246ea878443fcd953168366ff2da6cf46b527724a32eaa9d027"
+			},
+			{
+				"file": "frame_0011.png",
+				"sha256": "28b0d9df97d678855bff9bf3c1e4a60a78b2e1a8a097ac7cfc3b9d7b898b6eee"
+			},
+			{
+				"file": "frame_0012.png",
+				"sha256": "ae25ac910345df0b9bd6fcc5931776ef7ac5b450a93b7c06000101ac2c62b67e"
+			},
+			{
+				"file": "frame_0013.png",
+				"sha256": "6396d2c127c768d6aac82bfc9177474f203a60005981638a9801347d355e1494"
+			},
+			{
+				"file": "frame_0014.png",
+				"sha256": "5552f62b9597acdb98bc1e049a98b27bab601b7a1f24f36a8481873898e173e4"
+			},
+			{
+				"file": "frame_0015.png",
+				"sha256": "94b6a2cf7373da039e3bcab3bd3b5120e7d5a48566b241075c5a6c65753c59e3"
+			},
+			{
+				"file": "frame_0016.png",
+				"sha256": "452c192658996dcb98592a87e361db7771cdd8f75cf44a9865f9b828543b2cb5"
+			},
+			{
+				"file": "frame_0017.png",
+				"sha256": "e49a391fd56fbf493a0e286b17f2e43c4d3ea6b4d910f64655a234779d6d5f79"
+			},
+			{
+				"file": "frame_0018.png",
+				"sha256": "eb2e016b42193d99c09f4a85a64947c9da357be62a6f383c3b54be570b01fa57"
+			},
+			{
+				"file": "frame_0019.png",
+				"sha256": "c69d19cbd59c5161a1716bbb6e8faa023fa1e360771325a103f0c89f75ee1e0a"
+			},
+			{
+				"file": "frame_0020.png",
+				"sha256": "b3e686d2d628134ca25b8de7f39d50a19d82d40ca5ef68491056263a5270e0e2"
+			},
+			{
+				"file": "frame_0021.png",
+				"sha256": "7c6746755c6250af34c433a42c8cc001b0ddf4a107c0b4b725c93d0aeb2ed49f"
+			},
+			{
+				"file": "frame_0022.png",
+				"sha256": "d103930f542d8c197796365ccae9e555c3126b1738b45f8a6d34065150025ff6"
+			},
+			{
+				"file": "frame_0023.png",
+				"sha256": "6fca0b5621f8e32a7508dc5769a14cd70fa5a9de36db2cb6215343e5d472615a"
+			},
+			{
+				"file": "frame_0024.png",
+				"sha256": "422b1cff4a1782a389035988468e5ec56c455f7578d27546500a04c8c85b2988"
+			},
+			{
+				"file": "frame_0025.png",
+				"sha256": "9f9ce65e6d49e92f3cb29c1734e49d7757d11b3e6475c7b791cfb970d530d2e8"
+			},
+			{
+				"file": "frame_0026.png",
+				"sha256": "08a9bb73b2f10612a8a9d8afe3fd1cb88a90a3ce0ac12a1e22695bbecfbbaadd"
+			},
+			{
+				"file": "frame_0027.png",
+				"sha256": "1d22e9b10191e9edd4bbf2ccd5a9750354ff7e4d2b7a20755663eebe6658541a"
+			},
+			{
+				"file": "frame_0028.png",
+				"sha256": "4b036d321259c24ce635a8388fbdbb73452106e3721702901170fba6c6ac3ae6"
+			},
+			{
+				"file": "frame_0029.png",
+				"sha256": "05655c6f500ef1b2fddfce9a0b7dd48683ad146e69133012e7cae1ad0c185da1"
+			},
+			{
+				"file": "frame_0030.png",
+				"sha256": "521bbe1b33c41dd59d3cc5193c45b70d0a59c837894a6bcacdaab0ad52f0e5bf"
+			},
+			{
+				"file": "frame_0031.png",
+				"sha256": "1921a6c06b364e1fafe859cf9953b905d1508deb6424f33b4a9aca884ecf8957"
+			},
+			{
+				"file": "frame_0032.png",
+				"sha256": "80b27950fe13f19ceba7299ef6cae11f61abf7dc8e0cfdc429be48726e3a754a"
+			},
+			{
+				"file": "frame_0033.png",
+				"sha256": "c6cff709ec5b73cbad8f2cd0033047510b34e380c162cc89bbf9199a44083816"
+			},
+			{
+				"file": "frame_0034.png",
+				"sha256": "7c41f0fe7d59a7d8af732c37f5572638c2dfa1640a6b349d4a718f0d7a7de1bb"
+			},
+			{
+				"file": "frame_0035.png",
+				"sha256": "9c7585c29978ee5b1ac103ba16a5e4f79cd06b2fe26926bade4d6cf59ce96c92"
+			},
+			{
+				"file": "frame_0036.png",
+				"sha256": "068cf2d20d5e7d36c1f98d446548771adcc9ac6f38283bf4b7cd41ca9eddd34d"
+			},
+			{
+				"file": "frame_0037.png",
+				"sha256": "db4aaf29edd7f41ebe70fa6439260712df5f1f182c81def01089a8c83bdad96d"
+			},
+			{
+				"file": "frame_0038.png",
+				"sha256": "a072c79bf7f08ab08e34155761c683dd2cffc1f8ee5e8ac2d7a055c41622a506"
+			},
+			{
+				"file": "frame_0039.png",
+				"sha256": "918d385113f8ba19cdd91dbe6f4873bf7b05eb1322f7478d8e7b9bd684281176"
+			},
+			{
+				"file": "frame_0040.png",
+				"sha256": "57cf9d680bd4886501dcf6fb52d06ec5c25d48692b74eb22d2c50a87dbba80d4"
+			},
+			{
+				"file": "frame_0041.png",
+				"sha256": "1221d081044197136467d3d4a3369f1079e0a67d2d4b5b731046773e31984eae"
+			},
+			{
+				"file": "frame_0042.png",
+				"sha256": "82c4fca6f649b0efeea689056d3cea1ed2d8428080c0424e0bf019eaf19592e5"
+			},
+			{
+				"file": "frame_0043.png",
+				"sha256": "a9982fb1c0ed3e304d71e462b9aee95b0f912bc922bca43f765313f3d4d727a9"
+			},
+			{
+				"file": "frame_0044.png",
+				"sha256": "745efc5fe1351c7ca89d34c36e090445c7de859a5ef1c88816ed880bdc3d5057"
+			},
+			{
+				"file": "frame_0045.png",
+				"sha256": "54d7e6600dc0bab3ca8a3ed5b1191ca011b947ecee4b703c366347aa4d50731c"
+			},
+			{
+				"file": "frame_0046.png",
+				"sha256": "7df7eeaa044fe4bcfc4dc30ee3366e3ec344ea8cfce8fe8d5c90bacc34f31d70"
+			},
+			{
+				"file": "frame_0047.png",
+				"sha256": "b926a5488014afa16214e762228d8677ed1402123985436cf5dba8830546086b"
+			},
+			{
+				"file": "frame_0048.png",
+				"sha256": "45231326a6dd9942470127da517c8a158ec6d21f825d888913d74b0f8e432cda"
+			},
+			{
+				"file": "frame_0049.png",
+				"sha256": "f42bbef494e2974a330f7060a4ff8897dd731ec56d2d346ff6a8458b6090cc83"
+			},
+			{
+				"file": "frame_0050.png",
+				"sha256": "274cd66a022f0913cef820c1e76a819c85374d1c651af536ff988b605a97be3b"
+			},
+			{
+				"file": "frame_0051.png",
+				"sha256": "05b82503e54099ba6a0a4de18ea4246113422b211c6e43a2f55ea7f4a86d2f11"
+			},
+			{
+				"file": "frame_0052.png",
+				"sha256": "13ea12701996653c5e70e7bc865d35b79bcf62d4d012ca6702bec01202874f05"
+			},
+			{
+				"file": "frame_0053.png",
+				"sha256": "0d5885564965c0bd827cae70833e57b88d97eeca56777f969dfce25ab578a178"
+			},
+			{
+				"file": "frame_0054.png",
+				"sha256": "16517ce147c75b12b7c6f07dbf514e1a9b8cd9f6c1422608d747a2d9cb768114"
+			},
+			{
+				"file": "frame_0055.png",
+				"sha256": "216ed83d4be95e7657c22493d27ac52782ab9954f06d7fe5d163167b70035334"
+			},
+			{
+				"file": "frame_0056.png",
+				"sha256": "5e16176013b0bd2599e5391d485e4f130b09f6fe1fa48331b0fb085ce8214dd3"
+			},
+			{
+				"file": "frame_0057.png",
+				"sha256": "593da374aab41c28d219b41ae73b99c9aaa9f7f79e8fa983f742d83d68c6e202"
+			},
+			{
+				"file": "frame_0058.png",
+				"sha256": "a447a3593e641141d8cdb8cdc7192acd6f42004d967a930d7170e0846ec5a50e"
+			},
+			{
+				"file": "frame_0059.png",
+				"sha256": "3f8e5d2bf6497f86cf9e65cdbdfaa6f052aac6adbf986cf18f3c507600b99dff"
+			},
+			{
+				"file": "frame_0060.png",
+				"sha256": "589cc436fe4da90daa0b455904f812e105a676db971ba860af03d47a57e26242"
+			},
+			{
+				"file": "frame_0061.png",
+				"sha256": "f9a867c18597306abaad988860b496516c11d85bf64b0814eb4acf7f57f7dbe6"
+			},
+			{
+				"file": "frame_0062.png",
+				"sha256": "1d70013ee1d043e587447ecb2ddff0d28ba36c8b5a2cb7e48a8cb4fc1d626adb"
+			},
+			{
+				"file": "frame_0063.png",
+				"sha256": "fb3b2ce8e03e884ac53c89019fb1c88cdf1b1df6e1e400116333fac7f4218dd3"
+			},
+			{
+				"file": "frame_0064.png",
+				"sha256": "305b5f3511e9ffc5a0e55eefce5b95a609156c7e0d2632debab880324a8abd52"
+			},
+			{
+				"file": "frame_0065.png",
+				"sha256": "24617aac7f4b316adf3f2d5b572286e5cb71fa76f250d89e000d6ff335e8cecf"
+			},
+			{
+				"file": "frame_0066.png",
+				"sha256": "0f0039c300e65a5a23fa49325ec8ede1eb6ee0bfd0ac4ab5de7d160b9f8001aa"
+			},
+			{
+				"file": "frame_0067.png",
+				"sha256": "6f5fb4e0afaffbb10bfef3f8a767cf7011ee2d4153afe29006ec872d3cac9e0b"
+			},
+			{
+				"file": "frame_0068.png",
+				"sha256": "cb9738d3a243f5b4fcded37225c9479d4cf5a74efe85f52685458a448ada483e"
+			},
+			{
+				"file": "frame_0069.png",
+				"sha256": "dbbca08459c60b4188f6953f1edee1b6fb6da6d6fcd3b16a84946b22f4b9720e"
+			},
+			{
+				"file": "frame_0070.png",
+				"sha256": "e61bcb5cfe636e3b049d4be60f3f43a3a1174d57223a7d9cedf38936a9294da6"
+			},
+			{
+				"file": "frame_0071.png",
+				"sha256": "b2d0f52301c7abeafc3094bf9dcd446e7140cb00ec0206870b6843fdc7b3d3a1"
+			},
+			{
+				"file": "frame_0072.png",
+				"sha256": "4c4a6fb75d257ee90552fdc8d11a15abf80c35342d66df5b69cba7dd2e224506"
+			}
+		]
+	},
+	"models": {
+		"audio_vae": "minimax_h3_audio_vae_fp32.safetensors",
+		"clip": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+		"sampler": "res_multistep",
+		"scheduler": "simple",
+		"unet": "minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+		"video_vae": "minimax_h3_video_vae_fp16.safetensors"
+	},
+	"prompt": "Locked-off side-view game animation of the single reference creature facing right. Preserve its armor plates, shell pattern, anatomy, silhouette, colors, scale and screen position. Uniform neutral grey background and constant lighting. Entire body, tail and claws stay inside the canvas. No body rotation, camera movement, zoom, cuts, new limbs, particles, changing shadows or other objects. The creature is defeated: it staggers, its legs buckle and its body collapses onto the ground line, then lies completely still for the final third. It stays whole and inside the canvas. No blood, gore, particles or dust. No music or dialogue.",
+	"prompt_version": 1,
+	"reference": {
+		"ground_anchor": [
+			288,
+			495
+		],
+		"path": "art/creatures/references/gordon_queen/reference.png",
+		"sha256": "34b3289a69f2e4d850361630e61e3463a373458f66ba5e5d5c1dd7cf986fbcb8"
+	},
+	"seconds": 3.0,
+	"seed": 9032,
+	"size": 576,
+	"source_fps": 24.0,
+	"state": "death",
+	"status": "complete",
+	"steps": 15,
+	"take_id": "death_20261004T065251_717",
+	"updated_at": "2026-10-03T23:53:42"
+}

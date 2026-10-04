@@ -83,6 +83,9 @@ func _run() -> void:
 	DirAccess.make_dir_recursive_absolute(temp.path_join("art/creatures/enemies/spiker"))
 	_make_concept(temp.path_join("art/creatures/enemies/spiker/spiker_stage_1.png"))
 	_make_concept(temp.path_join("art/creatures/enemies/spiker/spiker_stage_0.png"))
+	# The pursuer's own concept: folded into the original, never a new creature.
+	DirAccess.make_dir_recursive_absolute(temp.path_join("art/creatures/enemies/voidstalker"))
+	_make_concept(temp.path_join("art/creatures/enemies/voidstalker/void_stalker_stage_1.png"))
 	Registry.repo_root_override = temp
 	Registry.data_root = temp.path_join("data/creatures")
 	Registry.stills_root = temp.path_join("stills")
@@ -115,8 +118,27 @@ func _check_names_and_templates() -> void:
 	check(AnimationScript.template("walk", "right").contains("facing right") and AnimationScript.template("walk").contains("walking stride"), "walk template")
 	check(Art.sample_indices(73, 24.0, 12.0).size() == 37, "12 fps sampling of 73 frames")
 	var families := Registry.list_concepts()
-	check(families.size() == 1 and families[0]["files"].size() == 2, "concepts grouped by family")
-	check(int(families[0]["files"][0]["stage"]) == 0, "sorted by stage")
+	var spiker: Dictionary = {}
+	var originals := {}
+	for family in families:
+		if family.family == "spiker":
+			spiker = family
+		for file in family.files:
+			if bool(file.get("builtin", false)):
+				originals[str(file.id)] = family.family
+	check(not spiker.is_empty() and spiker["files"].size() == 2, "concepts grouped by family")
+	check(int(spiker["files"][0]["stage"]) == 0, "sorted by stage")
+	check(originals == {"pursuer": "voidstalker", "breaker": "breaker", "ranged": "shellwalker"}, "the original monsters join their families")
+	check(Registry.builtin_info("breaker").stage == 2 and Registry.builtin_info("ranged").stage == 4 and Registry.builtin_info("pursuer").stage == 1, "as the stage their concept art shows")
+	var voidstalker: Array = []
+	for family in families:
+		if family.family == "voidstalker":
+			voidstalker = family.files
+	check(voidstalker.size() == 1 and voidstalker[0].id == "pursuer" and str(voidstalker[0].concept).ends_with("void_stalker_stage_1.png"), "the stage-1 concept is the pursuer: one tile, not two")
+	check(Registry.builtin_for_stage("voidstalker", 1) == "pursuer" and Registry.builtin_for_stage("voidstalker", 2) == "", "stage lookup")
+	Registry.put_creature("void_stalker_stage_1", {"family": "voidstalker", "stage": 1, "archetype": "pursuer", "in_encyclopedia": true, "reference": {"still": temp.path_join("art/creatures/enemies/voidstalker/void_stalker_stage_1.png")}})
+	check(not Registry.encyclopedia_ids().has("void_stalker_stage_1"), "a lab creature made from an original's concept isn't listed twice")
+	Registry._index.creatures.erase("void_stalker_stage_1")
 	var graph := AnimationScript.graph("p", "a.png", "", 576, 3.0, 7, "x")
 	check(not graph.has("2") and not graph["7"]["inputs"].has("last_frame"), "free ending leaves out the last frame")
 	check(AnimationScript.graph("p", "a.png", "a.png", 576, 3.0, 7, "x")["7"]["inputs"]["last_frame"] == ["2", 0], "rest ending wires the last frame")
@@ -131,7 +153,7 @@ func _check_lab() -> void:
 	lab.comfy.queue_free()
 	lab.comfy = fake
 	lab.add_child(fake)
-	check(lab.tiles.size() == 2, "both concepts listed")
+	check(lab.tiles.size() == 5, "both concepts and the three originals listed")
 	lab.select_concept("art/creatures/enemies/spiker/spiker_stage_1.png")
 	check(lab.creature_id == CREATURE and not lab.is_saved(), "new concept opens a draft")
 	check(lab.generate_button.disabled, "generate needs a reference")
@@ -251,6 +273,37 @@ func _check_lab() -> void:
 	MonsterStatsScript.reset_all()
 	ConfigScript.runtime_frames.erase("%s_idle" % CREATURE)
 	ConfigScript.runtime_manifests.erase("%s_idle" % CREATURE)
+
+	# The original breaker: new clips with its own reference and calibration.
+	var original_ref := temp.path_join("art/side-view/animations/references/breaker")
+	DirAccess.make_dir_recursive_absolute(original_ref)
+	var canvas := Image.create_empty(576, 576, false, Image.FORMAT_RGBA8)
+	canvas.fill(Color8(180, 180, 180))
+	canvas.fill_rect(Rect2i(200, 200, 170, 296), Color8(90, 60, 50))
+	canvas.save_png(original_ref.path_join("reference.png"))
+	lab.select_concept("builtin:breaker")
+	check(lab.is_builtin() and lab.has_reference(), "original breaker opens with its reference")
+	check(lab.archetype_picker.disabled and lab.prepare_button.disabled, "behavior and reference are fixed")
+	var refused: Dictionary = await lab.prepare_reference("solid")
+	check(not refused.ok, "its reference isn't re-prepared")
+	check(lab.ground_anchor() == ConfigScript.ASSETS["breaker"]["animation_source_anchor"], "uses the breaker's calibrated feet")
+	lab.select_state("hurt")
+	lab.seconds_spin.value = 1.0
+	var original_take: Dictionary = await lab.generate()
+	check(original_take.ok, "generate for the original: %s" % original_take.get("error", ""))
+	check(str(Registry.load_take("breaker", str(original_take.take_id)).reference.path).begins_with("art/side-view/animations/references/breaker"), "take records the original reference")
+	var original_install: Dictionary = await lab.install_take()
+	check(original_install.ok, "install for the original: %s" % original_install.get("error", ""))
+	var hurt: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(temp.path_join("animations/breaker_hurt/manifest.json")))
+	var anchor: Vector2 = ConfigScript.ASSETS["breaker"]["animation_source_anchor"]
+	check(is_equal_approx(float(hurt.ground_anchor[0]) + float(hurt.union_crop[0]), anchor.x) and is_equal_approx(float(hurt.ground_anchor[1]) + float(hurt.union_crop[1]), anchor.y), "clip pivots on the breaker's calibration")
+	check(ConfigScript.frames_for(ConfigScript.asset_for("breaker"), "hurt") != null, "the breaker plays its new hurt clip")
+	check(MonsterStatsScript.monster("breaker").kind == 1 and not Registry.encyclopedia_ids().has("breaker"), "still the built-in monster, listed once")
+	lab.name_edit.text = "Ironback"
+	lab._on_field_changed()
+	check(str(MonsterStatsScript.monster("breaker").name) == "Ironback (Stage 2)" and MonsterStatsScript.monster("breaker").legacy_name == "Breaker", "renamed in the encyclopedia, original name kept")
+	ConfigScript.runtime_frames.erase("breaker_hurt")
+	ConfigScript.runtime_manifests.erase("breaker_hurt")
 	lab.queue_free()
 	await process_frame
 

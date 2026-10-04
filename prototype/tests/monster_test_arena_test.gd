@@ -4,6 +4,8 @@ const MonsterStatsScript = preload("res://scripts/model/monster_stats.gd")
 const EnemyScript = preload("res://scripts/game/melee_enemy.gd")
 const BalanceData = preload("res://data/balance.gd")
 const TestCheckScript = preload("res://tests/test_check.gd")
+const RegistryScript = preload("res://scripts/model/creature_registry.gd")
+const CombatGeometryScript = preload("res://data/combat_geometry.gd")
 
 const ARENA_SCENE := "res://scenes/tools/monster_test_arena.tscn"
 
@@ -19,10 +21,11 @@ func check(condition: bool, message: String) -> void:
 func _run() -> void:
 	MonsterStatsScript.reset_all()
 	await _check_arena()
+	await _check_creatures()
 	await _check_title_entry()
 	MonsterStatsScript.reload()
 	if failures == 0:
-		print("PASS monster test arena: invincible dummy, per-monster damage numbers, add/remove, live encyclopedia edits, surge scaling, title entry")
+		print("PASS monster test arena: invincible dummy, per-monster damage numbers, add/remove, live encyclopedia edits, surge scaling, Creature Lab creatures, title entry")
 		quit(0)
 	else:
 		push_error("monster test arena checks failed: %d" % failures)
@@ -107,13 +110,13 @@ func _check_arena() -> void:
 	check(arena.monster_count() == 0, "picked monster removed")
 
 	var key := InputEventKey.new()
-	key.keycode = KEY_3
+	key.keycode = KEY_1 + arena.spawn_ids.find("ranged")
 	key.pressed = true
 	arena._unhandled_input(key)
-	check(arena.monster_count(EnemyScript.EnemyKind.RANGED) == 1, "key 3 adds a ranged monster")
+	check(arena.monster_count(EnemyScript.EnemyKind.RANGED) == 1, "its number key adds a ranged monster")
 	key.shift_pressed = true
 	arena._unhandled_input(key)
-	check(arena.monster_count() == 0, "shift+3 removes it")
+	check(arena.monster_count() == 0, "shift + its number removes it")
 
 	# Both-sides spawning alternates.
 	arena.set_spawn_side(arena.SpawnSide.BOTH)
@@ -125,6 +128,69 @@ func _check_arena() -> void:
 	check(arena.monster_count() == BalanceData.MAX_LIVE_ENEMIES, "monster count is capped")
 	arena.queue_free()
 	await process_frame
+
+## Creature Lab creatures can be spawned like the built-ins.
+func _check_creatures() -> void:
+	var temp := ProjectSettings.globalize_path("user://arena_creature_test")
+	DirAccess.make_dir_recursive_absolute(temp.path_join("stills"))
+	var still := Image.create_empty(576, 576, false, Image.FORMAT_RGBA8)
+	still.fill_rect(Rect2i(200, 300, 180, 196), Color(0.4, 0.3, 0.5))
+	still.save_png(temp.path_join("stills/test_spitter.png"))
+	still.save_png(temp.path_join("stills/test_crusher.png"))
+	RegistryScript.data_root = temp.path_join("data")
+	RegistryScript.stills_root = temp.path_join("stills")
+	RegistryScript.reload_index()
+	for pair in [["test_spitter", "ranged", 90.0], ["test_crusher", "breaker", 224.0]]:
+		RegistryScript.put_creature(pair[0], {"name": str(pair[0]).capitalize(), "family": "test", "stage": 1, "archetype": pair[1], "display_height": pair[2], "in_encyclopedia": true, "base_stats": {"damage": 3.0, "projectile_speed": 12.0}, "reference": {"still": temp.path_join("stills/%s.png" % pair[0]), "ground_anchor": [288, 495], "body_height": 196.0, "visible_bounds": [200, 300, 180, 196]}})
+	MonsterStatsScript.reset_all()
+	var arena: Node = await _new_arena()
+	check(arena.spawn_ids == RegistryScript.sort_by_lineage(arena.spawn_ids) and arena.spawn_ids.has("pursuer") and arena.spawn_ids.has("test_spitter") and arena.spawn_ids.has("test_crusher"), "spawner lists every monster by family and stage")
+	check(arena.spawn_rows.has("test_spitter") and arena.spawn_rows["test_spitter"].get_node("Icon").texture != null, "creature row with its picture")
+	check(arena.spawn_search.visible, "search box once there are more than four monsters")
+	var spitter: Node = arena.spawn_creature("test_spitter", 1)
+	check(spitter != null and spitter.monster_override == "test_spitter" and spitter.enemy_kind == EnemyScript.EnemyKind.RANGED, "creature spawns with its archetype's AI")
+	check(spitter.visual.asset_id == "test_spitter", "creature drawn with its own art")
+	check(arena.monster_count_of("test_spitter") == 1 and arena.monster_count(EnemyScript.EnemyKind.RANGED) == 1, "counted by id and by kind")
+	arena.reset_meter()
+	arena.simulate_step(15.0)
+	check(int(arena.hits_by_monster.get("test_spitter", 0)) > 0, "creature's shots hit the dummy")
+	check(is_equal_approx(float(arena.damage_by_monster.get("test_spitter", 0.0)), int(arena.hits_by_monster["test_spitter"]) * 3.0), "creature's own damage stat used")
+	check(not arena.hits_by_monster.has("ranged"), "hits credited to the creature, not its archetype")
+	check(arena.dummy.color_for("test_spitter") != arena.dummy.color_for("ranged"), "creature has its own number color")
+	arena._refresh_ui()
+	check(arena.meter_rows["test_spitter"].visible, "meter row appears for the creature")
+	check(arena.monster_near(spitter.position + Vector2(0.0, -40.0)) == spitter, "click picking finds a creature")
+	var crusher_box := CombatGeometryScript.hurtbox_for_kind("test_crusher")
+	check(is_equal_approx(crusher_box.size.y, CombatGeometryScript.BREAKER_HURTBOX.size.y * 2.0), "hurtbox scaled to the creature's height")
+	check(arena.remove_monster_of_id("test_spitter") and arena.monster_count() == 0, "remove a creature by id")
+	var index: int = arena.spawn_ids.find("test_crusher")
+	var key := InputEventKey.new()
+	key.keycode = KEY_1 + index
+	key.pressed = true
+	arena._unhandled_input(key)
+	check(arena.monster_count_of("test_crusher") == 1, "number key adds the creature")
+	key.shift_pressed = true
+	arena._unhandled_input(key)
+	check(arena.monster_count() == 0, "shift + number removes it")
+	arena.place_picker.select(index + 1)
+	arena.place_picker.item_selected.emit(index + 1)
+	check(arena.place_id == "test_crusher", "click-to-place can pick a creature")
+	arena.spawn_search.text = "crusher"
+	arena._filter_spawn_rows()
+	check(arena.spawn_rows["test_crusher"].visible and not arena.spawn_rows["pursuer"].visible, "search filters the list")
+	# A creature taken out of the encyclopedia leaves the list on refresh.
+	RegistryScript.put_creature("test_spitter", {"in_encyclopedia": false})
+	arena.refresh_monster_list()
+	check(not arena.spawn_ids.has("test_spitter") and arena.place_id == "test_crusher", "list refreshes and keeps the placement choice")
+	arena.queue_free()
+	await process_frame
+	RegistryScript.data_root = RegistryScript.DEFAULT_DATA_ROOT
+	RegistryScript.stills_root = RegistryScript.STILLS_ROOT
+	RegistryScript.reload_index()
+	RegistryScript.clear_art_cache()
+	MonsterStatsScript.reset_all()
+	for name in ["data/index.json", "stills/test_spitter.png", "stills/test_crusher.png"]:
+		DirAccess.remove_absolute(temp.path_join(name))
 
 func _check_title_entry() -> void:
 	var scene: Control = load("res://scenes/title_screen.tscn").instantiate()
