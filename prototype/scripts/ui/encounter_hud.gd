@@ -247,4 +247,3 @@ func _on_notice_action(action_id: String) -> void:
 		controller.retry_pending_save()
 	elif action_id == "retry_settlement":
 		controller.retry_offline_settlement()
-

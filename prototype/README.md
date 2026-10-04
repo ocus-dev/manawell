@@ -62,7 +62,7 @@ How it fits together:
 - `scripts/model/monster_stats.gd` (`MonsterStats`) owns the stats: defaults from `Balance`, overridden by `data/monster_stats.json`. `DefenseEnemy._apply_stats()` and the hostile projectile speed read from it.
 - `scripts/tools/monster_encyclopedia.gd` is the panel. The encounter controller attaches it in `_attach_monster_encyclopedia()`, and `apply_monster_stats()` pushes edits onto live enemies.
 - Ranged enemies now wait out `attack_interval` between shots (the wind-up counts toward it). Before this change `RANGED_ATTACK_INTERVAL` wasn't used, so ranged enemies fired again as soon as each wind-up finished.
-- To add a monster, add it to `MONSTERS` and `DEFAULTS` in `monster_stats.gd`, and add its sprite to `SideViewVisualConfig.ASSETS`.
+- To add a monster, add it to `MONSTERS` and `DEFAULTS` in `monster_stats.gd`, and add its sprite to `SideViewVisualConfig.ASSETS`. Creatures made in the **Creature Lab** (below) are added from `data/creatures/index.json` with no code changes.
 
 ```powershell
 & $godot_console --headless --path '.\prototype' --script 'res://tests/monster_encyclopedia_test.gd'
@@ -154,6 +154,35 @@ Files: `scenes/tools/weapon_lab.tscn`, `scripts/tools/weapon_lab.gd` (UI and pub
 & $godot_console --headless --path '.\prototype' --script 'res://tests/weapon_lab_test.gd'
 if ($LASTEXITCODE -ne 0) { throw "Weapon lab test failed with exit code $LASTEXITCODE" }
 ```
+
+## Creature Lab (dev tool)
+
+Turns creature concept art into animated monsters in the Monster Encyclopedia, using the MiniMax H3 ComfyUI workflow (the same graph as `tools/animation_pipeline/workflows.py`). Debug builds only: choose **CREATURE LAB** on the title screen. No Python or PowerShell is needed.
+
+**Concept art** is read from `art/creatures/enemies/<family>/`, one folder per creature family, one image per evolution stage named `<name>_stage_<n>.png` (images without a stage number are listed as *Base*). The list on the left groups them by family and sorts by stage; **Rescan** picks up new files. Each image becomes its own creature (id from the file name, e.g. `shell_walker_stage_2`).
+
+**ComfyUI** defaults to `http://192.168.1.102:8188` (the GPU machine; start ComfyUI there with `--listen`). Edit the URL in the header and press **Check**: it confirms the `MiniMaxH3ImageToVideo` node, the H3 model files and Trellis 2. The URL is remembered in `user://creature_lab_settings.json`.
+
+1. **Creature.** Name, **Behaves as** (Hunter = pursuer, Breaker, Ranged: which built-in monster's AI and starting stats it uses), which way the concept faces (game art faces right, so left-facing concepts are mirrored), in-game height and the encyclopedia description.
+2. **Reference.** Cuts the concept out (**Auto**/**Flat background** work offline and cope with a thin frame line or screenshot bars; **ComfyUI Trellis 2** for busy backgrounds; **PNG transparency**) and places it on the 576 px H3 canvas exactly like `prepare.py reference()` (70% width / 72% height, feet at y 495, flat grey). Click the picture to move the feet line. Writes `art/creatures/references/<id>/reference.png`, `reference.json`, `cutout.png`, and the in-game still `assets/side-view/creatures/<id>.png`.
+3. **Animations.** Pick a state (idle, walk, attack, wind-up, hurt, death, spawn). The prompt box starts from a template for that state; edit it freely. **Generate take** uploads the reference, queues the H3 graph with your prompt, seed, length and steps, waits (status shows the queue), and downloads every decoded frame. **End on the reference pose** gives H3 the reference as the last frame as well (on for loops, attack and hurt; off for death, wind-up and spawn, when the installed node allows an empty last frame). Takes are listed on the right with a 12 fps preview; **Use its prompt & seed** loads a take's settings to tweak or recreate it, and **Stop waiting** / **Collect frames** let a long render finish in the background. **Install as <state>** samples the frames (FPS, From/To trim), cuts each one out (grey background locally, or Trellis 2 per frame), puts them all in one union crop around the shared feet line and writes `assets/side-view/animations/<id>_<state>/` (`atlas.png`, `animation.tres`, `manifest.json`, the layout every actor uses, previous files backed up to `art/side-view/backups/`). It plays straight away; click back into the editor so Godot imports the atlas.
+4. **Encyclopedia.** **Add to encyclopedia** lists the creature next to the built-in monsters, with stats starting from its behavior's monster. Tune them in the encyclopedia (**Encyclopedia** in the header opens it over the lab) and **Save to game data** as usual; they go into `data/monster_stats.json` under the creature's id.
+
+**The database.** Everything needed to recreate a clip is kept under `data/creatures/` (commit it with the art):
+- `index.json`: every creature in development (name, family, stage, concept and its hash, behavior, facing, height, reference calibration, installed take per state, whether it's in the encyclopedia).
+- `<id>/prompts.json`: per state, every prompt version ever used (text, hash, date) and which one is current. Saving identical wording reuses its version number.
+- `<id>/takes/<take>.json`: one per generation: state, prompt and its version, seed, seconds, steps, size, model files, sampler, reference path + hash, ComfyUI server, upload name and prompt id, the exact API graph submitted, every downloaded frame with its hash, status/errors, and each install (fps, trim, cutout). The graph is also saved as `art/creatures/animations/<id>/<take>/api.json` (load or queue it in ComfyUI directly), next to the `masters/` frames and the cut frames.
+
+**In the game.** `scripts/model/creature_registry.gd` (`CreatureRegistry`) reads `data/creatures/index.json`. `MonsterStats.monsters()` returns the built-ins plus encyclopedia creatures (`MONSTERS` is still the built-in list), `MonsterStats.archetype(id)` names the behavior, and `SideViewVisualConfig.asset_for(id)` builds a creature's art from its reference and clips, so new creatures need no code. A `DefenseEnemy` with `monster_override = "<id>"` (set before `setup()`) fights with its archetype's AI but the creature's art and stats; spawning creatures in levels and the Monster Test Arena is the next step.
+
+Files: `scenes/tools/creature_lab.tscn`, `scripts/tools/creature_lab.gd` (UI), `scripts/tools/creature_lab_art.gd` (cutouts, reference, frame sampling, clip install), `scripts/tools/comfy_animation_client.gd` (ComfyUI client that accepts LAN servers), `scripts/model/creature_animation.gd` (H3 graph and prompt templates), `scripts/model/creature_registry.gd` (database).
+
+```powershell
+& $godot_console --headless --path '.\prototype' --script 'res://tests/creature_lab_test.gd'
+if ($LASTEXITCODE -ne 0) { throw "Creature lab test failed with exit code $LASTEXITCODE" }
+```
+
+The test runs the whole flow (reference, prompt versions, generate, install, encyclopedia) against a stand-in ComfyUI, writing only under `user://creature_lab_test/`.
 
 ## Run the upgrade purchases test
 

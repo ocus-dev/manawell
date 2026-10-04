@@ -1,0 +1,85 @@
+{
+	"creatures": {
+		"breaker_stage_0": {
+			"archetype": "breaker",
+			"concept": "art/creatures/enemies/breaker/breaker_stage_0.png",
+			"concept_sha256": "a3b94a25c810114283d7a22a34a32485827ff40a2b5c7c61bb68e1f56440a3ab",
+			"desc": "",
+			"display_height": 112.0,
+			"facing": "left",
+			"family": "breaker",
+			"id": "breaker_stage_0",
+			"in_encyclopedia": true,
+			"name": "Breaker",
+			"reference": {
+				"body_height": 268.0,
+				"canvas": [
+					576,
+					576
+				],
+				"cutout": "solid",
+				"dir": "art/creatures/references/breaker_stage_0",
+				"ground_anchor": [
+					288,
+					496
+				],
+				"mirrored": true,
+				"sha256": "786c4388772e7d50e4c9eac4fe512e1cbf008f1a6fe505e64482318e96a3f66b",
+				"still": "res://assets/side-view/creatures/breaker_stage_0.png",
+				"visible_bounds": [
+					87,
+					227,
+					403,
+					268
+				]
+			},
+			"stage": 0,
+			"states": {
+				"attack": {
+					"fps": 12.0,
+					"frames": 37,
+					"installed_at": "2026-10-03T20:20:02",
+					"prompt_version": 1,
+					"take": "attack_20261004T031447_727"
+				},
+				"death": {
+					"fps": 12.0,
+					"frames": 37,
+					"installed_at": "2026-10-03T20:23:10",
+					"prompt_version": 1,
+					"take": "death_20261004T032035_332"
+				},
+				"hurt": {
+					"fps": 12.0,
+					"frames": 37,
+					"installed_at": "2026-10-03T20:20:25",
+					"prompt_version": 1,
+					"take": "hurt_20261004T031814_469"
+				},
+				"idle": {
+					"fps": 12.0,
+					"frames": 37,
+					"installed_at": "2026-10-03T20:19:43",
+					"prompt_version": 1,
+					"take": "idle_20261004T031100_652"
+				},
+				"walk": {
+					"fps": 12.0,
+					"frames": 37,
+					"installed_at": "2026-10-03T20:19:52",
+					"prompt_version": 1,
+					"take": "walk_20261004T031241_348"
+				},
+				"windup": {
+					"fps": 12.0,
+					"frames": 37,
+					"installed_at": "2026-10-03T20:20:15",
+					"prompt_version": 1,
+					"take": "windup_20261004T031658_575"
+				}
+			},
+			"updated_at": "2026-10-03T20:23:34"
+		}
+	},
+	"format_version": 1
+}

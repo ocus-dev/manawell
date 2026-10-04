@@ -37,13 +37,17 @@ var boss_health_multiplier := 1.0
 var boss_damage_multiplier := 1.0
 var boss_size := 1.0
 var visual: Node
+## A Creature Lab creature (data/creatures/index.json) this enemy is drawn
+## and tuned as. Set before setup(); it behaves like its archetype's kind.
+var monster_override := ""
 
 func _ready() -> void:
 	visual = VisualScript.new()
 	visual.name = "EnemyVisual"
 	visual.z_index = 1
 	add_child(visual)
-	visual.configure(VisualConfigScript.enemy_asset(enemy_kind))
+	if monster_override.is_empty() or not visual.configure(monster_override):
+		visual.configure(VisualConfigScript.enemy_asset(enemy_kind))
 	visual.set_facing(-side)
 	visual.play_spawn()
 
@@ -141,6 +145,8 @@ func _simulate_ranged(delta: float) -> void:
 			visual.play_windup()
 
 func monster_id() -> String:
+	if not monster_override.is_empty() and not MonsterStatsScript.monster(monster_override).is_empty():
+		return monster_override
 	return MonsterStatsScript.id_for_kind(enemy_kind)
 
 ## Stats come from MonsterStats (data/monster_stats.json over data/balance.gd).

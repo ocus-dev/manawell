@@ -24,6 +24,8 @@ const PLATE_2 := Color("2a3036")
 const EDGE := Color("434c55")
 ## Distance from the enemy spawn point to the harvester, in world units.
 const ARENA_CROSSING_UNITS := (1240.0 - 160.0) / 32.0
+## Animation previews under the portrait (disabled when a monster has no clip).
+const PREVIEW_STATES := ["idle", "walk", "attack", "windup", "hurt", "death", "spawn"]
 
 signal closed
 
@@ -83,6 +85,7 @@ func open() -> void:
 		controller.set_experiment_paused(true)
 		for field in ["move_left_held", "move_right_held", "move_down_held", "jump_held", "pending_jump", "pending_dash", "pending_pulse", "pending_harvest", "pending_pause"]:
 			controller.set(field, false)
+	_sync_monster_tiles()
 	_render_tiles()
 	_render_entry()
 	_set_status(_idle_status())
@@ -322,7 +325,7 @@ func _build_index() -> Control:
 	tile_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	tile_list.add_theme_constant_override("separation", 8)
 	scroll.add_child(tile_list)
-	for entry in MonsterStatsScript.MONSTERS:
+	for entry in MonsterStatsScript.monsters():
 		var tile := _build_tile(entry)
 		tiles[entry["id"]] = tile
 		tile_list.add_child(tile)
@@ -334,6 +337,27 @@ func _build_index() -> Control:
 	empty.hide()
 	tile_list.add_child(empty)
 	return panel
+
+## Adds tiles for creatures added since the list was built (Creature Lab) and
+## drops tiles for ones taken out.
+func _sync_monster_tiles() -> void:
+	if tile_list == null:
+		return
+	var wanted: Array = MonsterStatsScript.monster_ids()
+	for id in tiles.keys():
+		if not wanted.has(id):
+			tiles[id].queue_free()
+			tiles.erase(id)
+	for entry in MonsterStatsScript.monsters():
+		var id := str(entry["id"])
+		if tiles.has(id):
+			continue
+		var tile := _build_tile(entry)
+		tiles[id] = tile
+		tile_list.add_child(tile)
+		tile_list.move_child(tile, tile_list.get_node("Empty").get_index())
+	if not wanted.has(selected_id):
+		selected_id = "pursuer"
 
 func _build_tile(entry: Dictionary) -> Button:
 	var id: String = entry["id"]
@@ -422,12 +446,15 @@ func _build_entry() -> Control:
 	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	portrait.flip_h = true
 	frame.add_child(portrait)
-	var anim_row := HBoxContainer.new()
-	anim_row.add_theme_constant_override("separation", 4)
+	var anim_row := GridContainer.new()
+	anim_row.columns = 4
+	anim_row.add_theme_constant_override("h_separation", 4)
+	anim_row.add_theme_constant_override("v_separation", 4)
 	portrait_column.add_child(anim_row)
 	var anim_group := ButtonGroup.new()
-	for animation in ["idle", "walk", "attack"]:
+	for animation in PREVIEW_STATES:
 		var anim_button := _button(animation.capitalize(), true)
+		anim_button.add_theme_font_size_override("font_size", 12)
 		anim_button.toggle_mode = true
 		anim_button.button_group = anim_group
 		anim_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -533,7 +560,9 @@ func _build_dialogs() -> void:
 func _render_tiles() -> void:
 	var query := search.text.strip_edges().to_lower() if search != null else ""
 	var shown := 0
-	for entry in MonsterStatsScript.MONSTERS:
+	for entry in MonsterStatsScript.monsters():
+		if not tiles.has(entry["id"]):
+			continue
 		var haystack := ("%s %s %s" % [entry["name"], entry["role"], entry["target"]]).to_lower()
 		var matches := query.is_empty() or haystack.contains(query)
 		tiles[entry["id"]].visible = matches
@@ -554,9 +583,10 @@ func _render_entry() -> void:
 	desc_label.text = entry["desc"]
 	var asset := VisualConfigScript.asset_for(selected_id)
 	for animation in anim_buttons.keys():
-		var frames: SpriteFrames = asset.get(animation + "_frames")
+		var frames: SpriteFrames = VisualConfigScript.frames_for(asset, animation) if not asset.is_empty() else null
 		anim_buttons[animation].disabled = frames == null
-	if asset.get(preview_animation + "_frames") == null:
+		anim_buttons[animation].visible = frames != null or ["idle", "walk", "attack"].has(animation)
+	if asset.is_empty() or VisualConfigScript.frames_for(asset, preview_animation) == null:
 		preview_animation = "idle"
 	anim_buttons[preview_animation].set_pressed_no_signal(true)
 	_update_portrait()
@@ -665,7 +695,7 @@ func _render_derived() -> void:
 	if controller != null and "weapon_damage" in controller:
 		weapon_damage = maxf(0.01, float(controller.weapon_damage))
 	_add_derived("Damage per second", "%.1f" % dps)
-	if id == "breaker":
+	if MonsterStatsScript.archetype(id) == "breaker":
 		_add_derived("Breaks harvester in", "%.1fs" % (BalanceData.MACHINE_INTEGRITY / dps) if dps > 0.0 else "never")
 	else:
 		_add_derived("Kills hero in", "%.1fs" % (BalanceData.HERO_HEALTH / dps) if dps > 0.0 else "never")
@@ -690,7 +720,7 @@ func _refresh_marks() -> void:
 	for id in tiles.keys():
 		tiles[id].find_child("Edited", true, false).visible = MonsterStatsScript.is_modified(id)
 	var edited := MonsterStatsScript.modified_count()
-	var total := MonsterStatsScript.MONSTERS.size()
+	var total := MonsterStatsScript.monsters().size()
 	count_label.text = "%d monsters%s%s" % [total, ", %d edited" % edited if edited > 0 else "", "  ·  unsaved" if MonsterStatsScript.has_unsaved_changes() else ""]
 
 func _set_status(text: String) -> void:
@@ -717,7 +747,7 @@ func _update_portrait() -> void:
 	if portrait == null:
 		return
 	var asset := VisualConfigScript.asset_for(selected_id)
-	var frames: SpriteFrames = asset.get(preview_animation + "_frames")
+	var frames: SpriteFrames = VisualConfigScript.frames_for(asset, preview_animation) if not asset.is_empty() else null
 	var animation := StringName(preview_animation)
 	if frames == null or not frames.has_animation(animation) or frames.get_frame_count(animation) == 0:
 		portrait.texture = sprite_texture(selected_id)

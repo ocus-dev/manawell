@@ -34,7 +34,8 @@ func _run() -> void:
 		quit(1)
 
 func _check_defaults_and_clamping() -> void:
-	check(MonsterStatsScript.monster_ids() == ["pursuer", "breaker", "ranged"], "monster order")
+	# Creature Lab creatures (data/creatures/index.json) follow the built-ins.
+	check(MonsterStatsScript.monster_ids().slice(0, 3) == ["pursuer", "breaker", "ranged"], "monster order")
 	check(is_equal_approx(MonsterStatsScript.get_stat("pursuer", "health"), BalanceData.PURSUER_HEALTH), "pursuer health default")
 	check(is_equal_approx(MonsterStatsScript.get_stat("breaker", "damage"), BalanceData.BREAKER_DAMAGE), "breaker damage default")
 	check(is_equal_approx(MonsterStatsScript.get_stat("ranged", "windup"), BalanceData.RANGED_WINDUP), "ranged windup default")

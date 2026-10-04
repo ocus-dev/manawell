@@ -1,6 +1,8 @@
 class_name SideViewVisualConfig
 extends RefCounted
 
+const CreatureRegistryScript = preload("res://scripts/model/creature_registry.gd")
+
 ## The gun barrel's end while firing (gun attack clip, hit frame).
 const HERO_EMITTER_LOCAL := Vector2(55.0, -17.0)
 const RANGED_EMITTER_LOCAL := Vector2(30.0, -44.0)
@@ -203,7 +205,8 @@ static func _asset_for(asset_id: String) -> Dictionary:
 			return _hero_2_animation_asset()
 		return ASSETS["hero"]
 	if not ASSETS.has(asset_id):
-		return {}
+		# Creatures made in the Creature Lab (data/creatures/index.json).
+		return CreatureRegistryScript.asset_for(asset_id)
 	return ASSETS[asset_id]
 
 static func _hero_2_static_available() -> bool:

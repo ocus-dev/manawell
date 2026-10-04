@@ -9,6 +9,7 @@ extends RefCounted
 ## values live and saves them back to that file.
 
 const BalanceData = preload("res://data/balance.gd")
+const CreatureRegistryScript = preload("res://scripts/model/creature_registry.gd")
 
 const DATA_PATH := "res://data/monster_stats.json"
 ## Exported builds cannot write into res://, so saves fall back to this path
@@ -16,6 +17,8 @@ const DATA_PATH := "res://data/monster_stats.json"
 const EXPORTED_BUILD_PATH := "user://monster_stats.json"
 const FORMAT_VERSION := 1
 
+## The built-in monsters. Creatures added in the Creature Lab follow them (see
+## monsters()); each borrows the stats of one of these (its archetype).
 ## Order here is the order shown in the encyclopedia.
 const MONSTERS: Array = [
 	{
@@ -91,9 +94,18 @@ static var last_load_message := ""
 
 # ---------- lookup ----------
 
+## Built-in monsters, then the Creature Lab's encyclopedia creatures
+## (data/creatures/index.json).
+static func monsters() -> Array:
+	var result: Array = MONSTERS.duplicate()
+	for creature_id in CreatureRegistryScript.encyclopedia_ids():
+		var base_id := CreatureRegistryScript.archetype(creature_id)
+		result.append(CreatureRegistryScript.monster_entry(creature_id, monster(base_id).get("stats", [])))
+	return result
+
 static func monster_ids() -> Array[String]:
 	var ids: Array[String] = []
-	for monster in MONSTERS:
+	for monster in monsters():
 		ids.append(str(monster["id"]))
 	return ids
 
@@ -101,7 +113,17 @@ static func monster(monster_id: String) -> Dictionary:
 	for entry in MONSTERS:
 		if entry["id"] == monster_id:
 			return entry
+	if CreatureRegistryScript.has(monster_id) and CreatureRegistryScript.encyclopedia_ids().has(monster_id):
+		var base: Dictionary = monster(CreatureRegistryScript.archetype(monster_id))
+		return CreatureRegistryScript.monster_entry(monster_id, base.get("stats", []))
 	return {}
+
+## The built-in monster whose behavior (and starting stats) a monster uses:
+## itself for built-ins, the archetype for Creature Lab creatures.
+static func archetype(monster_id: String) -> String:
+	if DEFAULTS.has(monster_id):
+		return monster_id
+	return CreatureRegistryScript.archetype(monster_id)
 
 static func id_for_kind(kind: int) -> String:
 	for entry in MONSTERS:
@@ -113,7 +135,34 @@ static func stat_keys(monster_id: String) -> Array:
 	return monster(monster_id).get("stats", [])
 
 static func default_value(monster_id: String, key: String) -> float:
-	return float(DEFAULTS.get(monster_id, {}).get(key, 0.0))
+	return float(defaults_for(monster_id).get(key, 0.0))
+
+## Default stats: data/balance.gd for built-ins; a Creature Lab creature
+## starts from its archetype's defaults, overridden by its own "base_stats".
+static func defaults_for(monster_id: String) -> Dictionary:
+	if DEFAULTS.has(monster_id):
+		return DEFAULTS[monster_id]
+	if not CreatureRegistryScript.has(monster_id):
+		return {}
+	var row: Dictionary = (DEFAULTS[archetype(monster_id)] as Dictionary).duplicate()
+	var own: Variant = CreatureRegistryScript.get_creature(monster_id).get("base_stats", {})
+	if own is Dictionary:
+		for key in own:
+			if row.has(key) and (typeof(own[key]) == TYPE_INT or typeof(own[key]) == TYPE_FLOAT):
+				row[key] = clamp_value(str(key), float(own[key]))
+	return row
+
+static func _all_defaults() -> Dictionary:
+	var result := DEFAULTS.duplicate(true)
+	for id in monster_ids():
+		if not result.has(id):
+			result[id] = defaults_for(id).duplicate()
+	return result
+
+## Rows for creatures added after the stats were loaded.
+static func _ensure_row(monster_id: String) -> void:
+	if not _values.has(monster_id) and not defaults_for(monster_id).is_empty():
+		_values[monster_id] = defaults_for(monster_id).duplicate()
 
 static func get_stat(monster_id: String, key: String) -> float:
 	_ensure_loaded()
@@ -124,6 +173,7 @@ static func get_stat(monster_id: String, key: String) -> float:
 
 static func set_stat(monster_id: String, key: String, value: float) -> float:
 	_ensure_loaded()
+	_ensure_row(monster_id)
 	if not _values.has(monster_id) or not STAT_DEFS.has(key) or not is_finite(value):
 		return get_stat(monster_id, key)
 	var clamped := clamp_value(key, value)
@@ -156,11 +206,11 @@ static func has_unsaved_changes() -> bool:
 
 static func reset_monster(monster_id: String) -> void:
 	_ensure_loaded()
-	if DEFAULTS.has(monster_id):
-		_values[monster_id] = (DEFAULTS[monster_id] as Dictionary).duplicate()
+	if not defaults_for(monster_id).is_empty():
+		_values[monster_id] = defaults_for(monster_id).duplicate()
 
 static func reset_all() -> void:
-	_values = DEFAULTS.duplicate(true)
+	_values = _all_defaults()
 	_loaded = true
 
 ## Drops in-memory edits and reloads from disk. Tests use this for isolation.
@@ -231,7 +281,7 @@ static func _ensure_loaded() -> void:
 	if _loaded:
 		return
 	_loaded = true
-	_values = DEFAULTS.duplicate(true)
+	_values = _all_defaults()
 	last_load_message = ""
 	var loaded_any := load_from_disk(DATA_PATH)
 	if OS.has_feature("template"):

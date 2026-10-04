@@ -8,6 +8,7 @@ const SAVE_PATH := "user://account_save.json"
 const BACKUP_PATH := "user://account_save.bak"
 const MONSTER_TEST_ARENA_SCENE := "res://scenes/tools/monster_test_arena.tscn"
 const WEAPON_LAB_SCENE := "res://scenes/tools/weapon_lab.tscn"
+const CREATURE_LAB_SCENE := "res://scenes/tools/creature_lab.tscn"
 const MonsterEncyclopediaScript = preload("res://scripts/tools/monster_encyclopedia.gd")
 const MenuStyleScript = preload("res://scripts/ui/title_menu_style.gd")
 
@@ -43,8 +44,9 @@ func _ready() -> void:
 		monster_encyclopedia.open_spawn_editor.call_deferred(level_id)
 
 ## Debug builds only: DEV ENCYCLOPEDIA (and F9) for tuning monster stats, and
-## MONSTER ARENA for watching those stats hit an invincible dummy, and WEAPON LAB
-## for importing weapon art and testing weapons.
+## MONSTER ARENA for watching those stats hit an invincible dummy, WEAPON LAB
+## for importing weapon art and testing weapons, and CREATURE LAB for turning
+## creature concept art into animated encyclopedia monsters.
 func _add_dev_tools() -> void:
 	if not OS.is_debug_build():
 		return
@@ -56,6 +58,7 @@ func _add_dev_tools() -> void:
 	menu.grow_vertical = Control.GROW_DIRECTION_END
 	_add_dev_button("DevEncyclopedia", "D E V   E N C Y C L O P E D I A", open_monster_encyclopedia)
 	_add_dev_button("MonsterTestArena", "M O N S T E R   A R E N A", open_monster_test_arena)
+	_add_dev_button("CreatureLab", "C R E A T U R E   L A B", open_creature_lab)
 	_add_dev_button("WeaponLab", "W E A P O N   L A B", open_weapon_lab)
 
 func _add_dev_button(node_name: String, label: String, action: Callable) -> void:
@@ -77,6 +80,9 @@ func open_monster_test_arena() -> void:
 
 func open_weapon_lab() -> void:
 	get_tree().change_scene_to_file(WEAPON_LAB_SCENE)
+
+func open_creature_lab() -> void:
+	get_tree().change_scene_to_file(CREATURE_LAB_SCENE)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel") and settings_panel.visible:

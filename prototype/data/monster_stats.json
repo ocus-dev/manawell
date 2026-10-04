@@ -8,6 +8,13 @@
 			"health": 50.0,
 			"move_speed": 3.1
 		},
+		"breaker_stage_0": {
+			"attack_interval": 1.0,
+			"attack_range": 1.8,
+			"damage": 12.0,
+			"health": 50.0,
+			"move_speed": 1.5
+		},
 		"pursuer": {
 			"attack_interval": 1.0,
 			"attack_range": 1.2,
