@@ -16,7 +16,30 @@
 		93.3084106445312,
 		419.887847900391
 	],
-	"installed_at": "2026-09-27T19:40:07",
+	"hand_atlas": "hand_atlas.png",
+	"hand_track": [
+		[
+			71.93,
+			-208.0
+		],
+		[
+			69.98,
+			-206.06
+		],
+		[
+			73.87,
+			-206.06
+		],
+		[
+			73.87,
+			-206.06
+		],
+		[
+			69.98,
+			-208.0
+		]
+	],
+	"installed_at": "2026-09-28T14:03:47",
 	"loop_requested": true,
 	"motion": "idle",
 	"playback_fps": 5.55555555555556,
@@ -29,7 +52,7 @@
 		3,
 		4
 	],
-	"source_sheet": "/tmp/art/weapons/clips/hero/idle_sheet/sheet_4703.png",
+	"source_sheet": "/tmp/art/weapons/clips/hero/idle_sheet_4/sheet_3282.png",
 	"union_crop": [
 		195,
 		76,

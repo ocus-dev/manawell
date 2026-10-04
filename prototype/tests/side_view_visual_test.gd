@@ -4,7 +4,8 @@ const VisualScript = preload("res://scripts/game/side_view_actor_visual.gd")
 const ConfigScript = preload("res://scripts/game/side_view_visual_config.gd")
 
 func _init() -> void:
-    assert(ConfigScript.asset_for("hero")["initial_visible_height"] == 80.0)
+    assert(is_equal_approx(ConfigScript.asset_for("hero")["initial_visible_height"], 80.0 * ConfigScript.HERO_DISPLAY_SCALE))
+    assert(ConfigScript.asset_for("hero")["art_visible_height"] == 80.0)
     assert(ConfigScript.asset_for("hero")["idle_frames"] != null)
     assert(ConfigScript.asset_for("hero")["walk_frames"] != null)
     assert(ConfigScript.asset_for("hero")["attack_frames"] != null)
@@ -17,7 +18,8 @@ func _init() -> void:
     root.add_child(visual)
     assert(visual.configure("breaker"))
     assert(visual.sprite.texture.resource_path == "res://assets/side-view/breaker.png")
-    assert(is_equal_approx(visual.base_scale, 112.0 / 903.0))
+    assert(is_equal_approx(visual.base_scale, 112.0 * ConfigScript.MONSTER_DISPLAY_SCALE / 903.0))
+    assert(is_equal_approx(ConfigScript.display_scale("some_future_monster"), ConfigScript.MONSTER_DISPLAY_SCALE))
     var anchor_y: float = visual.sprite.position.y + 905.0 * visual.base_scale
     assert(is_equal_approx(anchor_y, visual.sprite.texture.get_height() * 0.5 * visual.base_scale + 40.0))
     assert(is_equal_approx(visual.visible_top_local_y(), 40.0 + (3.0 - 905.0) * visual.base_scale))
@@ -30,6 +32,6 @@ func _init() -> void:
     var harvester_visual := VisualScript.new()
     root.add_child(harvester_visual)
     assert(harvester_visual.configure("harvester"))
-    assert(harvester_visual.idle_sprite.sprite_frames != null)
+    assert(harvester_visual.idle_sprite.sprite_frames != null and harvester_visual.idle_sprite.sprite_frames.get_frame_count(&"idle") == 48)
     print("Side-view visual mapping, facing and anchor checks passed")
     quit(0)

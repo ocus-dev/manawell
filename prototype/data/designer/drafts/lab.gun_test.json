@@ -1,0 +1,84 @@
+{
+  "art": {
+    "crop": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "facing": "right",
+    "grip": [
+      0.98,
+      0.43
+    ],
+    "hand_offset": [
+      24.0,
+      6.0
+    ],
+    "icon": "",
+    "job_id": "job_20260928T134718",
+    "rotation_degrees": 0.0,
+    "source": "art/ui-items/Weapons/12345.png",
+    "world_scale": 0.5,
+    "world_sprite": ""
+  },
+  "attack_clip": {},
+  "base_modifiers": [
+    {
+      "family": "designer.base.attack_damage",
+      "operation": "flat",
+      "stat": "attack_damage",
+      "value": 0.0
+    }
+  ],
+  "base_stats": {
+    "attack_damage": 10.0,
+    "attacks_per_second": 1.0
+  },
+  "behavior_id": "weapon.standard",
+  "clip_source": "type",
+  "description": "No description yet.",
+  "draft_id": "lab.gun_test",
+  "effects": [
+    {
+      "additive": true,
+      "align": true,
+      "anchor": [
+        1.0,
+        0.5
+      ],
+      "at": 0.5,
+      "columns": 4.0,
+      "follow": true,
+      "fps": 30.0,
+      "frame_count": 4.0,
+      "label": "Muzzle flash",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "opacity": 1.0,
+      "rotation": 0.0,
+      "sheet": "res://assets/weapons/gun_test/2/effects/0.png",
+      "size": 80.0,
+      "trigger": "hit"
+    }
+  ],
+  "explicit_modifiers": [],
+  "hand_fit": {
+    "angle": 180.0,
+    "flip": false,
+    "scale": 1.0
+  },
+  "item_level": 1.0,
+  "lab": {
+    "cutout_method": "auto",
+    "tolerance": 38.0
+  },
+  "label": "gun test",
+  "rarity": "common",
+  "schema_version": 1.0,
+  "swing": {},
+  "weapon_id": "gun_test",
+  "weapon_type": "gun"
+}

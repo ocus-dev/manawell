@@ -12,6 +12,7 @@ const CampaignStateScript = preload("res://scripts/model/campaign_state.gd")
 const ResearchResolverScript = preload("res://scripts/model/research_resolver.gd")
 const ResearchCatalogScript = preload("res://scripts/model/research_catalog.gd")
 const HeroStatResolverScript = preload("res://scripts/model/hero_stat_resolver.gd")
+const LevelSpawnsScript = preload("res://scripts/model/level_spawns.gd")
 
 static func build(account: RefCounted, run_state: RefCounted, selected_well_id: String = "well_1", notices: Dictionary = {}, ability_state: Dictionary = {}, campaign_state: RefCounted = null) -> Dictionary:
 	var catalog: RefCounted = account.content_catalog if account != null and account.get("content_catalog") != null else ContentCatalogScript.new()
@@ -43,7 +44,7 @@ static func build(account: RefCounted, run_state: RefCounted, selected_well_id: 
 			"inventory": _inventory_view(account),
 		},
 		"combat": _combat_view(run_state, catalog, active_run, ability_state),
-		"campaign": _campaign_view(account, campaign_state),
+		"campaign": _campaign_view(account, campaign_state, rates, active_well_id),
 		"results": {
 			"item_drops": account.item_reward_ids.duplicate() if account.item_reward_run_id == str(terminal_result.get("run_id", "")) and run_state != null and run_state.phase == RunStateScript.Phase.SUCCESS else [],
 			"phase": int(run_state.phase) if run_state != null else RunStateScript.Phase.READY,
@@ -67,9 +68,15 @@ static func build(account: RefCounted, run_state: RefCounted, selected_well_id: 
 		},
 	}
 
-static func _campaign_view(account: RefCounted, campaign_state: RefCounted) -> Dictionary:
+## Campaign levels are read-only while the game runs; loading them deep-copies
+## every level, so one shared copy is kept.
+static var _campaign_catalog: RefCounted
+
+static func _campaign_view(account: RefCounted, campaign_state: RefCounted, rates: Dictionary = {}, active_well_id: String = "") -> Dictionary:
 	var state: RefCounted = campaign_state if campaign_state != null else CampaignStateScript.new()
-	var definitions: RefCounted = CampaignCatalogScript.new()
+	if _campaign_catalog == null:
+		_campaign_catalog = CampaignCatalogScript.new()
+	var definitions: RefCounted = _campaign_catalog
 	var act_id: String = state.active_act_id if not state.active_act_id.is_empty() else definitions.first_act_id()
 	var act: Dictionary = definitions.get_act(act_id)
 	var nodes: Array = act.get("nodes", [])
@@ -80,10 +87,12 @@ static func _campaign_view(account: RefCounted, campaign_state: RefCounted) -> D
 	for node in nodes:
 		var node_id: String = str(node.get("id", ""))
 		statuses[node_id] = state.node_status(act_id, node_id, definitions)
+		statuses[node_id]["progress_surge"] = LevelSpawnsScript.progress_surge(node_id)
 		if node.get("type", "") == "well":
 			var well_id: String = str(node.get("well_id", ""))
-			var well_status: Dictionary = state.well_status(well_id, account)
-			var rate: float = float(ProductionScript.calculate_rates(account.commissioned_wells, account.hero_assignments, account.owned_upgrades).get(well_id, 0.0)) * 60.0
+			var well_status: Dictionary = state.well_status(well_id, account, active_well_id)
+			# Same rates as Operations (research ranks and the active well included).
+			var rate: float = float(rates.get(well_id, 0.0)) * 60.0
 			well_status["rate_per_minute"] = rate
 			well_status["guard_label"] = account.get_guard_for_well(well_id) if well_status.get("guarded", false) else "Unstaffed"
 			well_status["indicator"] = "active" if well_status.get("active", false) else "producing" if well_status.get("producing", false) else "idle"
@@ -116,7 +125,7 @@ static func _inventory_view(account: RefCounted) -> Dictionary:
 		if account.has_hero(hero_id):
 			heroes.append({"id": hero_id, "label": _hero_label(account.content_catalog, hero_id), "kit": account.hero_kits.get(hero_id, {"weapon": "", "hero": "", "harvester": ""}).duplicate(true)})
 	var selected_hero_id := str(heroes[0].get("id", "")) if not heroes.is_empty() else ""
-	return {"items": items, "owned_count": account.owned_items.size(), "new_count": account.new_items.size(), "capacity": AccountStateScript.INVENTORY_CAPACITY, "stored_count": account.item_instances.size(), "heroes": heroes, "selected_hero_id": selected_hero_id, "instances": account.item_instances.duplicate(true), "ranks": account.research_ranks.duplicate(true), "hero_resolver": {"ranks": account.research_ranks.duplicate(true), "instances": account.item_instances.duplicate(true)}}
+	return {"items": items, "scrap": int(account.scrap), "banked_mana": float(account.bank), "owned_count": account.owned_items.size(), "new_count": account.new_items.size(), "capacity": AccountStateScript.INVENTORY_CAPACITY, "stored_count": account.item_instances.size(), "heroes": heroes, "selected_hero_id": selected_hero_id, "instances": account.item_instances.duplicate(true), "ranks": account.research_ranks.duplicate(true), "hero_resolver": {"ranks": account.research_ranks.duplicate(true), "instances": account.item_instances.duplicate(true)}}
 
 static func _research_view(account: RefCounted, catalog: RefCounted, run_state: RefCounted, well_id: String = "well_1") -> Dictionary:
 	var loadout_id: String = account.get_loadout_for_well(well_id)
@@ -194,6 +203,7 @@ static func _research_view(account: RefCounted, catalog: RefCounted, run_state: 
 	return {
 		"equipment_choices": choices,
 		"banked_mana": float(account.bank),
+		"scrap": int(account.scrap),
 		"passive_rate_per_minute": _total_rate_per_minute(ProductionScript.calculate_rates(account.commissioned_wells, account.hero_assignments, account.owned_upgrades, "", account.research_ranks)),
 		"upgrades": upgrades,
 		"tracks": tracks,
@@ -313,12 +323,14 @@ static func _hero_view(account: RefCounted, catalog: RefCounted, hero_id: String
 		"available_for_guard": role == "reserve",
 	}
 
+## Just the combat readout, cheap enough to rebuild every frame.
+static func combat_view(run_state: RefCounted, catalog: RefCounted, active_run: bool, ability_state: Dictionary = {}) -> Dictionary:
+	return _combat_view(run_state, catalog, active_run, ability_state)
+
 static func _combat_view(run_state: RefCounted, catalog: RefCounted, active_run: bool, ability_state: Dictionary = {}) -> Dictionary:
 	if run_state == null:
 		return {"active": false, "phase": RunStateScript.Phase.READY}
-	var next_surge: float = 0.0
-	if run_state.phase == RunStateScript.Phase.EXTRACTING:
-		next_surge = maxf(0.0, (BalanceData.SURGE_DURATION - fmod(run_state.simulation_elapsed, BalanceData.SURGE_DURATION)) / run_state.pressure_time_scale)
+	var next_surge: float = run_state.seconds_to_next_surge()
 	var at_risk: int = floori(run_state.tank_base * run_state.multiplier) if run_state.phase == RunStateScript.Phase.EXTRACTING else run_state.locked_payout
 	return {
 		"active": active_run,
@@ -334,6 +346,9 @@ static func _combat_view(run_state: RefCounted, catalog: RefCounted, active_run:
 		"completed_surges": run_state.completed_surges,
 		"multiplier": run_state.multiplier,
 		"next_surge_seconds": next_surge,
+		"surge_limit": run_state.surge_limit,
+		"at_surge_limit": run_state.at_surge_limit(),
+		"mana_per_second": run_state.mana_per_second(),
 		"pressure_time_scale": run_state.pressure_time_scale,
 		"threat_label": "Surge pressure" if active_run else "No active surge",
 		"at_risk_payout": at_risk,

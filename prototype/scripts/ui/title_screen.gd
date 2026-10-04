@@ -1,6 +1,9 @@
 extends Control
 
+## Parked for later (not opened by the game right now): the Hero Roster screen.
 const HERO_HUB_SCENE := "res://scenes/hero_hub.tscn"
+const OPERATIONS_SCENE := "res://scenes/main.tscn"
+const GameFlowScript = preload("res://scripts/model/game_flow.gd")
 const SAVE_PATH := "user://account_save.json"
 const BACKUP_PATH := "user://account_save.bak"
 const MONSTER_TEST_ARENA_SCENE := "res://scenes/tools/monster_test_arena.tscn"
@@ -9,21 +12,22 @@ const MonsterEncyclopediaScript = preload("res://scripts/tools/monster_encyclope
 const MenuStyleScript = preload("res://scripts/ui/title_menu_style.gd")
 
 @onready var menu: VBoxContainer = $Menu
-@onready var continue_button: Button = $Menu/Continue
+@onready var play_button: Button = $Menu/Play
 @onready var settings_panel: PanelContainer = $SettingsPanel
 @onready var new_game_confirmation: ConfirmationDialog = $NewGameConfirmation
 
 var monster_encyclopedia: CanvasLayer
 
 func _ready() -> void:
-	continue_button.disabled = not FileAccess.file_exists(SAVE_PATH) and not FileAccess.file_exists(BACKUP_PATH)
-	$Menu/Continue.pressed.connect(_start_game)
-	$Menu/NewGame.pressed.connect(_request_new_game)
+	# One save profile: PLAY loads it, or starts the tutorial on first launch.
+	play_button.pressed.connect(play)
+	$SettingsPanel/Settings/ResetProgress.pressed.connect(_request_reset)
 	$Menu/Settings.pressed.connect(_show_settings)
 	$Menu/Quit.pressed.connect(get_tree().quit)
 	$SettingsPanel/Settings/Fullscreen.toggled.connect(_set_fullscreen)
 	$SettingsPanel/Settings/Back.pressed.connect(_hide_settings)
 	new_game_confirmation.confirmed.connect(_start_new_game)
+	_style_new_game_dialog()
 	$SettingsPanel/Settings/Fullscreen.button_pressed = DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
 	_add_dev_tools()
 	# Readable menu: dark button plates with light text, amber + ▶ when
@@ -31,10 +35,12 @@ func _ready() -> void:
 	MenuStyleScript.apply(self, "plates")
 	MenuStyleScript.style_settings(self)
 	_explain_embedded_fullscreen()
-	if continue_button.disabled:
-		$Menu/NewGame.grab_focus()
-	else:
-		continue_button.grab_focus()
+	play_button.grab_focus()
+	# Coming back from a spawn preview: reopen the spawn editor on that level.
+	if not GameFlowScript.reopen_spawn_editor_level.is_empty() and monster_encyclopedia != null:
+		var level_id := GameFlowScript.reopen_spawn_editor_level
+		GameFlowScript.reopen_spawn_editor_level = ""
+		monster_encyclopedia.open_spawn_editor.call_deferred(level_id)
 
 ## Debug builds only: DEV ENCYCLOPEDIA (and F9) for tuning monster stats, and
 ## MONSTER ARENA for watching those stats hit an invincible dummy, and WEAPON LAB
@@ -78,18 +84,85 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 func _start_game() -> void:
-	get_tree().change_scene_to_file(HERO_HUB_SCENE)
+	get_tree().change_scene_to_file(OPERATIONS_SCENE)
 
-func _request_new_game() -> void:
-	if continue_button.disabled:
+## True once a profile exists (the backup counts if the main file is damaged).
+func has_profile() -> bool:
+	return FileAccess.file_exists(SAVE_PATH) or FileAccess.file_exists(BACKUP_PATH)
+
+func play() -> void:
+	if has_profile():
+		GameFlowScript.play_requested = true
 		_start_game()
+	else:
+		_start_new_game()
+
+## Settings > Reset progress: erase the profile (after confirming) and start
+## over from the tutorial.
+func _request_reset() -> void:
+	if not has_profile():
+		_start_new_game()
 		return
 	new_game_confirmation.popup_centered()
+	# Safer default: Enter/Space cancels unless the player picks the red button.
+	new_game_confirmation.get_cancel_button().grab_focus()
+
+## Makes the "replace your save?" dialog easy to read: large light text on a
+## dark panel, a clear title bar, a red destructive button and a plain Cancel.
+func _style_new_game_dialog() -> void:
+	var dialog := new_game_confirmation
+	dialog.title = "Reset progress?"
+	dialog.dialog_text = "This erases your character's progress and starts over from the tutorial."
+	dialog.ok_button_text = "Erase and start over"
+	dialog.cancel_button_text = "Keep my progress"
+	dialog.dialog_autowrap = true
+	dialog.min_size = Vector2i(520, 0)
+	var body := StyleBoxFlat.new()
+	body.bg_color = Color("141a20")
+	body.set_content_margin_all(24)
+	dialog.add_theme_stylebox_override("panel", body)
+	var frame := StyleBoxFlat.new()
+	frame.bg_color = Color("1d252d")
+	frame.border_color = MenuStyleScript.AMBER
+	frame.set_border_width_all(2)
+	frame.set_corner_radius_all(8)
+	frame.expand_margin_left = 2
+	frame.expand_margin_right = 2
+	frame.expand_margin_bottom = 2
+	frame.expand_margin_top = 40
+	dialog.add_theme_stylebox_override("embedded_border", frame)
+	dialog.add_theme_stylebox_override("embedded_unfocused_border", frame)
+	dialog.add_theme_font_size_override("title_font_size", 22)
+	dialog.add_theme_color_override("title_color", MenuStyleScript.INK)
+	dialog.add_theme_constant_override("title_height", 40)
+	dialog.add_theme_constant_override("buttons_separation", 16)
+	var label := dialog.get_label()
+	label.add_theme_font_size_override("font_size", 20)
+	label.add_theme_color_override("font_color", MenuStyleScript.INK)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_style_dialog_button(dialog.get_ok_button(), Color("8f2f28"), Color("e06a5c"))
+	_style_dialog_button(dialog.get_cancel_button(), Color("2a333c"), Color("6c7a86"))
+
+func _style_dialog_button(button: Button, fill: Color, border: Color) -> void:
+	button.custom_minimum_size = Vector2(200, 48)
+	button.add_theme_font_size_override("font_size", 18)
+	for color_name in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color", "font_hover_pressed_color"]:
+		button.add_theme_color_override(color_name, Color.WHITE)
+	var states := {"normal": fill, "hover": fill.lightened(0.15), "pressed": fill.darkened(0.2), "focus": fill}
+	for state in states:
+		var box := StyleBoxFlat.new()
+		box.bg_color = states[state]
+		box.border_color = Color.WHITE if state == "focus" else border
+		box.set_border_width_all(3 if state == "focus" else 2)
+		box.set_corner_radius_all(6)
+		box.set_content_margin_all(10)
+		button.add_theme_stylebox_override(state, box)
 
 func _start_new_game() -> void:
 	var store := preload("res://scripts/model/save_store.gd").new()
 	if not store.clear_save():
 		push_warning(store.last_error)
+	GameFlowScript.start_tutorial = true
 	_start_game()
 
 func _show_settings() -> void:

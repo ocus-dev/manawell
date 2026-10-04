@@ -11,6 +11,11 @@ func _run() -> void:
 	await process_frame
 	var operations = controller.encounter_hud.operations
 	var briefing = operations.mission_briefing
+	# A new profile is briefed on the tutorial (Sector B); after it, Scrap Approach.
+	assert(briefing.get_node("MissionBriefingContent/EnvironmentName").text == "SECTOR B (TUTORIAL)", "Fresh profile: the tutorial")
+	controller.campaign_state.completed_nodes["act_01/act_01_node_02"] = true
+	controller._update_hud()
+	await process_frame
 	assert(briefing != null, "Operations exposes a mission briefing")
 	assert(briefing.get_node("MissionBriefingContent/EnvironmentThumbnail").texture != null, "Briefing includes the environment thumbnail")
 	assert(briefing.get_node("MissionBriefingContent/EnvironmentName").text == "SCRAP APPROACH", "Briefing uses the current campaign stage name")
@@ -28,11 +33,6 @@ func _run() -> void:
 	for button in operations.expedition_panel.loadout_buttons.values():
 		assert(button.custom_minimum_size.y <= 54.0, "Loadout choices remain compact")
 	controller.campaign_state.completed_nodes["act_01/act_01_node_01"] = true
-	controller._update_hud()
-	await process_frame
-	assert(briefing.get_node("MissionBriefingContent/EnvironmentName").text == "INTAKE WELL", "Briefing follows the newly available well")
-	assert(briefing.get_node("MissionBriefingContent/Objective").text.contains("Stabilize Intake Well"), "Well objective comes from the selected campaign level")
-	controller.campaign_state.completed_nodes["act_01/act_01_node_02"] = true
 	controller._update_hud()
 	await process_frame
 	assert(briefing.get_node("MissionBriefingContent/EnvironmentName").text == "BROKEN VIADUCT", "Briefing follows the furthest advanced stage")

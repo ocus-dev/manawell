@@ -4,6 +4,7 @@ signal settings_requested(opener: Control)
 
 var bank_label: Label
 var passive_label: Label
+var scrap_label: Label
 
 func _ready() -> void:
 	if bank_label == null:
@@ -14,6 +15,7 @@ func configure(view_data: Dictionary) -> void:
 		_build()
 	bank_label.text = "Banked mana %0.2f" % float(view_data.get("banked_mana", 0.0))
 	passive_label.text = "Passive %0.2f mana/min" % float(view_data.get("passive_rate_per_minute", 0.0))
+	scrap_label.text = "Scrap %d" % int(view_data.get("scrap", 0))
 
 func _build() -> void:
 	var row := HBoxContainer.new()
@@ -33,6 +35,10 @@ func _build() -> void:
 	passive_label.name = "PassiveRate"
 	passive_label.custom_minimum_size = Vector2(190, 40)
 	row.add_child(passive_label)
+	scrap_label = Label.new()
+	scrap_label.name = "Scrap"
+	scrap_label.custom_minimum_size = Vector2(100, 40)
+	row.add_child(scrap_label)
 	var settings := Button.new()
 	settings.name = "SettingsButton"
 	settings.text = "Settings"

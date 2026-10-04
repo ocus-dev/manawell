@@ -17,7 +17,7 @@ func configure(view_data: Dictionary) -> void:
 	var sealing: bool = phase == 2
 	var extracting: bool = phase == 1
 	var payout: int = int(view_data.get("at_risk_payout", 0))
-	payout_label.text = "At risk: %d mana" % payout
+	payout_label.text = "%d mana" % payout
 	if sealing:
 		action_button.text = "Sealing... %.1fs" % float(view_data.get("sealing_remaining", 0.0))
 		action_button.disabled = true
@@ -42,7 +42,7 @@ func _build() -> void:
 	content.name = "ExtractionContent"
 	content.add_theme_constant_override("separation", 8)
 	add_child(content)
-	payout_label = _label("At risk: 0 mana", 16)
+	payout_label = _label("0 mana", 16)
 	payout_label.name = "AtRisk"
 	payout_label.custom_minimum_size = Vector2(104, 40)
 	payout_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER

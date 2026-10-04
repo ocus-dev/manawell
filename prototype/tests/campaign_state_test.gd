@@ -20,20 +20,27 @@ func _init() -> void:
 	assert(_count_type(act, "monster") == 4)
 	assert(_count_type(act, "boss") == 1)
 	var campaign: RefCounted = CampaignStateScript.new()
-	assert(campaign.node_status("act_01", "act_01_node_01", catalog)["status"] == CampaignStateScript.STATUS_AVAILABLE)
-	assert(campaign.node_status("act_01", "act_01_node_02", catalog)["status"] == CampaignStateScript.STATUS_LOCKED)
-	assert(campaign.furthest_progression_node(catalog)["id"] == "act_01_node_01", "Fresh progress briefs the first campaign node")
-	assert(campaign.start_node("act_01", "act_01_node_01", catalog))
+	# Sector B (the tutorial, act_01_node_02) comes first; Scrap Approach after it.
+	assert(campaign.node_status("act_01", "act_01_node_02", catalog)["status"] == CampaignStateScript.STATUS_AVAILABLE)
+	assert(campaign.node_status("act_01", "act_01_node_01", catalog)["status"] == CampaignStateScript.STATUS_LOCKED)
+	assert(campaign.furthest_progression_node(catalog)["id"] == "act_01_node_02", "Fresh progress briefs the tutorial")
 	var account: RefCounted = AccountStateScript.new()
-	var result := {"run_id": "campaign-run-1", "phase": RunStateScript.Phase.SUCCESS, "payout": 3, "completed_surges": 0}
+	assert(campaign.start_node("act_01", "act_01_node_02", catalog))
+	# A well harvest before any surge pays out but doesn't clear the level.
+	var early := {"run_id": "campaign-run-0", "phase": RunStateScript.Phase.SUCCESS, "payout": 3, "completed_surges": 0}
+	assert(campaign.commit_terminal_result(early, account, catalog))
+	assert(campaign.node_status("act_01", "act_01_node_02", catalog)["status"] != CampaignStateScript.STATUS_COMPLETED)
+	assert(campaign.start_node("act_01", "act_01_node_02", catalog))
+	var result := {"run_id": "campaign-run-2", "phase": RunStateScript.Phase.SUCCESS, "payout": 3, "completed_surges": 1}
+	assert(campaign.commit_terminal_result(result, account, catalog))
+	assert(campaign.node_status("act_01", "act_01_node_02", catalog)["status"] == CampaignStateScript.STATUS_COMPLETED)
+	assert(account.is_well_commissioned("well_1"))
+	assert(not campaign.commit_terminal_result(result, account, catalog))
+	assert(campaign.furthest_progression_node(catalog)["id"] == "act_01_node_01", "Operations advances to Scrap Approach")
+	assert(campaign.start_node("act_01", "act_01_node_01", catalog))
+	result = {"run_id": "campaign-run-1", "phase": RunStateScript.Phase.SUCCESS, "payout": 3, "completed_surges": 0}
 	assert(campaign.commit_terminal_result(result, account, catalog))
 	assert(campaign.node_status("act_01", "act_01_node_01", catalog)["status"] == CampaignStateScript.STATUS_COMPLETED)
-	assert(campaign.furthest_progression_node(catalog)["id"] == "act_01_node_02", "Operations advances to the newly available node")
-	assert(not campaign.commit_terminal_result(result, account, catalog))
-	assert(campaign.start_node("act_01", "act_01_node_02", catalog))
-	result = {"run_id": "campaign-run-2", "phase": RunStateScript.Phase.SUCCESS, "payout": 3, "completed_surges": 1}
-	assert(campaign.commit_terminal_result(result, account, catalog))
-	assert(account.is_well_commissioned("well_1"))
 	assert(account.is_well_unlocked("well_2"))
 	assert(campaign.furthest_progression_node(catalog)["id"] == "act_01_node_03", "Operations follows the next stage after the well")
 	assert(not account.is_well_unlocked("well_3"))

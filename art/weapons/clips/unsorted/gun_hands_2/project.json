@@ -1,0 +1,259 @@
+{
+	"align_mode": "feet",
+	"background": "cacac9",
+	"body_height": 339.0,
+	"boxes": [
+		[
+			29,
+			177,
+			233,
+			340
+		],
+		[
+			268,
+			177,
+			248,
+			340
+		],
+		[
+			541,
+			177,
+			261,
+			340
+		],
+		[
+			828,
+			177,
+			264,
+			340
+		],
+		[
+			1125,
+			177,
+			264,
+			340
+		],
+		[
+			1446,
+			177,
+			262,
+			340
+		],
+		[
+			1744,
+			177,
+			247,
+			340
+		]
+	],
+	"cut": {
+		"clear_holes": true,
+		"drop_neighbors": true,
+		"method": "solid",
+		"min_piece": 0.03,
+		"tolerance": 38.0
+	},
+	"frame_ms": [
+		83.0,
+		83.0,
+		83.0,
+		83.0,
+		83.0,
+		83.0,
+		83.0
+	],
+	"frame_sources": [],
+	"frames": [
+		{
+			"anchor": [
+				105.0,
+				340.0
+			],
+			"file": "frames/cut_000.png",
+			"hand": "frames/handmask_000.png",
+			"hand_painted": false
+		},
+		{
+			"anchor": [
+				123.0,
+				340.0
+			],
+			"file": "frames/cut_001.png",
+			"hand": "frames/handmask_001.png",
+			"hand_painted": false
+		},
+		{
+			"anchor": [
+				130.0,
+				340.0
+			],
+			"file": "frames/cut_002.png",
+			"hand": "frames/handmask_002.png",
+			"hand_painted": false
+		},
+		{
+			"anchor": [
+				132.0,
+				340.0
+			],
+			"file": "frames/cut_003.png",
+			"hand": "frames/handmask_003.png",
+			"hand_painted": false
+		},
+		{
+			"anchor": [
+				132.0,
+				340.0
+			],
+			"file": "frames/cut_004.png",
+			"hand": "frames/handmask_004.png",
+			"hand_painted": false
+		},
+		{
+			"anchor": [
+				131.0,
+				340.0
+			],
+			"file": "frames/cut_005.png",
+			"hand": "frames/handmask_005.png",
+			"hand_painted": false
+		},
+		{
+			"anchor": [
+				119.0,
+				340.0
+			],
+			"file": "frames/cut_006.png",
+			"hand": "frames/handmask_006.png",
+			"hand_painted": false
+		}
+	],
+	"front_hand": true,
+	"ground_y": -1,
+	"hits": [],
+	"label": "Attack",
+	"mode": "hero_weapon",
+	"reference": {
+		"frames": 7,
+		"offsets": [
+			[
+				0.0,
+				0.0
+			],
+			[
+				2.0,
+				0.0
+			],
+			[
+				4.0,
+				0.0
+			],
+			[
+				2.0,
+				0.0
+			],
+			[
+				2.0,
+				0.0
+			],
+			[
+				0.0,
+				2.0
+			],
+			[
+				0.0,
+				0.0
+			]
+		],
+		"scale": 1.00296735905045
+	},
+	"scale": 1.0,
+	"schema_version": 1,
+	"source_kind": "sheet",
+	"starts": [],
+	"strip": [
+		29,
+		177,
+		1962,
+		340
+	],
+	"track": [
+		{
+			"behind": false,
+			"grip": [
+				225.0,
+				144.0
+			],
+			"tip": [
+				180.0,
+				122.0
+			]
+		},
+		{
+			"behind": true,
+			"grip": [
+				145.0,
+				45.0
+			],
+			"tip": [
+				284.0,
+				84.0
+			]
+		},
+		{
+			"behind": false,
+			"grip": [
+				140.0,
+				37.0
+			],
+			"tip": [
+				301.0,
+				77.0
+			]
+		},
+		{
+			"behind": false,
+			"grip": [
+				137.0,
+				41.0
+			],
+			"tip": [
+				310.0,
+				71.0
+			]
+		},
+		{
+			"behind": false,
+			"grip": [
+				136.0,
+				43.0
+			],
+			"tip": [
+				322.0,
+				71.0
+			]
+		},
+		{
+			"behind": false,
+			"grip": [
+				88.0,
+				45.0
+			],
+			"tip": [
+				267.0,
+				59.0
+			]
+		},
+		{
+			"behind": true,
+			"grip": [
+				158.0,
+				177.0
+			],
+			"tip": [
+				267.0,
+				148.0
+			]
+		}
+	]
+}

@@ -67,9 +67,6 @@ func define_hero(hero_id: String, definition: Dictionary) -> void:
 func define_upgrade(upgrade_id: String, definition: Dictionary) -> void:
 	upgrades[upgrade_id] = definition.duplicate(true)
 
-func define_surge_rule(rule: Dictionary) -> void:
-	surge_rules.append(rule.duplicate(true))
-
 func has_well(well_id: String) -> bool:
 	return wells.has(well_id)
 
@@ -86,9 +83,6 @@ func get_research(research_id: String) -> Dictionary:
 	if research_tracks.has(research_id):
 		return research_tracks[research_id].duplicate(true)
 	return research_unlocks.get(research_id, {}).duplicate(true)
-
-func research_ids() -> Array[String]:
-	return ResearchCatalogScript.all_ids()
 
 func get_well(well_id: String) -> Dictionary:
 	return wells.get(well_id, {})

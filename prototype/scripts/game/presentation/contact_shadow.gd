@@ -24,15 +24,18 @@ func _process(_delta: float) -> void:
 	if not enabled or not is_instance_valid(target) or target.is_queued_for_deletion() or _target_is_dead():
 		visible = false
 		return
-	var feet_y := target.global_position.y + 40.0
-	support_y = _resolve_support_y(feet_y, target.global_position.x)
+	# In the parent's space (the world can be drawn raised, see set_world_lift).
+	var parent_2d := get_parent() as Node2D
+	var target_position: Vector2 = parent_2d.to_local(target.global_position) if parent_2d != null else target.global_position
+	var feet_y := target_position.y + 40.0
+	support_y = _resolve_support_y(feet_y, target_position.x)
 	if not is_finite(support_y):
 		visible = false
 		return
 	var distance := maxf(0.0, support_y - feet_y)
 	var distance_ratio := clampf(distance / falloff, 0.0, 1.0)
 	var scale_ratio := lerpf(1.0, 0.58, distance_ratio)
-	position = Vector2(target.global_position.x, support_y + 2.0)
+	position = Vector2(target_position.x, support_y + 2.0)
 	width = maxf(12.0, base_width * scale_ratio)
 	modulate.a = opacity * lerpf(1.0, 0.45, distance_ratio)
 	visible = true

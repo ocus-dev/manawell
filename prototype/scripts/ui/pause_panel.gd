@@ -3,6 +3,7 @@ extends PanelContainer
 signal resume_requested
 signal settings_requested
 signal abandon_requested
+signal quit_to_title_requested
 
 var at_risk_label: Label
 var confirmation: PanelContainer
@@ -15,7 +16,12 @@ func _ready() -> void:
 func configure(view_data: Dictionary) -> void:
 	if at_risk_label == null:
 		_build()
-	at_risk_label.text = "Current tank at risk: %d mana" % int(view_data.get("at_risk_payout", 0))
+	at_risk_label.text = "%d Mana" % int(view_data.get("at_risk_payout", 0))
+	# The abandon confirmation stays up across HUD refreshes; it is closed
+	# when the pause menu opens or closes (see close_confirmation).
+
+## Called when the pause menu is shown or hidden.
+func close_confirmation() -> void:
 	_hide_confirmation()
 
 func request_abandon() -> void:
@@ -71,9 +77,17 @@ func _build() -> void:
 	settings.custom_minimum_size = Vector2(0, 44)
 	settings.pressed.connect(settings_requested.emit)
 	content.add_child(settings)
+	var quit_to_title := Button.new()
+	quit_to_title.name = "QuitToTitle"
+	quit_to_title.text = "Quit to title"
+	quit_to_title.tooltip_text = "Ends this run (the tank's mana is lost) and opens the start screen. Runs aren't saved."
+	quit_to_title.custom_minimum_size = Vector2(0, 44)
+	quit_to_title.pressed.connect(quit_to_title_requested.emit)
+	content.add_child(quit_to_title)
 	var abandon := Button.new()
 	abandon.name = "Abandon"
-	abandon.text = "Abandon current tank"
+	abandon.text = "Return to operations screen"
+	abandon.tooltip_text = "Ends this run (the mana in the tank is lost) and goes back to Operations."
 	abandon.custom_minimum_size = Vector2(0, 44)
 	abandon.pressed.connect(request_abandon)
 	content.add_child(abandon)
@@ -85,12 +99,12 @@ func _build() -> void:
 	confirmation_content.name = "ConfirmationContent"
 	confirmation.add_child(confirmation_content)
 	var confirmation_label := Label.new()
-	confirmation_label.text = "Abandon current tank? The at-risk amount will be forfeited."
+	confirmation_label.text = "Return to the operations screen? This run ends and the mana in the tank will be lost."
 	confirmation_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	confirmation_content.add_child(confirmation_label)
 	var confirm := Button.new()
 	confirm.name = "ConfirmAbandon"
-	confirm.text = "Confirm abandon"
+	confirm.text = "Confirm"
 	confirm.custom_minimum_size = Vector2(0, 44)
 	confirm.pressed.connect(_on_confirm_abandon)
 	confirmation_content.add_child(confirm)

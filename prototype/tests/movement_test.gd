@@ -2,12 +2,13 @@ extends SceneTree
 
 const HeroScript = preload("res://scripts/game/player.gd")
 const ControllerScript = preload("res://scripts/game/encounter_controller.gd")
+const BalanceData = preload("res://data/balance.gd")
 
 func _init() -> void:
 	var hero: Node2D = HeroScript.new()
 	hero.position = Vector2(640.0, 500.0)
 	hero.simulate_tick(1.0 / 60.0, 1.0)
-	assert(is_equal_approx(hero.position.x, 643.2))
+	assert(is_equal_approx(hero.position.x, 640.0 + BalanceData.HERO_HORIZONTAL_SPEED / 60.0))
 	assert(hero.last_facing == 1)
 	hero.simulate_tick(1.0 / 60.0, -1.0)
 	assert(is_equal_approx(hero.position.x, 640.0))

@@ -1,28 +1,32 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene format=3 uid="uid://l4b48ydy3els"]
 
-[ext_resource type="Script" path="res://scripts/ui/title_screen.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://assets/title/title-background.png" id="2_background"]
-[ext_resource type="Texture2D" path="res://assets/title/telos-title.png" id="3_title"]
+[ext_resource type="Script" uid="uid://chy8mvmnf7u33" path="res://scripts/ui/title_screen.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://dege6teo0ta7u" path="res://assets/title/title-background.png" id="2_background"]
+[ext_resource type="Texture2D" uid="uid://wfueqsoshib0" path="res://assets/title/telos-title.png" id="3_title"]
+
+[sub_resource type="StyleBoxFlat" id="StyleFocus"]
+content_margin_top = 8.0
+content_margin_bottom = 8.0
+bg_color = Color(0.96, 0.67, 0.31, 0.08)
+border_width_bottom = 1
+border_color = Color(0.96, 0.67, 0.31, 0.8)
+
+[sub_resource type="StyleBoxFlat" id="StyleHover"]
+content_margin_top = 8.0
+content_margin_bottom = 8.0
+bg_color = Color(0.96, 0.67, 0.31, 0.13)
+border_width_bottom = 2
+border_color = Color(0.96, 0.67, 0.31, 0.9)
 
 [sub_resource type="StyleBoxEmpty" id="StyleButton"]
 content_margin_top = 8.0
 content_margin_bottom = 8.0
 
-[sub_resource type="StyleBoxFlat" id="StyleHover"]
-bg_color = Color(0.96, 0.67, 0.31, 0.13)
-border_width_bottom = 2
-border_color = Color(0.96, 0.67, 0.31, 0.9)
-content_margin_top = 8.0
-content_margin_bottom = 8.0
-
-[sub_resource type="StyleBoxFlat" id="StyleFocus"]
-bg_color = Color(0.96, 0.67, 0.31, 0.08)
-border_width_bottom = 1
-border_color = Color(0.96, 0.67, 0.31, 0.8)
-content_margin_top = 8.0
-content_margin_bottom = 8.0
-
 [sub_resource type="StyleBoxFlat" id="StylePanel"]
+content_margin_left = 28.0
+content_margin_top = 24.0
+content_margin_right = 28.0
+content_margin_bottom = 24.0
 bg_color = Color(0.04, 0.055, 0.07, 0.88)
 border_width_left = 1
 border_width_top = 1
@@ -33,10 +37,6 @@ corner_radius_top_left = 3
 corner_radius_top_right = 3
 corner_radius_bottom_right = 3
 corner_radius_bottom_left = 3
-content_margin_left = 28.0
-content_margin_top = 24.0
-content_margin_right = 28.0
-content_margin_bottom = 24.0
 
 [sub_resource type="Theme" id="ThemeTitle"]
 default_font_size = 18
@@ -44,18 +44,18 @@ Button/colors/font_color = Color(0.08, 0.1, 0.12, 1)
 Button/colors/font_disabled_color = Color(0.25, 0.28, 0.31, 0.55)
 Button/colors/font_focus_color = Color(0.06, 0.075, 0.09, 1)
 Button/colors/font_hover_color = Color(0.04, 0.055, 0.07, 1)
+Button/colors/font_outline_color = Color(0.92, 0.94, 0.96, 0.32)
 Button/colors/font_pressed_color = Color(0.04, 0.055, 0.07, 1)
 Button/constants/outline_size = 2
-Button/colors/font_outline_color = Color(0.92, 0.94, 0.96, 0.32)
-Button/styles/normal = SubResource("StyleButton")
-Button/styles/hover = SubResource("StyleHover")
-Button/styles/pressed = SubResource("StyleHover")
 Button/styles/focus = SubResource("StyleFocus")
-PanelContainer/styles/panel = SubResource("StylePanel")
-Label/colors/font_color = Color(0.92, 0.94, 0.95, 1)
+Button/styles/hover = SubResource("StyleHover")
+Button/styles/normal = SubResource("StyleButton")
+Button/styles/pressed = SubResource("StyleHover")
 CheckButton/colors/font_color = Color(0.92, 0.94, 0.95, 1)
+Label/colors/font_color = Color(0.92, 0.94, 0.95, 1)
+PanelContainer/styles/panel = SubResource("StylePanel")
 
-[node name="TitleScreen" type="Control"]
+[node name="TitleScreen" type="Control" unique_id=1362202396]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -65,11 +65,15 @@ grow_vertical = 2
 theme = SubResource("ThemeTitle")
 script = ExtResource("1_script")
 
-[node name="Background" type="TextureRect" parent="."]
+[node name="Background" type="TextureRect" parent="." unique_id=1049962666]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 4.0
+offset_top = 3.0
+offset_right = 4.0
+offset_bottom = 3.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
@@ -77,7 +81,7 @@ texture = ExtResource("2_background")
 expand_mode = 1
 stretch_mode = 6
 
-[node name="Title" type="TextureRect" parent="."]
+[node name="Title" type="TextureRect" parent="." unique_id=1523959771]
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
@@ -89,7 +93,7 @@ texture = ExtResource("3_title")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Menu" type="VBoxContainer" parent="."]
+[node name="Menu" type="VBoxContainer" parent="." unique_id=339622022]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -104,29 +108,24 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 8
 
-[node name="Continue" type="Button" parent="Menu"]
+[node name="Play" type="Button" parent="Menu" unique_id=1010596039]
 custom_minimum_size = Vector2(230, 48)
 layout_mode = 2
 focus_neighbor_top = NodePath("../Quit")
-text = "C O N T I N U E"
+text = "P L A Y"
 
-[node name="NewGame" type="Button" parent="Menu"]
-custom_minimum_size = Vector2(230, 48)
-layout_mode = 2
-text = "N E W   G A M E"
-
-[node name="Settings" type="Button" parent="Menu"]
+[node name="Settings" type="Button" parent="Menu" unique_id=220760444]
 custom_minimum_size = Vector2(230, 48)
 layout_mode = 2
 text = "S E T T I N G S"
 
-[node name="Quit" type="Button" parent="Menu"]
+[node name="Quit" type="Button" parent="Menu" unique_id=34308327]
 custom_minimum_size = Vector2(230, 48)
 layout_mode = 2
-focus_neighbor_bottom = NodePath("../Continue")
+focus_neighbor_bottom = NodePath("../Play")
 text = "Q U I T"
 
-[node name="SettingsPanel" type="PanelContainer" parent="."]
+[node name="SettingsPanel" type="PanelContainer" parent="." unique_id=1676390232]
 visible = false
 layout_mode = 1
 anchors_preset = 8
@@ -135,34 +134,38 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -190.0
-offset_top = -90.0
+offset_top = -120.0
 offset_right = 190.0
-offset_bottom = 110.0
+offset_bottom = 140.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Settings" type="VBoxContainer" parent="SettingsPanel"]
+[node name="Settings" type="VBoxContainer" parent="SettingsPanel" unique_id=675625181]
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="Heading" type="Label" parent="SettingsPanel/Settings"]
+[node name="Heading" type="Label" parent="SettingsPanel/Settings" unique_id=1919474310]
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
 text = "SETTINGS"
 horizontal_alignment = 1
 
-[node name="Fullscreen" type="CheckButton" parent="SettingsPanel/Settings"]
+[node name="Fullscreen" type="CheckButton" parent="SettingsPanel/Settings" unique_id=289176952]
 custom_minimum_size = Vector2(280, 44)
 layout_mode = 2
 text = "Fullscreen"
 
-[node name="Back" type="Button" parent="SettingsPanel/Settings"]
+[node name="ResetProgress" type="Button" parent="SettingsPanel/Settings" unique_id=1424839731]
+custom_minimum_size = Vector2(280, 44)
+layout_mode = 2
+text = "R E S E T   P R O G R E S S"
+
+[node name="Back" type="Button" parent="SettingsPanel/Settings" unique_id=1618998328]
 custom_minimum_size = Vector2(280, 44)
 layout_mode = 2
 text = "B A C K"
 
-[node name="NewGameConfirmation" type="ConfirmationDialog" parent="."]
+[node name="NewGameConfirmation" type="ConfirmationDialog" parent="." unique_id=1658998007]
 title = "Start New Game"
-dialog_text = "Start over and replace the current save?"
 ok_button_text = "Start New Game"
-cancel_button_text = "Cancel"
+dialog_text = "Start over and replace the current save?"

@@ -49,6 +49,28 @@ static func revision_for(draft: Dictionary) -> Dictionary:
         if not str(clip.get("hand_source", "")).is_empty():
             clip["hand_sheet"] = PENDING_EFFECT_SHEET
         revision["attack_clip"] = clip
+    if draft.get("pose_sources") is Dictionary:
+        var sources := {}
+        for key in ["idle", "walk"]:
+            if ["type", "own", "none"].has(str(draft.pose_sources.get(key, ""))):
+                sources[key] = str(draft.pose_sources[key])
+        if not sources.is_empty():
+            revision["pose_sources"] = sources
+    if draft.get("pose_clips") is Dictionary:
+        var poses := {}
+        for key in ["idle", "walk"]:
+            var pose: Variant = draft.pose_clips.get(key, {})
+            if not WeaponClipScript.is_set(pose):
+                continue
+            var entry: Dictionary = WeaponClipScript.normalize(pose)
+            entry.erase("project")
+            if not str(entry.get("source", "")).is_empty() or not str(entry.get("sheet", "")).begins_with("res://"):
+                entry["sheet"] = PENDING_EFFECT_SHEET
+            if not str(entry.get("hand_source", "")).is_empty():
+                entry["hand_sheet"] = PENDING_EFFECT_SHEET
+            poses[key] = entry
+        if not poses.is_empty():
+            revision["pose_clips"] = poses
     if draft.get("swing") is Dictionary and not draft.swing.is_empty():
         revision["swing"] = draft.swing.duplicate(true)
     if draft.get("base_stats") is Dictionary:

@@ -48,10 +48,10 @@
         0.5
       ],
       "at": 0.5,
-      "columns": 8,
+      "columns": 8.0,
       "follow": true,
       "fps": 30.0,
-      "frame_count": 8,
+      "frame_count": 8.0,
       "label": "Impact ring",
       "offset": [
         0.0,
@@ -71,10 +71,10 @@
         0.5
       ],
       "at": 0.5,
-      "columns": 10,
+      "columns": 10.0,
       "follow": true,
       "fps": 20.0,
-      "frame_count": 10,
+      "frame_count": 10.0,
       "label": "Glow pulse",
       "offset": [
         0.0,

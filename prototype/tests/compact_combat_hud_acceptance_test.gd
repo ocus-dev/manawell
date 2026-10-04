@@ -72,16 +72,17 @@ func _configure_scenario(controller: Node, scenario: String) -> void:
 func _assert_layout(controller: Node, window_size: Vector2i, scenario: String) -> void:
 	var viewport_rect := Rect2(Vector2.ZERO, Vector2(window_size))
 	var hud: Control = controller.encounter_hud.combat
-	var widgets := [hud.get_node("SurvivalWidget"), hud.get_node("PressureWidget"), hud.get_node("CombatWallet"), hud.get_node("AbilityBar"), hud.get_node("ExtractionWidget")]
+	var widgets := [hud.find_child("SurvivalWidget", true, false), hud.find_child("PressureWidget", true, false), hud.find_child("CombatWallet", true, false), hud.find_child("AbilityBar", true, false), hud.find_child("ExtractionWidget", true, false)]
 	for widget in widgets:
 		var bounds: Rect2 = widget.get_global_rect()
 		print("hud_acceptance_bounds ", scenario, " ", widget.name, " ", bounds)
 		assert(TestCheckScript.check(viewport_rect.encloses(bounds), scenario + " " + widget.name + " stays inside viewport"))
-	assert(TestCheckScript.check(widgets[0].get_global_rect().end.y <= 64.0, scenario + " health stays in top band"))
-	assert(TestCheckScript.check(widgets[1].get_global_rect().end.y <= 64.0, scenario + " pressure stays in top band"))
+	var health_rect: Rect2 = widgets[0].get_global_rect()
+	assert(TestCheckScript.check(health_rect.position.x <= 1.0 and health_rect.position.y <= 1.0, scenario + " health snaps to the top-left corner"))
+	assert(TestCheckScript.check(widgets[1].get_global_rect().position.y >= health_rect.end.y - 1.0, scenario + " surge sits below health"))
 	assert(TestCheckScript.check(widgets[2].get_global_rect().end.y <= 64.0, scenario + " pause stays in top band"))
 	assert(TestCheckScript.check(widgets[3].get_global_rect().position.y >= 656.0, scenario + " skills stay in logical bottom band"))
-	assert(TestCheckScript.check(widgets[4].get_global_rect().position.y >= 656.0, scenario + " extraction stays in logical bottom band"))
+	assert(TestCheckScript.check(widgets[4].get_global_rect().position.y >= widgets[1].get_global_rect().end.y - 1.0, scenario + " mana sits below surge"))
 
 func _capture(controller: Node, scenario: String, window_size: Vector2i) -> void:
 	await RenderingServer.frame_post_draw

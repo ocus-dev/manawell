@@ -14,6 +14,8 @@ var active_act_id: String = ""
 var active_node_id: String = ""
 var committed_terminal_ids: Dictionary = {}
 var all_levels_enabled := false
+## The tutorial area isn't a campaign node; its boss clear is kept here.
+var tutorial_cleared := false
 
 func _init() -> void:
 	var catalog: RefCounted = CampaignCatalogScript.new()
@@ -33,7 +35,7 @@ func to_save_payload() -> Dictionary:
 	for key in committed_terminal_ids.keys():
 		commits.append(str(key))
 	commits.sort()
-	return {"completed_nodes": completed, "unlocked_acts": acts, "active_act_id": active_act_id, "active_node_id": active_node_id, "committed_terminal_ids": commits}
+	return {"completed_nodes": completed, "unlocked_acts": acts, "active_act_id": active_act_id, "active_node_id": active_node_id, "committed_terminal_ids": commits, "tutorial_cleared": tutorial_cleared}
 
 static func validate_save_payload(payload: Dictionary, catalog: RefCounted = null) -> Dictionary:
 	var definitions: RefCounted = CampaignCatalogScript.new() if catalog == null else catalog
@@ -78,7 +80,37 @@ func from_save_payload(payload: Dictionary, catalog: RefCounted = null) -> bool:
 	committed_terminal_ids.clear()
 	for run_id in payload.get("committed_terminal_ids", []):
 		committed_terminal_ids[run_id] = true
+	tutorial_cleared = bool(payload.get("tutorial_cleared", false))
 	return true
+
+## Clears a level straight away (its zone boss was killed): the next level
+## unlocks even if the run is lost afterwards.
+func mark_cleared(act_id: String, node_id: String, catalog: RefCounted = null) -> bool:
+	var definitions: RefCounted = CampaignCatalogScript.new() if catalog == null else catalog
+	var node: Dictionary = definitions.get_node(act_id, node_id)
+	if node.is_empty():
+		return false
+	var key := _node_key(act_id, node_id)
+	var newly := not completed_nodes.has(key)
+	completed_nodes[key] = true
+	if node["type"] == "boss":
+		var next_act: String = definitions.next_act_id(act_id)
+		if not next_act.is_empty():
+			unlocked_acts[next_act] = true
+	return newly
+
+func is_cleared(act_id: String, node_id: String) -> bool:
+	return completed_nodes.has(_node_key(act_id, node_id))
+
+## The level that `node_id` unlocks (the first one that lists it as a
+## prerequisite), or {} if it's the last.
+func next_node(act_id: String, node_id: String, catalog: RefCounted = null) -> Dictionary:
+	var definitions: RefCounted = CampaignCatalogScript.new() if catalog == null else catalog
+	for candidate_id in definitions.node_ids(act_id):
+		var candidate: Dictionary = definitions.get_node(act_id, candidate_id)
+		if candidate.get("prerequisites", []).has(node_id):
+			return candidate
+	return {}
 
 func start_node(act_id: String, node_id: String, catalog: RefCounted = null) -> bool:
 	var definitions: RefCounted = CampaignCatalogScript.new() if catalog == null else catalog
@@ -159,8 +191,18 @@ func commit_terminal_result(result: Dictionary, account: RefCounted, catalog: Re
 		return false
 	var well_id: String = str(node.get("well_id", ""))
 	var surge_count: int = int(result.get("completed_surges", 0))
+	# Levels with a boss gate only clear (first-clear rewards, unlock) once the
+	# boss is dead, and well levels need at least one surge. Anything less is a
+	# farming run: the mana is still paid out, nothing unlocks.
+	var cleared := bool(result.get("zone_cleared", true)) or completed_nodes.has(_node_key(active_act_id, active_node_id))
 	if node["type"] == "well" and surge_count < 1:
-		return false
+		cleared = false
+	if not cleared:
+		if not account.complete_run(result, run_id, well_id, surge_count):
+			return false
+		committed_terminal_ids[run_id] = true
+		clear_active_node()
+		return true
 	if not account.complete_campaign_run(result, run_id, active_node_id, node.get("level_data", {}), well_id, surge_count):
 		return false
 	if node["type"] == "well" and not account.is_well_commissioned(well_id):

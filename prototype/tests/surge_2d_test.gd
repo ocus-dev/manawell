@@ -13,6 +13,9 @@ func _init() -> void:
 	quit(0)
 
 func _make_controller() -> Node:
+	# The default well is the Sector B tutorial map (no monsters by default);
+	# these checks are about the built-in surge director, so switch it on.
+	preload("res://scripts/model/level_spawns.gd").set_mode("tutorial", "default")
 	var controller: Node = load("res://scenes/main.tscn").instantiate()
 	get_root().add_child(controller)
 	assert(controller.start_run())
@@ -25,13 +28,11 @@ func _test_continuing_catalog_director() -> void:
 	controller.simulate_step(90.0)
 	assert(controller.spawn_index > 0)
 	assert(controller.spawn_timer >= 0.0)
-	assert(controller.side_sequence > 1)
+	for enemy in controller.enemies:
+		assert(enemy.side == 1, "enemies enter from the right")
 	assert(controller.spawned_kinds.has(EnemyScript.EnemyKind.PURSUER))
 	assert(controller.spawned_kinds.has(EnemyScript.EnemyKind.BREAKER))
 	assert(controller.spawned_kinds.has(EnemyScript.EnemyKind.RANGED))
-	var first_warning: Dictionary = controller.pending_entry_warnings[0]
-	assert(first_warning.has("side"))
-	assert(first_warning.has("remaining"))
 	var tier_four_interval: float = controller._spawn_interval()
 	controller.run_state.completed_surges = 5
 	assert(controller._spawn_interval() < tier_four_interval)

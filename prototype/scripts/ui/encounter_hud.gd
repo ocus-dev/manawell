@@ -46,7 +46,8 @@ func build(owner: Node) -> void:
 	set_view_state(view_state)
 
 func set_view_state(next_state: Dictionary) -> void:
-	view_state = next_state.duplicate(true)
+	# The controller builds a fresh dictionary each time, so no copy is needed.
+	view_state = next_state
 	selected_well_id = str(view_state.get("selected_well_id", selected_well_id))
 	selected_loadout_id = str(view_state.get("selected_loadout_id", selected_loadout_id))
 	selected_active_hero_id = str(view_state.get("active_hero_id", selected_active_hero_id))
@@ -55,14 +56,13 @@ func set_view_state(next_state: Dictionary) -> void:
 		return
 	var operations_state: Dictionary = view_state.get("operations", {})
 	var combat_state: Dictionary = view_state.get("combat", {})
-	if operations != null:
+	# Operations is hidden during a run; it is refreshed again when it comes back.
+	if operations != null and not bool(combat_state.get("active", false)):
 		operations.refresh(view_state)
 	if combat != null:
 		combat.configure(view_state)
 	if notice_host != null:
 		notice_host.configure(view_state.get("notices", {}))
-	if settings_panel != null:
-		settings_panel.configure(view_state.get("notices", {}))
 	if router != null:
 		router.configure(view_state)
 	var active := bool(combat_state.get("active", false))
@@ -80,6 +80,13 @@ func set_view_state(next_state: Dictionary) -> void:
 		router.show_results(view_state.get("results", {}))
 	elif not bool(combat_state.get("paused", false)) and not terminal and router.mode != "hidden":
 		router.hide_overlays()
+
+## Per-frame update during a run: only the combat readout changes.
+func update_combat(combat_state: Dictionary) -> void:
+	if combat == null:
+		return
+	view_state["combat"] = combat_state
+	combat.configure_combat(combat_state)
 
 func choose_well(well_id: String) -> void:
 	well_selected.emit(well_id)
@@ -120,8 +127,14 @@ func _build() -> void:
 	add_child(router)
 	notice_host = NoticeHostScript.new()
 	notice_host.name = "NoticeHost"
-	notice_host.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-	notice_host.position = Vector2(24, -150)
+	# Centred on screen; grows evenly in every direction as the text wraps.
+	notice_host.set_anchors_preset(Control.PRESET_CENTER)
+	notice_host.offset_left = -180.0
+	notice_host.offset_right = 180.0
+	notice_host.offset_top = -55.0
+	notice_host.offset_bottom = 55.0
+	notice_host.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	notice_host.grow_vertical = Control.GROW_DIRECTION_BOTH
 	notice_host.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(notice_host)
 	settings_panel = SettingsPanelScript.new()
@@ -149,26 +162,31 @@ func _configure_commands() -> void:
 		operations.inventory_equip_requested.connect(func(hero_id: String, slot: String, instance_id: String): controller.equip_inventory_item(hero_id, slot, instance_id))
 		operations.inventory_unequip_requested.connect(func(hero_id: String, slot: String): controller.unequip_inventory_item(hero_id, slot))
 		operations.inventory_lock_toggled.connect(func(instance_id: String, locked: bool): controller.lock_inventory_item(instance_id, locked))
-		operations.inventory_discard_requested.connect(func(instance_id: String, confirmed_name: String): controller.discard_inventory_item(instance_id, confirmed_name))
+		operations.inventory_salvage_requested.connect(_on_salvage_requested)
 		operations.settings_requested.connect(_show_settings)
 		operations.campaign_node_selected.connect(func(act_id: String, node_id: String): campaign_node_selected.emit(act_id, node_id))
 		operations.campaign_node_activate.connect(func(act_id: String, node_id: String): campaign_node_activate.emit(act_id, node_id))
+		operations.home_requested.connect(func(): controller.enter_home())
 		combat.pause_requested.connect(controller.toggle_pause)
 		combat.harvest_requested.connect(controller.request_start_or_harvest)
 		combat.ability_requested.connect(_on_ability_requested)
+		combat.world_clicked.connect(func(at: Vector2) -> void: controller.handle_world_click(at))
+		combat.surge_limit_changed.connect(controller.set_surge_limit)
+		combat.drill_panel_closed.connect(controller.close_drill_panel)
 		router.resume_requested.connect(controller.toggle_pause)
 		router.abandon_requested.connect(controller.abandon)
+		router.quit_to_title_requested.connect(controller.quit_to_title)
 		router.return_requested.connect(controller.return_to_operations)
 		router.retry_requested.connect(controller.retry)
 		router.settings_requested.connect(_show_settings)
 		notice_host.action_requested.connect(_on_notice_action)
-		settings_panel.retry_save_requested.connect(controller.retry_pending_save)
-		settings_panel.retry_settlement_requested.connect(controller.retry_offline_settlement)
-		settings_panel.clear_requested.connect(_on_clear_requested)
-		settings_panel.developer_toggle_requested.connect(controller._toggle_sealing_setting)
 		settings_panel.resolution_requested.connect(controller.set_resolution)
 		settings_panel.ui_scale_requested.connect(controller.set_ui_scale)
 		settings_panel.closed.connect(_hide_settings)
+
+func _on_salvage_requested(instance_ids: Array) -> void:
+	var result: Dictionary = controller.salvage_inventory_items(instance_ids)
+	operations.inventory_panel.show_salvage_result(result)
 
 func _on_destination_requested(well_id: String) -> void:
 	well_selected.emit(well_id)
@@ -210,12 +228,16 @@ func _show_settings(opener: Control = null) -> void:
 	settings_opener = opener if is_instance_valid(opener) else get_viewport().gui_get_focus_owner()
 	settings_panel.visible = true
 	settings_panel.mouse_filter = Control.MOUSE_FILTER_STOP
-	settings_panel.configure(view_state.get("notices", {}))
+	# Settings replaces the pause menu while open (it's smaller and would overlap).
+	if router != null and router.pause_panel != null:
+		router.pause_panel.visible = false
 	settings_panel.set_ui_scale(controller.ui_scale)
-	settings_panel.get_node("SettingsContent/RetrySave").grab_focus()
+	settings_panel.focus_first()
 
 func _hide_settings() -> void:
 	settings_panel.visible = false
+	if router != null and router.pause_panel != null and router.mode == "pause":
+		router.pause_panel.visible = true
 	if is_instance_valid(settings_opener):
 		settings_opener.grab_focus()
 	settings_opener = null
@@ -226,7 +248,3 @@ func _on_notice_action(action_id: String) -> void:
 	elif action_id == "retry_settlement":
 		controller.retry_offline_settlement()
 
-func _on_clear_requested() -> void:
-	controller.clear_saved_progress()
-	if str(controller.save_store.last_error).is_empty():
-		_hide_settings()

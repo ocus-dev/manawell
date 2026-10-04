@@ -607,6 +607,9 @@ func _check_hands(lab: Node) -> void:
 	importer.brush = 30.0
 	importer.paint_hand(0, Vector2(grip_px), true)
 	check(importer.hand_masks[0].get_pixelv(grip_px).r < 0.5 and importer.hand_painted[0], "hand brush erases (Shift)")
+	importer.paint_hand(0, Vector2(grip_px) + Vector2(12, 4), false)
+	var full_rebuild: Image = preload("res://scripts/tools/weapon_clip_import.gd").masked(importer.cut[0], importer.hand_masks[0])
+	check(importer.hand_pictures[0] is Image and (importer.hand_pictures[0] as Image).get_data() == full_rebuild.get_data(), "brush strokes update only the painted area, matching a full rebuild")
 	importer.reset_hand(0)
 	check(importer.hand_masks[0].get_pixelv(grip_px).r > 0.5 and not importer.hand_painted[0], "Auto hand redoes it")
 	importer.brush = 6.0
@@ -773,7 +776,7 @@ func _check_type_defaults(lab: Node, sheet_path: String) -> void:
 	stage.begin_drag(zoomed_grip)
 	stage.drag_to(zoomed_grip + Vector2(30, 0))
 	stage.end_drag()
-	check(absf(float(lab.draft.art.hand_offset[0]) - float(zoomed_before[0]) - 30.0 / stage.hold_camera.zoom.x) <= 1.0, "dragging while zoomed moves the weapon less (finer placement)")
+	check(absf(float(lab.draft.art.hand_offset[0]) - float(zoomed_before[0]) - 30.0 / stage.hold_camera.zoom.x / hero.display_scale()) <= 1.0, "dragging while zoomed moves the weapon less (finer placement)")
 	stage.set_hold_zoom(50.0)
 	check(is_equal_approx(stage.hold_zoom, stage.HOLD_ZOOM_MAX), "zoom is capped")
 	stage.set_hold_zoom(0.1)
@@ -847,6 +850,10 @@ func _check_arena() -> void:
 	arena.monsters_invincible = false
 	arena.simulate_step(6.0)
 	check(arena.kills >= 1 and arena.monster_count() == 0, "with dying on, the weapon kills")
+	arena.shots.clear()
+	arena.play_swing()
+	check(arena.shots.size() == 1 and Vector2(arena.shots[0].velocity).x > 0.0 and absf(Vector2(arena.shots[0].velocity).y) < 0.001, "E with a ranged weapon fires a shot straight ahead when no monster is around")
+	arena.shots.clear()
 	arena.configure_weapon("Test Sword", texture, {}, "weapon.melee", {"attack_damage": 9.0, "attack_interval": 0.4})
 	arena.monsters_invincible = true
 	arena.reset_meter()
@@ -946,6 +953,34 @@ func _check_hero_animations() -> void:
 	dummy.fill_rect(Rect2i(10, 0, 20, 40), Color.RED)
 	dummy.fill_rect(Rect2i(0, 40, 60, 40), Color.RED)
 	check(is_equal_approx(ClipImport.body_center_x(dummy), 20.0), "body line-up follows the torso, not the legs")
+	# Front fist: tracked across frames, saved, and the held weapon follows it.
+	var blob_frames: Array = []
+	for index in range(3):
+		var frame := Image.create_empty(80, 80, false, Image.FORMAT_RGBA8)
+		frame.fill_rect(Rect2i(10, 10, 30, 60), Color(0.8, 0.1, 0.1))
+		frame.fill_rect(Rect2i(44 + index * 4, 30 - index * 3, 10, 10), Color(0.2, 0.2, 0.25))
+		frame.fill_rect(Rect2i(47 + index * 4, 33 - index * 3, 4, 4), Color(0.9, 0.9, 0.9))
+		blob_frames.append(frame)
+	var fists: Array = ClipImport.track_patch(blob_frames, 0, Vector2(49, 35), 10, 12)
+	check(fists.size() == 3 and Vector2(fists[1]).distance_to(Vector2(53, 32)) <= 2.0 and Vector2(fists[2]).distance_to(Vector2(57, 29)) <= 2.0, "front fist tracked across frames (%s)" % str(fists))
+	var fist_clip := clip.duplicate(true)
+	fist_clip["hand_track"] = [[30, 20], [34, 16]]
+	var fist_result: Dictionary = HeroAnims.install(fist_clip, "idle")
+	var fist_manifest: Dictionary = VisualConfig.runtime_manifests.get("hero_idle", {})
+	check(bool(fist_result.ok) and fist_manifest.get("hand_track", []).size() == 2, "fist track saved with the animation")
+	var holder: Node2D = HeroScript.new()
+	root.add_child(holder)
+	await process_frame
+	holder.configure_held_weapon(ImageTexture.create_from_image(Image.create_empty(8, 8, false, Image.FORMAT_RGBA8)))
+	holder.visual.idle_sprite.frame = 0
+	holder._process(0.0)
+	var socket_start: Vector2 = holder.weapon_socket.position
+	holder.visual.idle_sprite.frame = 1
+	holder._process(0.0)
+	var moved_by: Vector2 = holder.weapon_socket.position - socket_start
+	var step: float = float(VisualConfig.ASSETS.hero.animation_reference_height) / 50.0 * holder.visual.animation_scale
+	check(absf(moved_by.x - 4.0 * step) < 0.01 and absf(moved_by.y + 4.0 * step) < 0.01, "the held weapon follows the fist (%s)" % str(moved_by))
+	holder.queue_free()
 	VisualConfig.runtime_frames.clear()
 	VisualConfig.runtime_manifests.clear()
 	HeroAnims.animations_root = HeroAnims.ANIMATIONS_ROOT

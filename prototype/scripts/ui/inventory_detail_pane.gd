@@ -3,12 +3,14 @@ extends PanelContainer
 const Resolver = preload("res://scripts/model/hero_stat_resolver.gd")
 const Definitions = preload("res://scripts/model/item_definitions.gd")
 const Icons = preload("res://scripts/ui/item_icons.gd")
+const SalvageScript = preload("res://scripts/model/salvage.gd")
 const STAT_LABELS := {"attack_damage": "Attack", "attacks_per_second": "Attacks / sec", "armor": "Armor", "max_health": "Health", "move_speed": "Move speed", "vision_radius": "Vision", "health_regen": "Health / sec", "mining_bonus": "Mining bonus", "drop_bonus": "Drop bonus", "projectile_speed": "Projectile speed", "damage_vs.swarm": "Damage vs swarm", "damage_vs.armored": "Damage vs armored", "damage_vs.guardian": "Damage vs guardian", "resistance.fire": "Fire resistance", "resistance.shock": "Shock resistance", "resistance.toxin": "Toxin resistance"}
 const COLORS := {"common": Color("bdc6cf"), "magic": Color("71bfff"), "rare": Color("e6c46c"), "epic": Color("c292ed")}
 
 signal equip_requested(hero_id: String, slot: String, instance_id: String)
 signal lock_toggled(instance_id: String, locked: bool)
-signal discard_requested(instance_id: String, confirmed_name: String)
+## The panel owns the confirmation dialog, shared with multi-select salvage.
+signal salvage_requested(instance_id: String)
 
 var item_title: Label
 var detail: Label
@@ -18,14 +20,10 @@ var metadata: Label
 var status: Label
 var equip_button: Button
 var lock_button: CheckButton
-var discard_button: Button
-var discard_dialog: ConfirmationDialog
-var discard_name: LineEdit
+var salvage_button: Button
 var _record: Dictionary = {}
 var _hero_id := ""
 var _slot := ""
-var _pending_discard_id := ""
-var _pending_discard_label := ""
 
 func _label(value: String, font_size: int = 14) -> Label:
 	var result := Label.new()
@@ -89,20 +87,12 @@ func _ready() -> void:
 	lock_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lock_button.toggled.connect(_lock)
 	actions.add_child(lock_button)
-	discard_button = Button.new()
-	discard_button.text = "Discard"
-	_compact_button(discard_button)
-	discard_button.pressed.connect(request_discard)
-	actions.add_child(discard_button)
-	discard_dialog = ConfirmationDialog.new()
-	discard_dialog.title = "Discard item"
-	discard_dialog.ok_button_text = "Discard"
-	discard_name = LineEdit.new()
-	discard_name.placeholder_text = "Exact item name"
-	discard_dialog.add_child(discard_name)
-	discard_name.text_changed.connect(func(value: String): discard_dialog.get_ok_button().disabled = value != _pending_discard_label)
-	discard_dialog.confirmed.connect(_confirm_discard)
-	add_child(discard_dialog)
+	salvage_button = Button.new()
+	salvage_button.name = "SalvageButton"
+	salvage_button.text = "Salvage"
+	_compact_button(salvage_button)
+	salvage_button.pressed.connect(request_salvage)
+	actions.add_child(salvage_button)
 	refresh({}, [], "", {})
 
 func _compact_button(button: Button) -> void:
@@ -121,8 +111,6 @@ func refresh(state: Dictionary, _records: Array, hero_id: String, selected_recor
 	if item_title == null:
 		return
 	var id := str(_record.get("instance_id", ""))
-	if discard_dialog.visible and (id != _pending_discard_id or bool(_record.get("locked", false)) or not str(_record.get("equipped_hero_id", "")).is_empty() or not bool(state.get("mutation_allowed", true))):
-		discard_dialog.hide()
 	var has_item := not id.is_empty()
 	icon.texture = Icons.texture(str(_record.get("base_id", ""))) if has_item else null
 	item_title.text = str(_record.get("label", "Item")) if has_item else "Select an item"
@@ -149,7 +137,9 @@ func refresh(state: Dictionary, _records: Array, hero_id: String, selected_recor
 	equip_button.text = "Equipped" if equipped_here else "Equip to " + str(hero.get("label", "hero"))
 	lock_button.disabled = not has_item or not allowed
 	lock_button.set_pressed_no_signal(bool(_record.get("locked", false)))
-	discard_button.disabled = not has_item or not allowed or not owner.is_empty() or bool(_record.get("locked", false))
+	salvage_button.disabled = not has_item or not allowed or not owner.is_empty() or bool(_record.get("locked", false))
+	var value := SalvageScript.yield_for(_record) if has_item else {}
+	salvage_button.tooltip_text = "Break down for %s." % SalvageScript.describe(value) if has_item else ""
 	status.text = ""
 	if has_item:
 		if not allowed:
@@ -163,9 +153,9 @@ func refresh(state: Dictionary, _records: Array, hero_id: String, selected_recor
 		elif equipped_here:
 			status.text = "Currently equipped. Use its slot to unequip."
 		elif bool(_record.get("locked", false)):
-			status.text = "Locked items cannot be discarded."
+			status.text = "Locked items cannot be salvaged."
 		else:
-			status.text = "Replaced gear stays in your inventory."
+			status.text = "Salvage value: %s." % SalvageScript.describe(value)
 	preview.text = _comparison(state, hero, id) if has_item and not hero.is_empty() else ""
 
 func _comparison(state: Dictionary, hero: Dictionary, id: String) -> String:
@@ -211,17 +201,6 @@ func _lock(value: bool) -> void:
 	if not lock_button.disabled:
 		lock_toggled.emit(str(_record.get("instance_id", "")), value)
 
-func request_discard() -> void:
-	if discard_button.disabled:
-		return
-	_pending_discard_id = str(_record.get("instance_id", ""))
-	_pending_discard_label = str(_record.get("label", ""))
-	discard_name.text = ""
-	discard_dialog.dialog_text = "Permanently discard %s?\nType its exact name below." % _pending_discard_label
-	discard_dialog.get_ok_button().disabled = true
-	discard_dialog.popup_centered(Vector2i(420, 160))
-	discard_name.grab_focus()
-
-func _confirm_discard() -> void:
-	if not discard_button.disabled and _pending_discard_id == str(_record.get("instance_id", "")) and discard_name.text == _pending_discard_label:
-		discard_requested.emit(_pending_discard_id, discard_name.text)
+func request_salvage() -> void:
+	if not salvage_button.disabled:
+		salvage_requested.emit(str(_record.get("instance_id", "")))

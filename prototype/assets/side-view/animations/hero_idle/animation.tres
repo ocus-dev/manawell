@@ -1,4 +1,4 @@
-[gd_resource type="SpriteFrames" load_steps=7 format=3 uid="uid://iq3yffk764uv"]
+[gd_resource type="SpriteFrames" format=3 uid="uid://iq3yffk764uv"]
 
 [ext_resource type="Texture2D" uid="uid://b0ykvviv7x8a" path="res://assets/side-view/animations/hero_idle/atlas.png" id="1"]
 
@@ -40,7 +40,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("Frame_4")
 }],
-"loop": true,
+"loop": 1,
 "name": &"idle",
 "speed": 5.556
 }]

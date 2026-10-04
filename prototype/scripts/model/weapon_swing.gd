@@ -164,5 +164,3 @@ static func sample(swing: Dictionary, progress: float) -> Dictionary:
 		offset = strike_offset.lerp(Vector2.ZERO, k)
 	return {"angle": angle, "offset": offset}
 
-static func duration_of(swing: Variant) -> float:
-	return float(normalize(swing).duration)

@@ -25,9 +25,15 @@ func reset_cursor(timestamp: float) -> void:
 	if is_finite(timestamp):
 		settlement_cursor = timestamp
 
+## Read-only well data shared by every rate calculation (building a catalog
+## deep-copies the content tables, and rates are asked for many times a second).
+static var _shared_catalog: RefCounted
+
 static func calculate_rates(commissioned_wells: Dictionary, hero_assignments: Dictionary, owned_upgrades: Dictionary, active_well_id: String = "", research_ranks: Dictionary = {}) -> Dictionary:
 	var rates: Dictionary = {}
-	var catalog: RefCounted = ContentCatalogScript.new()
+	if _shared_catalog == null:
+		_shared_catalog = ContentCatalogScript.new()
+	var catalog: RefCounted = _shared_catalog
 	var pump_factor: float = 1.0 + 0.25 * int(research_ranks.get("harvest.amount", 1 if owned_upgrades.has("pump_1") else 0))
 	for well_id in catalog.well_ids():
 		if not commissioned_wells.has(well_id) or well_id == active_well_id:

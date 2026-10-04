@@ -239,8 +239,8 @@
   "weapons": {
     "edf_6": {
       "assets": {
-        "icon": "res://assets/weapons/edf_6/9/icon.png",
-        "world_sprite": "res://assets/weapons/edf_6/9/world-sprite.png"
+        "icon": "res://assets/weapons/edf_6/13/icon.png",
+        "world_sprite": "res://assets/weapons/edf_6/13/world-sprite.png"
       },
       "base_modifiers": [
         {
@@ -248,17 +248,11 @@
           "operation": "flat",
           "stat": "attack_damage",
           "value": 0.0
-        },
-        {
-          "family": "designer.base.attacks_per_second",
-          "operation": "increased",
-          "stat": "attacks_per_second",
-          "value": 0.1
         }
       ],
       "base_stats": {
-        "attack_damage": 10.0,
-        "attacks_per_second": 1.66
+        "attack_damage": 20.0,
+        "attacks_per_second": 1.0
       },
       "behavior_id": "weapon.melee",
       "clip_source": "type",
@@ -283,7 +277,7 @@
           ],
           "opacity": 1.0,
           "rotation": 0.0,
-          "sheet": "res://assets/weapons/edf_6/9/effects/0.png",
+          "sheet": "res://assets/weapons/edf_6/10/effects/0.png",
           "size": 120.0,
           "trigger": "windup"
         }
@@ -293,7 +287,7 @@
         "flip": false,
         "scale": 1.3
       },
-      "label": "Edf 6",
+      "label": "test ax 1",
       "pivot": {
         "coordinate_space": "normalized",
         "facing": "right",
@@ -307,14 +301,14 @@
         ],
         "origin": "top_left",
         "rotation_degrees": -3.0,
-        "world_scale": 0.5
+        "world_scale": 0.55
       },
-      "revision": 9.0,
+      "revision": 13,
       "schema_version": 1.0,
       "source_hashes": {
         "icon_sha256": "1e62aee1740ac50d14f06769de69113eb98dc72a0def3e7c668952ce9237ab2e",
-        "job_id": "job_20260927T174727",
-        "manifest_sha256": "3db36aff8e0197754ea55e41dbbf650655800fa15fa219fa5c0062c5f52b9c75",
+        "job_id": "job_20260928T134700",
+        "manifest_sha256": "e27bcec73f10dff2a62b4e3dfbf2a2891007bd65ae66161194513a7b459fca40",
         "world_sprite_sha256": "0a87421e758741717d0b24bda95096d5d672410e463e99f734432e15d77105ba"
       },
       "swing": {
@@ -335,8 +329,66 @@
     },
     "edf_9": {
       "assets": {
-        "icon": "res://assets/weapons/edf_9/1/icon.png",
-        "world_sprite": "res://assets/weapons/edf_9/1/world-sprite.png"
+        "icon": "res://assets/weapons/edf_9/5/icon.png",
+        "world_sprite": "res://assets/weapons/edf_9/5/world-sprite.png"
+      },
+      "base_modifiers": [
+        {
+          "family": "designer.base.attack_damage",
+          "operation": "flat",
+          "stat": "attack_damage",
+          "value": 0.0
+        },
+        {
+          "family": "designer.base.attacks_per_second",
+          "operation": "increased",
+          "stat": "attacks_per_second",
+          "value": 0.01
+        }
+      ],
+      "base_stats": {
+        "attack_damage": 9.5,
+        "attacks_per_second": 2.0
+      },
+      "behavior_id": "weapon.melee",
+      "clip_source": "type",
+      "description": "No description yet.",
+      "hand_fit": {
+        "angle": 180.0,
+        "flip": false,
+        "scale": 1.0
+      },
+      "label": "Edf 9",
+      "pivot": {
+        "coordinate_space": "normalized",
+        "facing": "right",
+        "grip": [
+          0.5,
+          0.75
+        ],
+        "hand_offset": [
+          -1.0,
+          8.0
+        ],
+        "origin": "top_left",
+        "rotation_degrees": 0.0,
+        "world_scale": 0.5
+      },
+      "revision": 5.0,
+      "schema_version": 1.0,
+      "source_hashes": {
+        "icon_sha256": "6ce161f225a23e9ab0a25a2e22d618d2ecf1c41ecbc31e7e1a137a6e890cd28d",
+        "job_id": "job_20260927T213932",
+        "manifest_sha256": "f3279a8bf26e6bde3da5488a6da7256753a3551cf6a2b2c03fa24c0d01df8876",
+        "world_sprite_sha256": "72ee2f81d581304a495e064db1bb334c4fc11fdf6fc156633529bc70ac8649a0"
+      },
+      "weapon_id": "edf_9",
+      "weapon_type": "sword"
+    },
+    "gun_test": {
+      "assets": {
+        "icon": "res://assets/weapons/gun_test/5/icon.png",
+        "world_sprite": "res://assets/weapons/gun_test/5/world-sprite.png"
       },
       "base_modifiers": [
         {
@@ -348,37 +400,67 @@
       ],
       "base_stats": {
         "attack_damage": 10.0,
-        "attacks_per_second": 1.67
+        "attacks_per_second": 1.0
       },
       "behavior_id": "weapon.standard",
       "clip_source": "type",
       "description": "No description yet.",
-      "label": "Edf 9",
+      "effects": [
+        {
+          "additive": true,
+          "align": true,
+          "anchor": [
+            1.0,
+            0.5
+          ],
+          "at": 0.5,
+          "columns": 4.0,
+          "follow": true,
+          "fps": 30.0,
+          "frame_count": 4.0,
+          "label": "Muzzle flash",
+          "offset": [
+            0.0,
+            0.0
+          ],
+          "opacity": 1.0,
+          "rotation": 0.0,
+          "sheet": "res://assets/weapons/gun_test/2/effects/0.png",
+          "size": 80.0,
+          "trigger": "hit"
+        }
+      ],
+      "hand_fit": {
+        "angle": 180.0,
+        "flip": false,
+        "scale": 1.0
+      },
+      "label": "gun test",
       "pivot": {
         "coordinate_space": "normalized",
         "facing": "right",
         "grip": [
-          0.02,
-          0.75
+          0.98,
+          0.43
         ],
         "hand_offset": [
-          -19.0,
-          -33.0
+          24.0,
+          6.0
         ],
         "origin": "top_left",
         "rotation_degrees": 0.0,
-        "world_scale": 0.6
+        "world_scale": 0.5
       },
-      "revision": 1.0,
+      "revision": 5.0,
       "schema_version": 1.0,
       "source_hashes": {
-        "icon_sha256": "6ce161f225a23e9ab0a25a2e22d618d2ecf1c41ecbc31e7e1a137a6e890cd28d",
-        "job_id": "job_20260927T184426",
-        "manifest_sha256": "c28588d6904883ffc97d229777953121896a17e814bdc8d4747d80d1fbea080b",
-        "world_sprite_sha256": "72ee2f81d581304a495e064db1bb334c4fc11fdf6fc156633529bc70ac8649a0"
+        "icon_sha256": "a0767630bcac7890febc54c0338acf337a8217be067271e2fb3f484612b6426a",
+        "job_id": "job_20260928T134718",
+        "manifest_sha256": "1165ef7d0351a8751b47013353dd2b3cb7bacdcedba1cdba9d901c4251635ddc",
+        "world_sprite_sha256": "70e3ba0190b3c96f56f4e477d81fc9970affe04ea4c20a7fde4d4d06ca42e56a"
       },
-      "weapon_id": "edf_9",
-      "weapon_type": "sword"
+      "weapon_id": "gun_test",
+      "weapon_type": "gun"
     },
     "leftsword": {
       "assets": {
@@ -416,8 +498,8 @@
         "rotation_degrees": 0.0,
         "world_scale": 0.5
       },
-      "revision": 3,
-      "schema_version": 1,
+      "revision": 3.0,
+      "schema_version": 1.0,
       "source_hashes": {
         "icon_sha256": "850b655baae9c5eaf2235c6973fa563302dbce9015f91671abf36b2501006ce5",
         "job_id": "job_20260919T012801",
@@ -429,8 +511,8 @@
     },
     "sword": {
       "assets": {
-        "icon": "res://assets/weapons/sword/2/icon.png",
-        "world_sprite": "res://assets/weapons/sword/2/world-sprite.png"
+        "icon": "res://assets/weapons/sword/3/icon.png",
+        "world_sprite": "res://assets/weapons/sword/3/world-sprite.png"
       },
       "attack_clip": {
         "anchor": [
@@ -461,11 +543,11 @@
           83.0,
           83.0
         ],
-        "hand_sheet": "res://assets/weapons/sword/2/hand.png",
+        "hand_sheet": "res://assets/weapons/sword/3/hand.png",
         "label": "Attack",
         "mode": "hero_weapon",
         "scale": 1.0,
-        "sheet": "res://assets/weapons/sword/2/clip.png",
+        "sheet": "res://assets/weapons/sword/3/clip.png",
         "track": [
           {
             "angle": 20.9426509010122,
@@ -567,7 +649,7 @@
           ],
           "opacity": 1.0,
           "rotation": 0.0,
-          "sheet": "res://assets/weapons/sword/2/effects/0.png",
+          "sheet": "res://assets/weapons/sword/3/effects/0.png",
           "size": 96.0,
           "trigger": "hit"
         },
@@ -590,7 +672,7 @@
           ],
           "opacity": 1.0,
           "rotation": 0.0,
-          "sheet": "res://assets/weapons/sword/2/effects/1.png",
+          "sheet": "res://assets/weapons/sword/3/effects/1.png",
           "size": 120.0,
           "trigger": "windup"
         }
@@ -604,14 +686,14 @@
           0.75
         ],
         "hand_offset": [
-          -26.0,
-          7.0
+          -24.0,
+          9.0
         ],
         "origin": "top_left",
         "rotation_degrees": 0.0,
         "world_scale": 0.5
       },
-      "revision": 2.0,
+      "revision": 3.0,
       "schema_version": 1.0,
       "source_hashes": {
         "icon_sha256": "a3af31e0c1c3c72a76eb82aca04d123e2cb1f5e1ec0ad089a042110806cc2045",

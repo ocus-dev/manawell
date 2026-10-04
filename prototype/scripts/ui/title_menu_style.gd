@@ -84,7 +84,7 @@ static func style_settings(title: Control) -> void:
 		heading.add_theme_color_override("font_color", INK)
 		heading.add_theme_color_override("font_outline_color", SHADOW)
 		heading.add_theme_constant_override("outline_size", 3)
-	for button_name in ["Fullscreen", "Back"]:
+	for button_name in ["Fullscreen", "ResetProgress", "Back"]:
 		var button: Button = panel.get_node_or_null("Settings/" + button_name)
 		if button == null:
 			continue

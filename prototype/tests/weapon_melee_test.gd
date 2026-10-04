@@ -12,9 +12,18 @@ func _run() -> void:
 	controller.persistence_enabled = false
 	root.add_child(controller)
 	await process_frame
-	assert(controller.account_state.grant_published_weapon("light blade"), controller.account_state.inventory_command_error)
-	controller.account_state.published_weapons["light blade"].revision.behavior_id = "weapon.melee"
-	var weapon_id := "designer:light blade:1"
+	var published := _published_weapon()
+	assert(controller.account_state.grant_published_weapon(published.id), controller.account_state.inventory_command_error)
+	controller.account_state.published_weapons[published.id].revision.behavior_id = "weapon.melee"
+	# This test checks the plain socket placement: no authored hand offset.
+	# It checks the plain built-in setup, so strip this weapon's own placement,
+	# swing, animation and effects.
+	var revision: Dictionary = controller.account_state.published_weapons[published.id].revision
+	revision.get("pivot", {})["hand_offset"] = [0.0, 0.0]
+	for key in ["swing", "attack_clip", "effects", "hand_fit"]:
+		revision.erase(key)
+	revision["clip_source"] = "none"
+	var weapon_id := "designer:%s:%d" % [published.id, published.revision]
 	assert(controller.account_state.equip_instance("hero_1", "weapon", weapon_id))
 	assert(controller.start_run())
 	assert(controller.weapon_behavior_id == "weapon.melee")
@@ -24,11 +33,11 @@ func _run() -> void:
 	var right_socket: Vector2 = controller.hero.weapon_socket.global_position
 	var right_bounds: Rect2 = controller.hero.held_weapon_world_rect()
 	assert(right_grip.distance_to(right_socket) < 0.01, "right-facing grip stays attached to the socket")
-	assert(maxf(right_bounds.size.x, right_bounds.size.y) <= 96.01 and right_bounds.size.x < 100.0, "held art uses bounded gameplay scale instead of raw texture pixels")
+	assert(maxf(right_bounds.size.x, right_bounds.size.y) <= 96.01 * controller.hero.display_scale() and right_bounds.size.x < 100.0 * controller.hero.display_scale(), "held art uses bounded gameplay scale instead of raw texture pixels")
 	var long_weapon_texture: Texture2D = load("res://assets/weapons/batton of beating/1/world-sprite.png")
 	controller.hero.configure_held_weapon(long_weapon_texture, Vector2(0.5, 0.75), "right", 1.0)
 	var long_bounds: Rect2 = controller.hero.held_weapon_world_rect()
-	assert(maxf(long_bounds.size.x, long_bounds.size.y) <= 96.01, "long prepared weapons stay within the gameplay size bound")
+	assert(maxf(long_bounds.size.x, long_bounds.size.y) <= 96.01 * controller.hero.display_scale(), "long prepared weapons stay within the gameplay size bound")
 	assert(controller.hero.held_weapon_grip_world_position().distance_to(controller.hero.weapon_socket.global_position) < 0.01, "long weapon grip stays attached")
 	controller.hero.configure_held_weapon(long_weapon_texture, Vector2(0.5, 0.75), "left", 1.0)
 	assert(controller.hero.held_weapon.scale.x < 0.0, "authored left-facing art is preserved")
@@ -120,3 +129,13 @@ func _run() -> void:
 	controller.queue_free()
 	print("PASS W06 melee: target lock, single hit, cadence, movement, pause, death cancel, snapshot, facing, and held art")
 	quit(0)
+
+## Any weapon currently in the game (the tests used to rely on "light blade",
+## which has since been removed in the Weapon Lab).
+func _published_weapon() -> Dictionary:
+	var index: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/weapons/index.json"))
+	var weapons: Dictionary = index.get("weapons", {}) if index is Dictionary else {}
+	var ids: Array = weapons.keys()
+	ids.sort()
+	assert(not ids.is_empty(), "at least one weapon must be published")
+	return {"id": str(ids[0]), "revision": int(weapons[ids[0]].get("revision", 1))}

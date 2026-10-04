@@ -8,9 +8,11 @@ const RunStateScript = preload("res://scripts/model/run_state.gd")
 # Source-pixel markers on harvester.png, relative to the prepared texture.
 # Converted through the same ground-anchor / scale path as the sprite.
 const MARKER_SOURCES := {
-	"exhaust": Vector2(248.0, 268.0),
-	"contact": Vector2(418.0, 688.0),
-	"lamp": Vector2(508.0, 348.0),
+	# Drill art (2026-10-02): steam from the top cap, dust/sparks at the auger
+	# tip where it meets the ground, light at the left amber beacon.
+	"exhaust": Vector2(616.0, 20.0),
+	"contact": Vector2(624.0, 1118.0),
+	"lamp": Vector2(409.0, 680.0),
 }
 
 var config: RefCounted = ConfigScript.new()
@@ -108,13 +110,14 @@ func marker_world(marker_id: String) -> Vector2:
 	var harvester: Node2D = controller.harvester_visual
 	var asset: Dictionary = VisualAssetScript.asset_for("harvester")
 	if asset.is_empty() or not MARKER_SOURCES.has(marker_id):
-		return harvester.global_position
+		return harvester.position
 	var source: Vector2 = MARKER_SOURCES[marker_id]
 	var ground: Vector2 = asset["ground_anchor"]
 	var applied_scale: float = float(harvester.base_scale) * float(harvester.scale_multiplier)
 	var facing: float = float(harvester.facing)
 	var local := Vector2(0.0, float(harvester.ground_local_y)) + (source - ground) * Vector2(applied_scale * facing, applied_scale)
-	return harvester.global_position + local
+	# Harvester and this visual share the controller's space.
+	return harvester.position + local
 
 func notify_muzzle(kind: String, feet_position: Vector2, facing: int) -> void:
 	if config == null or not config.muzzle_flashes_enabled:

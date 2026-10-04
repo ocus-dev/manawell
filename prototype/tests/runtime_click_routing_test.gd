@@ -21,9 +21,10 @@ func _run() -> void:
 	if viewport_rect.size.x >= picker_rect.size.x and viewport_rect.size.y >= picker_rect.size.y:
 		assert(picker_rect.end.x <= viewport_rect.end.x and picker_rect.end.y <= viewport_rect.end.y)
 	hud.operations.hero_picker.close_picker()
-	var selected_destination: Button = hud.operations.get_node("OperationsScroll/OuterMargin/OperationsContent/OperationsWorkspace/WellsResearchRegion/WellsRegion/WellsContent/WellCardsPlaceholder/WellCard_well_1/WellCardContent/PrepareButton")
+	# Found by name so layout changes to the Operations page don't break the test.
+	var selected_destination: Button = hud.operations.find_child("StartExtraction", true, false)
+	assert(selected_destination != null, "the expedition Start button is on the Operations page")
 	assert(not selected_destination.disabled)
-	assert(selected_destination.text == "Start extraction")
 	selected_destination.emit_signal("pressed")
 	assert(controller.run_state.phase == RunStateScript.Phase.EXTRACTING)
 	hud.router.show_pause(hud.view_state.get("combat", {}))

@@ -12,7 +12,8 @@ func _run() -> void:
     controller._update_hud()
     await process_frame
     var operations = controller.encounter_hud.operations
-    operations.navigation_buttons["research"].emit_signal("pressed")
+    # The Research tab is hidden for now; open its page directly.
+    operations._show_page("research")
     await process_frame
     await process_frame
     for i in range(10):

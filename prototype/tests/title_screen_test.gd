@@ -13,8 +13,9 @@ func _run() -> void:
 	await process_frame
 	assert(scene.get_node("Background").texture != null)
 	assert(scene.get_node("Title").texture != null)
-	assert(scene.get_node("Menu/Continue") is Button)
-	assert(scene.get_node("Menu/NewGame") is Button)
+	assert(scene.get_node("Menu/Play") is Button)
+	assert(scene.get_node_or_null("Menu/Continue") == null and scene.get_node_or_null("Menu/NewGame") == null, "one profile: just PLAY")
+	assert(scene.get_node("SettingsPanel/Settings/ResetProgress") is Button)
 	assert(scene.get_node("Menu/Settings") is Button)
 	assert(scene.get_node("Menu/Quit") is Button)
 	scene._show_settings()

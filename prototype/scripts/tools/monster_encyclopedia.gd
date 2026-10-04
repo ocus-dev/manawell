@@ -1,6 +1,7 @@
 extends CanvasLayer
 
-## Monster Encyclopedia: developer tool for tuning monster stats in-game.
+## Dev Encyclopedia (was Monster Encyclopedia): developer tool for tuning
+## monster stats, weapon stats (Weapons tab) and level spawns in-game.
 ##
 ## Open with F9 during an encounter (debug builds) or from the title screen.
 ## Edits apply immediately to MonsterStats and to monsters already in the
@@ -10,6 +11,8 @@ const MonsterStatsScript = preload("res://scripts/model/monster_stats.gd")
 const VisualConfigScript = preload("res://scripts/game/side_view_visual_config.gd")
 const IndustrialThemeScript = preload("res://scripts/ui/industrial_theme.gd")
 const BalanceData = preload("res://data/balance.gd")
+const LevelSpawnsPageScript = preload("res://scripts/tools/level_spawns_page.gd")
+const WeaponsPageScript = preload("res://scripts/tools/weapon_encyclopedia_page.gd")
 
 const TOGGLE_KEY := KEY_F9
 const AMBER := Color("f0a836")
@@ -53,6 +56,15 @@ var text_dialog_area: TextEdit
 var text_dialog_error: Label
 var text_dialog_mode := ""
 var reset_all_dialog: ConfirmationDialog
+## Tabs: "monsters" (stats), "weapons" (weapon logbook and stats) and
+## "spawns" (which creatures each level spawns).
+const TABS := [["monsters", "Monsters"], ["weapons", "Weapons"], ["spawns", "Levels"]]
+var tab := "monsters"
+var tab_buttons: Dictionary = {}
+var monster_body: Control
+var monster_footer: Control
+var spawns_page: Control
+var weapons_page: Control
 
 func _ready() -> void:
 	layer = 121
@@ -75,7 +87,40 @@ func open() -> void:
 	_render_entry()
 	_set_status(_idle_status())
 	root.show()
-	search.grab_focus()
+	if tab == "spawns":
+		spawns_page.refresh()
+	elif tab == "weapons":
+		weapons_page.refresh()
+	else:
+		search.grab_focus()
+
+## Switches between the monster stats, the weapon logbook and the level spawn editor.
+func show_tab(tab_id: String) -> void:
+	tab = tab_id
+	for key in tab_buttons:
+		tab_buttons[key].set_pressed_no_signal(key == tab_id)
+	monster_body.visible = tab_id == "monsters"
+	monster_footer.visible = tab_id == "monsters"
+	spawns_page.visible = tab_id == "spawns"
+	weapons_page.visible = tab_id == "weapons"
+	count_label.visible = tab_id == "monsters"
+	if tab_id == "spawns":
+		spawns_page.refresh()
+	elif tab_id == "weapons":
+		weapons_page.refresh()
+
+## Opens straight onto the weapon logbook (optionally at one weapon).
+func open_weapons(weapon_id: String = "") -> void:
+	open()
+	show_tab("weapons")
+	if not weapon_id.is_empty():
+		weapons_page.select_weapon(weapon_id)
+
+## Opens straight onto the spawn editor for `level_id` (e.g. after a preview).
+func open_spawn_editor(level_id: String) -> void:
+	open()
+	show_tab("spawns")
+	spawns_page.select_level(level_id)
 
 func close() -> void:
 	if not is_open():
@@ -206,7 +251,15 @@ func _build() -> void:
 	column.add_child(body)
 	body.add_child(_build_index())
 	body.add_child(_build_entry())
-	column.add_child(_build_footer())
+	monster_body = body
+	monster_footer = _build_footer()
+	column.add_child(monster_footer)
+	spawns_page = LevelSpawnsPageScript.new(self)
+	spawns_page.hide()
+	column.add_child(spawns_page)
+	weapons_page = WeaponsPageScript.new(self)
+	weapons_page.hide()
+	column.add_child(weapons_page)
 	_build_dialogs()
 
 func _build_header() -> Control:
@@ -216,7 +269,7 @@ func _build_header() -> Control:
 	row.add_theme_constant_override("separation", 14)
 	bar.add_child(row)
 	var title := Label.new()
-	title.text = "MONSTER ENCYCLOPEDIA"
+	title.text = "DEV ENCYCLOPEDIA"
 	title.add_theme_font_size_override("font_size", 22)
 	title.add_theme_color_override("font_color", AMBER)
 	row.add_child(title)
@@ -226,6 +279,16 @@ func _build_header() -> Control:
 	tag.add_theme_color_override("font_color", MUTED)
 	tag.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(tag)
+	for tab_entry in TABS:
+		var tab_id: String = tab_entry[0]
+		var tab_button := _button(tab_entry[1])
+		tab_button.name = "Tab_" + tab_id
+		tab_button.toggle_mode = true
+		tab_button.add_theme_stylebox_override("pressed", _button_box(AMBER_DEEP, AMBER))
+		tab_button.pressed.connect(show_tab.bind(tab_id))
+		tab_buttons[tab_id] = tab_button
+		row.add_child(tab_button)
+	tab_buttons["monsters"].button_pressed = true
 	count_label = Label.new()
 	count_label.add_theme_color_override("font_color", MUTED)
 	count_label.add_theme_font_size_override("font_size", 14)

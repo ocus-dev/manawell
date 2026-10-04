@@ -74,5 +74,3 @@ static func segment_fraction_against_rect(start: Vector2, end: Vector2, rect: Re
 			return -1.0
 	return entry
 
-static func platform_shots_are_open() -> bool:
-	return true

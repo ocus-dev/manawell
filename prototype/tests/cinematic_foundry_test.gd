@@ -16,18 +16,9 @@ func _run() -> void:
 	assert(foundry.shadow_nodes.size() >= 2)
 	var hero_shadow = foundry.shadow_nodes[str(foundry.hero.get_instance_id())]
 	assert(is_equal_approx(hero_shadow.position.y, ArenaLayoutScript.FLOOR_TOP_Y + 2.0))
-	foundry.hero.position = Vector2(320.0, ArenaLayoutScript.hero_support_y("platform_left"))
-	foundry.hero.grounded = true
-	foundry.hero.support_id = "platform_left"
-	foundry._refresh_shadows()
-	await process_frame
-	assert(is_equal_approx(hero_shadow.position.y, ArenaLayoutScript.support_top("platform_left") + 2.0))
+	# Floor-only arena: an airborne hero's shadow stays on the floor.
 	foundry.hero.grounded = false
-	foundry.hero.support_id = "platform_left"
-	foundry.hero.position = Vector2(320.0, 300.0)
-	foundry._refresh_shadows()
-	await process_frame
-	assert(is_equal_approx(hero_shadow.position.y, ArenaLayoutScript.support_top("platform_left") + 2.0))
+	foundry.hero.support_id = ""
 	foundry.hero.position = Vector2(700.0, 300.0)
 	foundry._refresh_shadows()
 	await process_frame

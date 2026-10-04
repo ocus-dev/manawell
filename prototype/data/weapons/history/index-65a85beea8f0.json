@@ -1,0 +1,708 @@
+{
+  "retired": {
+    "156": {
+      "assets": {
+        "icon": "res://assets/weapons/156/3/icon.png",
+        "world_sprite": "res://assets/weapons/156/3/world-sprite.png"
+      },
+      "base_modifiers": [
+        {
+          "family": "designer.base.attack_damage",
+          "operation": "flat",
+          "stat": "attack_damage",
+          "value": 1.0
+        }
+      ],
+      "behavior_id": "weapon.melee",
+      "description": "Draft weapon description.",
+      "label": "1264",
+      "pivot": {
+        "coordinate_space": "normalized",
+        "facing": "right",
+        "grip": [
+          0.5,
+          0.75
+        ],
+        "hand_offset": [
+          18.0,
+          -41.0
+        ],
+        "origin": "top_left",
+        "rotation_degrees": -28.0,
+        "world_scale": 0.75
+      },
+      "revision": 3.0,
+      "schema_version": 1.0,
+      "source_hashes": {
+        "icon_sha256": "850b655baae9c5eaf2235c6973fa563302dbce9015f91671abf36b2501006ce5",
+        "job_id": "job_20260919T011901",
+        "manifest_sha256": "280ddfbe7cabcb9c5d9561727d94e3324e461ae74e2076e1c6822534a8a1e420",
+        "world_sprite_sha256": "f7db6764e8bdc2d6d41622618faad3d731461a6d731b5bf17740eea8a8961e9a"
+      },
+      "weapon_id": "156"
+    },
+    "batton of beating": {
+      "assets": {
+        "icon": "res://assets/weapons/batton of beating/5/icon.png",
+        "world_sprite": "res://assets/weapons/batton of beating/5/world-sprite.png"
+      },
+      "base_modifiers": [
+        {
+          "family": "designer.base.attack_damage",
+          "operation": "flat",
+          "stat": "attack_damage",
+          "value": 0.0
+        }
+      ],
+      "behavior_id": "weapon.standard",
+      "description": "Really hurts",
+      "label": "beat stick",
+      "pivot": {
+        "coordinate_space": "normalized",
+        "facing": "right",
+        "grip": [
+          0.5,
+          1.0
+        ],
+        "hand_offset": [
+          1.0,
+          0.0
+        ],
+        "origin": "top_left",
+        "rotation_degrees": 4.0,
+        "world_scale": 1.5
+      },
+      "revision": 5.0,
+      "schema_version": 1.0,
+      "source_hashes": {
+        "icon_sha256": "889de072fda580bc2b452d6777bd269af83dda09aa9a3e92c908a17c0cca587b",
+        "job_id": "job_20260913T231240",
+        "manifest_sha256": "f9d3efa4bc91e9a14f232c0662f30fdf891cdcdbc2ac0d3d308c58df75147dbd",
+        "world_sprite_sha256": "744e0c66e55920955200b297518fd347588b338453a484ff4cbbda94f1af15ca"
+      },
+      "weapon_id": "batton of beating"
+    },
+    "laser_0": {
+      "assets": {
+        "icon": "res://assets/weapons/laser_0/1/icon.png",
+        "world_sprite": "res://assets/weapons/laser_0/1/world-sprite.png"
+      },
+      "base_modifiers": [
+        {
+          "family": "designer.base.attack_damage",
+          "operation": "flat",
+          "stat": "attack_damage",
+          "value": 0.0
+        }
+      ],
+      "behavior_id": "weapon.standard",
+      "description": "Cuts even better than steel",
+      "label": "Laser sword",
+      "pivot": {
+        "coordinate_space": "normalized",
+        "facing": "right",
+        "grip": [
+          0.5,
+          0.75
+        ],
+        "origin": "top_left"
+      },
+      "revision": 1.0,
+      "schema_version": 1.0,
+      "source_hashes": {
+        "icon_sha256": "cd709271f61a458334bff37232a4367365f1886696bde3d07a94dc81f17e13c7",
+        "job_id": "job_20260913T214112",
+        "manifest_sha256": "2a84c6668923097e16956f274032e449f8fed9667865669358ba442fadadd035",
+        "world_sprite_sha256": "f11ca0bded1fb1661a4ef426b30a307716476d1165a91b689ea93ef563206626"
+      },
+      "weapon_id": "laser_0"
+    },
+    "light blade": {
+      "assets": {
+        "icon": "res://assets/weapons/light blade/1/icon.png",
+        "world_sprite": "res://assets/weapons/light blade/1/world-sprite.png"
+      },
+      "base_modifiers": [
+        {
+          "family": "designer.base.attack_damage",
+          "operation": "flat",
+          "stat": "attack_damage",
+          "value": 1.0
+        },
+        {
+          "family": "designer.base.attacks_per_second",
+          "operation": "increased",
+          "stat": "attacks_per_second",
+          "value": 1.0
+        },
+        {
+          "family": "designer.base.projectile_speed",
+          "operation": "increased",
+          "stat": "projectile_speed",
+          "value": 1.0
+        }
+      ],
+      "behavior_id": "weapon.standard",
+      "description": "A cold edge, bright as it is sharp",
+      "label": "Light blade",
+      "pivot": {
+        "coordinate_space": "normalized",
+        "facing": "right",
+        "grip": [
+          0.5,
+          0.75
+        ],
+        "origin": "top_left"
+      },
+      "revision": 1.0,
+      "schema_version": 1.0,
+      "source_hashes": {
+        "icon_sha256": "cd709271f61a458334bff37232a4367365f1886696bde3d07a94dc81f17e13c7",
+        "job_id": "job_20260913T213648",
+        "manifest_sha256": "d52c8719164340c337f252986e76c22db5a24ba000bb284901264ba8cbcbad5a",
+        "world_sprite_sha256": "f11ca0bded1fb1661a4ef426b30a307716476d1165a91b689ea93ef563206626"
+      },
+      "weapon_id": "light blade"
+    },
+    "luck_baton": {
+      "assets": {
+        "icon": "res://assets/weapons/luck_baton/1/icon.png",
+        "world_sprite": "res://assets/weapons/luck_baton/1/world-sprite.png"
+      },
+      "base_modifiers": [
+        {
+          "family": "designer.base.attack_damage",
+          "operation": "flat",
+          "stat": "attack_damage",
+          "value": 0.0
+        }
+      ],
+      "behavior_id": "weapon.standard",
+      "description": "Knock the change out of them",
+      "label": "Lucky beating stick",
+      "pivot": {
+        "coordinate_space": "normalized",
+        "facing": "right",
+        "grip": [
+          0.5,
+          0.75
+        ],
+        "origin": "top_left"
+      },
+      "revision": 1.0,
+      "schema_version": 1.0,
+      "source_hashes": {
+        "icon_sha256": "889de072fda580bc2b452d6777bd269af83dda09aa9a3e92c908a17c0cca587b",
+        "job_id": "job_20260913T222543",
+        "manifest_sha256": "f99e2fa7dd35845efbbaa407ba06404388d5cc6ac6d1be5d66e3bf99816461c2",
+        "world_sprite_sha256": "744e0c66e55920955200b297518fd347588b338453a484ff4cbbda94f1af15ca"
+      },
+      "weapon_id": "luck_baton"
+    },
+    "new_weapon": {
+      "assets": {
+        "icon": "res://assets/weapons/new_weapon/1/icon.png",
+        "world_sprite": "res://assets/weapons/new_weapon/1/world-sprite.png"
+      },
+      "base_modifiers": [
+        {
+          "family": "designer.base.attack_damage",
+          "operation": "flat",
+          "stat": "attack_damage",
+          "value": 0.0
+        }
+      ],
+      "behavior_id": "weapon.standard",
+      "description": "Better than your fists",
+      "label": "Smasher",
+      "pivot": {
+        "coordinate_space": "normalized",
+        "facing": "right",
+        "grip": [
+          0.5,
+          0.75
+        ],
+        "origin": "top_left"
+      },
+      "revision": 1.0,
+      "schema_version": 1.0,
+      "source_hashes": {
+        "icon_sha256": "0de5556c9bcb131208a53d82854c75ce6cd22e70e9751af68840f1d8899b5b35",
+        "job_id": "job_20260913T210039",
+        "manifest_sha256": "2ea194f241bd3a2c7db96d7dc28190c658090142c66a6970ed21fbfaeabbea2c",
+        "world_sprite_sha256": "1b6ec09de18eec6102be77404e3b8e64eb43f2746191c279d391e6f1ee33d01b"
+      },
+      "weapon_id": "new_weapon"
+    }
+  },
+  "schema_version": 1.0,
+  "weapons": {
+    "edf_6": {
+      "assets": {
+        "icon": "res://assets/weapons/edf_6/10/icon.png",
+        "world_sprite": "res://assets/weapons/edf_6/10/world-sprite.png"
+      },
+      "base_modifiers": [
+        {
+          "family": "designer.base.attack_damage",
+          "operation": "flat",
+          "stat": "attack_damage",
+          "value": 0.0
+        },
+        {
+          "family": "designer.base.attacks_per_second",
+          "operation": "increased",
+          "stat": "attacks_per_second",
+          "value": 0.1
+        }
+      ],
+      "base_stats": {
+        "attack_damage": 10.0,
+        "attacks_per_second": 1.66
+      },
+      "behavior_id": "weapon.melee",
+      "clip_source": "type",
+      "description": "No description yet.",
+      "effects": [
+        {
+          "additive": true,
+          "align": true,
+          "anchor": [
+            0.5,
+            0.5
+          ],
+          "at": 0.5,
+          "columns": 10.0,
+          "follow": true,
+          "fps": 20.0,
+          "frame_count": 10.0,
+          "label": "Glow pulse",
+          "offset": [
+            0.0,
+            0.0
+          ],
+          "opacity": 1.0,
+          "rotation": 0.0,
+          "sheet": "res://assets/weapons/edf_6/10/effects/0.png",
+          "size": 120.0,
+          "trigger": "windup"
+        }
+      ],
+      "hand_fit": {
+        "angle": 0.0,
+        "flip": false,
+        "scale": 1.3
+      },
+      "label": "test ax 1",
+      "pivot": {
+        "coordinate_space": "normalized",
+        "facing": "right",
+        "grip": [
+          0.02,
+          0.75
+        ],
+        "hand_offset": [
+          -18.0,
+          9.0
+        ],
+        "origin": "top_left",
+        "rotation_degrees": -3.0,
+        "world_scale": 0.55
+      },
+      "revision": 10.0,
+      "schema_version": 1.0,
+      "source_hashes": {
+        "icon_sha256": "1e62aee1740ac50d14f06769de69113eb98dc72a0def3e7c668952ce9237ab2e",
+        "job_id": "job_20260928T134700",
+        "manifest_sha256": "e27bcec73f10dff2a62b4e3dfbf2a2891007bd65ae66161194513a7b459fca40",
+        "world_sprite_sha256": "0a87421e758741717d0b24bda95096d5d672410e463e99f734432e15d77105ba"
+      },
+      "swing": {
+        "duration": 0.8,
+        "preset": "test_axe",
+        "settle_angle": 0.0,
+        "snap": -0.6,
+        "strike_angle": 95.0,
+        "strike_lift": -8.0,
+        "strike_push": 6.0,
+        "strike_time": 0.5,
+        "windup_angle": -150.0,
+        "windup_push": -6.0,
+        "windup_time": 0.35
+      },
+      "weapon_id": "edf_6",
+      "weapon_type": "axe"
+    },
+    "edf_9": {
+      "assets": {
+        "icon": "res://assets/weapons/edf_9/4/icon.png",
+        "world_sprite": "res://assets/weapons/edf_9/4/world-sprite.png"
+      },
+      "base_modifiers": [
+        {
+          "family": "designer.base.attack_damage",
+          "operation": "flat",
+          "stat": "attack_damage",
+          "value": 0.0
+        }
+      ],
+      "base_stats": {
+        "attack_damage": 9.5,
+        "attacks_per_second": 2.0
+      },
+      "behavior_id": "weapon.melee",
+      "clip_source": "type",
+      "description": "No description yet.",
+      "hand_fit": {
+        "angle": 180.0,
+        "flip": false,
+        "scale": 1.0
+      },
+      "label": "Edf 9",
+      "pivot": {
+        "coordinate_space": "normalized",
+        "facing": "right",
+        "grip": [
+          0.5,
+          0.75
+        ],
+        "hand_offset": [
+          -1.0,
+          8.0
+        ],
+        "origin": "top_left",
+        "rotation_degrees": 0.0,
+        "world_scale": 0.5
+      },
+      "revision": 4.0,
+      "schema_version": 1.0,
+      "source_hashes": {
+        "icon_sha256": "6ce161f225a23e9ab0a25a2e22d618d2ecf1c41ecbc31e7e1a137a6e890cd28d",
+        "job_id": "job_20260927T213932",
+        "manifest_sha256": "f3279a8bf26e6bde3da5488a6da7256753a3551cf6a2b2c03fa24c0d01df8876",
+        "world_sprite_sha256": "72ee2f81d581304a495e064db1bb334c4fc11fdf6fc156633529bc70ac8649a0"
+      },
+      "weapon_id": "edf_9",
+      "weapon_type": "sword"
+    },
+    "gun_test": {
+      "assets": {
+        "icon": "res://assets/weapons/gun_test/5/icon.png",
+        "world_sprite": "res://assets/weapons/gun_test/5/world-sprite.png"
+      },
+      "base_modifiers": [
+        {
+          "family": "designer.base.attack_damage",
+          "operation": "flat",
+          "stat": "attack_damage",
+          "value": 0.0
+        }
+      ],
+      "base_stats": {
+        "attack_damage": 10.0,
+        "attacks_per_second": 1.0
+      },
+      "behavior_id": "weapon.standard",
+      "clip_source": "type",
+      "description": "No description yet.",
+      "effects": [
+        {
+          "additive": true,
+          "align": true,
+          "anchor": [
+            1.0,
+            0.5
+          ],
+          "at": 0.5,
+          "columns": 4.0,
+          "follow": true,
+          "fps": 30.0,
+          "frame_count": 4.0,
+          "label": "Muzzle flash",
+          "offset": [
+            0.0,
+            0.0
+          ],
+          "opacity": 1.0,
+          "rotation": 0.0,
+          "sheet": "res://assets/weapons/gun_test/2/effects/0.png",
+          "size": 80.0,
+          "trigger": "hit"
+        }
+      ],
+      "hand_fit": {
+        "angle": 180.0,
+        "flip": false,
+        "scale": 1.0
+      },
+      "label": "gun test",
+      "pivot": {
+        "coordinate_space": "normalized",
+        "facing": "right",
+        "grip": [
+          0.98,
+          0.43
+        ],
+        "hand_offset": [
+          24.0,
+          6.0
+        ],
+        "origin": "top_left",
+        "rotation_degrees": 0.0,
+        "world_scale": 0.5
+      },
+      "revision": 5.0,
+      "schema_version": 1.0,
+      "source_hashes": {
+        "icon_sha256": "a0767630bcac7890febc54c0338acf337a8217be067271e2fb3f484612b6426a",
+        "job_id": "job_20260928T134718",
+        "manifest_sha256": "1165ef7d0351a8751b47013353dd2b3cb7bacdcedba1cdba9d901c4251635ddc",
+        "world_sprite_sha256": "70e3ba0190b3c96f56f4e477d81fc9970affe04ea4c20a7fde4d4d06ca42e56a"
+      },
+      "weapon_id": "gun_test",
+      "weapon_type": "gun"
+    },
+    "leftsword": {
+      "assets": {
+        "icon": "res://assets/weapons/leftsword/3/icon.png",
+        "world_sprite": "res://assets/weapons/leftsword/3/world-sprite.png"
+      },
+      "base_modifiers": [
+        {
+          "family": "designer.base.attack_damage",
+          "operation": "flat",
+          "stat": "attack_damage",
+          "value": 1.0
+        }
+      ],
+      "base_stats": {
+        "attack_damage": 10.0,
+        "attacks_per_second": 1.67
+      },
+      "behavior_id": "weapon.melee",
+      "clip_source": "type",
+      "description": "Trusty lefty",
+      "label": "lefty",
+      "pivot": {
+        "coordinate_space": "normalized",
+        "facing": "right",
+        "grip": [
+          0.1,
+          0.75
+        ],
+        "hand_offset": [
+          -18.0,
+          8.0
+        ],
+        "origin": "top_left",
+        "rotation_degrees": 0.0,
+        "world_scale": 0.5
+      },
+      "revision": 3.0,
+      "schema_version": 1.0,
+      "source_hashes": {
+        "icon_sha256": "850b655baae9c5eaf2235c6973fa563302dbce9015f91671abf36b2501006ce5",
+        "job_id": "job_20260919T012801",
+        "manifest_sha256": "0182becad20ba0e301d23edd5e1673adbada670d69a4b24f1f16f30d98cf0ffd",
+        "world_sprite_sha256": "f7db6764e8bdc2d6d41622618faad3d731461a6d731b5bf17740eea8a8961e9a"
+      },
+      "weapon_id": "leftsword",
+      "weapon_type": "sword"
+    },
+    "sword": {
+      "assets": {
+        "icon": "res://assets/weapons/sword/3/icon.png",
+        "world_sprite": "res://assets/weapons/sword/3/world-sprite.png"
+      },
+      "attack_clip": {
+        "anchor": [
+          113.0,
+          202.0
+        ],
+        "attacks": [
+          {
+            "end": 6.0,
+            "hit": 3.0,
+            "start": 0.0
+          }
+        ],
+        "body_height": 200.0,
+        "cell": [
+          242.0,
+          204.0
+        ],
+        "columns": 7.0,
+        "fit_hit": true,
+        "frame_count": 7.0,
+        "frame_ms": [
+          83.0,
+          83.0,
+          83.0,
+          83.0,
+          83.0,
+          83.0,
+          83.0
+        ],
+        "hand_sheet": "res://assets/weapons/sword/3/hand.png",
+        "label": "Attack",
+        "mode": "hero_weapon",
+        "scale": 1.0,
+        "sheet": "res://assets/weapons/sword/3/clip.png",
+        "track": [
+          {
+            "angle": 20.9426509010122,
+            "behind": false,
+            "grip": [
+              162.0,
+              125.0
+            ],
+            "length": 86.7294616699219
+          },
+          {
+            "angle": -151.990819902081,
+            "behind": false,
+            "grip": [
+              182.0,
+              150.0
+            ],
+            "length": 53.2353248596191
+          },
+          {
+            "angle": -166.920875767299,
+            "behind": false,
+            "grip": [
+              98.0,
+              18.0
+            ],
+            "length": 101.636604309082
+          },
+          {
+            "angle": -15.1540672869737,
+            "behind": false,
+            "grip": [
+              208.0,
+              95.0
+            ],
+            "length": 99.4585342407227
+          },
+          {
+            "angle": -13.3924974670039,
+            "behind": false,
+            "grip": [
+              220.0,
+              99.0
+            ],
+            "length": 107.935165405273
+          },
+          {
+            "angle": 4.89909234729598,
+            "behind": false,
+            "grip": [
+              224.0,
+              104.0
+            ],
+            "length": 105.385009765625
+          },
+          {
+            "angle": -152.949409631336,
+            "behind": false,
+            "grip": [
+              177.0,
+              155.0
+            ],
+            "length": 52.7730979919434
+          }
+        ]
+      },
+      "base_modifiers": [
+        {
+          "family": "designer.base.attack_damage",
+          "operation": "flat",
+          "stat": "attack_damage",
+          "value": 0.0
+        }
+      ],
+      "base_stats": {
+        "attack_damage": 10.0,
+        "attacks_per_second": 1.67
+      },
+      "behavior_id": "weapon.melee",
+      "clip_source": "type",
+      "description": "No description yet.",
+      "effects": [
+        {
+          "additive": true,
+          "align": true,
+          "anchor": [
+            0.95,
+            0.5
+          ],
+          "at": 0.5,
+          "columns": 8.0,
+          "follow": false,
+          "fps": 24.0,
+          "frame_count": 8.0,
+          "label": "Spark burst",
+          "offset": [
+            0.0,
+            0.0
+          ],
+          "opacity": 1.0,
+          "rotation": 0.0,
+          "sheet": "res://assets/weapons/sword/3/effects/0.png",
+          "size": 96.0,
+          "trigger": "hit"
+        },
+        {
+          "additive": true,
+          "align": true,
+          "anchor": [
+            0.5,
+            0.5
+          ],
+          "at": 0.5,
+          "columns": 10.0,
+          "follow": true,
+          "fps": 20.0,
+          "frame_count": 10.0,
+          "label": "Glow pulse",
+          "offset": [
+            0.0,
+            0.0
+          ],
+          "opacity": 1.0,
+          "rotation": 0.0,
+          "sheet": "res://assets/weapons/sword/3/effects/1.png",
+          "size": 120.0,
+          "trigger": "windup"
+        }
+      ],
+      "label": "Sword",
+      "pivot": {
+        "coordinate_space": "normalized",
+        "facing": "right",
+        "grip": [
+          0.1,
+          0.75
+        ],
+        "hand_offset": [
+          -24.0,
+          9.0
+        ],
+        "origin": "top_left",
+        "rotation_degrees": 0.0,
+        "world_scale": 0.5
+      },
+      "revision": 3.0,
+      "schema_version": 1.0,
+      "source_hashes": {
+        "icon_sha256": "a3af31e0c1c3c72a76eb82aca04d123e2cb1f5e1ec0ad089a042110806cc2045",
+        "job_id": "job_20260927T142136",
+        "manifest_sha256": "dc2b29a3018c9db712e06f898f03bbb4cacea80335b3a7854c633e78eeaf27bf",
+        "world_sprite_sha256": "4fbe95053611f5135b494fe57792761112b388ba12977528707d2ebf2ff866e6"
+      },
+      "weapon_id": "sword",
+      "weapon_type": "sword"
+    }
+  }
+}

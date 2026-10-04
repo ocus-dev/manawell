@@ -41,7 +41,7 @@ func _test_live_transform_preview() -> void:
 	controller._configure_held_weapon_visual(persisted_revision)
 	assert(controller.hero.held_weapon_hand_offset == Vector2(18.0, -24.0), "runtime load must preserve persisted hand offset")
 	assert(controller.hero.held_weapon.to_global(Vector2.ZERO).distance_to(target_center) < 0.01, "runtime load must preserve weapon placement")
-	assert(maxf(controller.hero.held_weapon_world_rect().size.x, controller.hero.held_weapon_world_rect().size.y) <= 96.01)
+	assert(maxf(controller.hero.held_weapon_world_rect().size.x, controller.hero.held_weapon_world_rect().size.y) <= 96.01 * controller.hero.display_scale())
 	editor.grip_x.value = 0.2
 	editor.grip_y.value = 0.4
 	editor.world_scale.value = 1.5
@@ -53,10 +53,10 @@ func _test_live_transform_preview() -> void:
 	assert(is_equal_approx(controller.hero.held_weapon_scale, 1.5))
 	assert(is_equal_approx(controller.hero.held_weapon_rotation_degrees, 22.0))
 	assert(controller.hero.held_weapon_facing == "left")
-	assert(is_equal_approx(controller.hero.held_weapon_grip_world_position().distance_to(controller.hero.weapon_socket.global_position), Vector2(18.0, -24.0).length()))
+	assert(is_equal_approx(controller.hero.held_weapon_grip_world_position().distance_to(controller.hero.weapon_socket.global_position), Vector2(18.0, -24.0).length() * controller.hero.display_scale()))
 	var chosen_point: Vector2 = controller.hero.weapon_socket.to_global(controller.hero.held_weapon.position)
 	assert(editor.set_grip_from_world_point(chosen_point), "weapon click must select a grip point")
-	assert(is_equal_approx(controller.hero.held_weapon_grip_world_position().distance_to(controller.hero.weapon_socket.global_position), Vector2(18.0, -24.0).length()))
+	assert(is_equal_approx(controller.hero.held_weapon_grip_world_position().distance_to(controller.hero.weapon_socket.global_position), Vector2(18.0, -24.0).length() * controller.hero.display_scale()))
 	editor.queue_free()
 	controller.queue_free()
 	await process_frame

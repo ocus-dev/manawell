@@ -175,6 +175,8 @@ var clip_source_buttons: Dictionary = {}
 var clip_make_button: Button
 var clip_default_button: Button
 var clip_defaults_label: Label
+## Idle / walk rows in section 4: animation -> {source, summary, make, edit, default, remove}.
+var pose_rows: Dictionary = {}
 var hand_fit_row: Control
 var hand_angle_spin: SpinBox
 var hand_scale_spin: SpinBox
@@ -589,11 +591,24 @@ func set_modifier(stat: String, operation: String, value: float) -> void:
 	draft["base_modifiers"] = modifiers
 
 ## The weapon's numbers in game, from HeroStatResolver (no research, no upgrades).
+## Previews redraw every frame and ask for these many times, so the result is
+## kept until the inputs (level, modifiers, base stats) change.
+var _stats_cache_key := ""
+var _stats_cache: Dictionary = {}
+
 func resolved_stats() -> Dictionary:
-	var instance := {"instance_id": "lab-preview", "base_id": "core.heavy_breech", "rarity": "common", "item_level": int(draft.get("item_level", 1)), "implicit_modifiers": draft.get("base_modifiers", []).duplicate(true), "explicit_modifiers": draft.get("explicit_modifiers", []).duplicate(true), "base_stats": base_stats_of(draft)}
+	var base_modifiers: Array = draft.get("base_modifiers", [])
+	var explicit_modifiers: Array = draft.get("explicit_modifiers", [])
+	var base_stats := base_stats_of(draft)
+	var key := var_to_str([int(draft.get("item_level", 1)), base_modifiers, explicit_modifiers, base_stats])
+	if key == _stats_cache_key:
+		return _stats_cache.duplicate()
+	var instance := {"instance_id": "lab-preview", "base_id": "core.heavy_breech", "rarity": "common", "item_level": int(draft.get("item_level", 1)), "implicit_modifiers": base_modifiers.duplicate(true), "explicit_modifiers": explicit_modifiers.duplicate(true), "base_stats": base_stats}
 	var resolved := Resolver.resolve({}, {"lab-preview": instance}, {"weapon": "lab-preview"})
 	var stats: Dictionary = resolved.get("stats", {})
-	return {"attack_damage": float(stats.get("attack_damage", BalanceData.WEAPON_DAMAGE)), "attacks_per_second": float(stats.get("attacks_per_second", 1.0 / BalanceData.WEAPON_INTERVAL)), "attack_interval": float(stats.get("attack_interval", BalanceData.WEAPON_INTERVAL)), "projectile_speed": BalanceData.WEAPON_PROJECTILE_SPEED}
+	_stats_cache_key = key
+	_stats_cache = {"attack_damage": float(stats.get("attack_damage", BalanceData.WEAPON_DAMAGE)), "attacks_per_second": float(stats.get("attacks_per_second", 1.0 / BalanceData.WEAPON_INTERVAL)), "attack_interval": float(stats.get("attack_interval", BalanceData.WEAPON_INTERVAL)), "projectile_speed": BalanceData.WEAPON_PROJECTILE_SPEED}
+	return _stats_cache.duplicate()
 
 func current_pivot() -> Dictionary:
 	var art: Dictionary = draft.get("art", {})
@@ -625,7 +640,7 @@ func open_arena() -> void:
 		get_window().content_scale_aspect = _saved_aspect
 	add_child(arena)
 	var label := str(draft.get("label", ""))
-	arena.configure_weapon(label if not label.is_empty() else "Unnamed weapon", current_world_texture(), current_pivot(), str(draft.get("behavior_id", "weapon.standard")), resolved_stats(), current_swing_for_game(), current_effects(), effective_clip(), hand_fit())
+	arena.configure_weapon(label if not label.is_empty() else "Unnamed weapon", current_world_texture(), current_pivot(), str(draft.get("behavior_id", "weapon.standard")), resolved_stats(), current_swing_for_game(), current_effects(), effective_clip(), hand_fit(), effective_pose_clips())
 	ui.visible = false
 	if current_world_texture() == null:
 		arena._set_status("No prepared art yet: the hero is testing the stats with an empty hand.")
@@ -696,6 +711,15 @@ func publish() -> Dictionary:
 	draft["attack_clip"] = published_clip.duplicate(true) if published_clip is Dictionary else {}
 	if not project.is_empty() and not draft.attack_clip.is_empty():
 		draft.attack_clip["project"] = project
+	# Same for the idle / walk.
+	var pose_projects := {}
+	for animation in WeaponTypes.POSE_ANIMATIONS:
+		pose_projects[animation] = str(WeaponTypes.own_pose_clip(draft, animation).get("project", ""))
+	var published_poses: Variant = published_entry(weapon_id).get("pose_clips", {})
+	draft["pose_clips"] = published_poses.duplicate(true) if published_poses is Dictionary else {}
+	for animation in draft.pose_clips:
+		if not str(pose_projects.get(animation, "")).is_empty() and draft.pose_clips[animation] is Dictionary:
+			draft.pose_clips[animation]["project"] = pose_projects[animation]
 	_update_loot_after_publish(weapon_id)
 	save_draft()
 	reload_entries()
@@ -736,6 +760,11 @@ func has_changes_from_published() -> bool:
 		return true
 	if str(draft.get("weapon_type", "")) != str(current.get("weapon_type", "")) or WeaponTypes.clip_source(draft) != WeaponTypes.clip_source(current):
 		return true
+	for animation in WeaponTypes.POSE_ANIMATIONS:
+		if WeaponTypes.pose_source(draft, animation) != WeaponTypes.pose_source(current, animation):
+			return true
+		if not _clips_equal(WeaponTypes.own_pose_clip(draft, animation), WeaponTypes.own_pose_clip(current, animation)):
+			return true
 	# No job id: still using the published art, which isn't a change.
 	var job_id := str(draft.art.job_id)
 	return not job_id.is_empty() and job_id != str(current.get("source_hashes", {}).get("job_id", ""))
@@ -935,6 +964,7 @@ func _on_name_changed(text: String) -> void:
 		if guessed != str(draft.get("weapon_type", "")):
 			draft["weapon_type"] = guessed
 			draft["type_guessed"] = not guessed.is_empty()
+			_match_behavior_to_type()
 			_refresh_clip_section()
 	_mark_dirty()
 
@@ -2217,6 +2247,7 @@ func set_weapon_type(type_id: String) -> void:
 	var id := WeaponTypes.type_id_from(type_id)
 	draft["weapon_type"] = id
 	draft.erase("type_guessed")
+	_match_behavior_to_type()
 	_mark_dirty()
 	_refresh_clip_section()
 	# Keep the list's category tags and filter counts current.
@@ -2224,6 +2255,22 @@ func set_weapon_type(type_id: String) -> void:
 		if str(entry.get("id", "")) == str(draft.get("weapon_id", "")):
 			entry["weapon_type"] = id
 	_render_tiles()
+
+## Picking a sword (axe, hammer...) makes the weapon melee and picking a gun or
+## bow makes it ranged, so a sword never ends up firing bolts. Fan and Lance
+## count as ranged and are kept for guns and bows.
+func _match_behavior_to_type() -> void:
+	var current := str(draft.get("behavior_id", "weapon.standard"))
+	var type_id := str(draft.get("weapon_type", ""))
+	if not WeaponTypes.behavior_mismatch(type_id, current):
+		return
+	var wanted := WeaponTypes.default_behavior(type_id)
+	draft["behavior_id"] = wanted
+	if behavior_picker != null:
+		for index in range(BEHAVIORS.size()):
+			if str(BEHAVIORS[index][0]) == wanted:
+				behavior_picker.select(index)
+		_refresh_resolved()
 
 ## "type" (the type's default), "own" (this weapon's), or "none".
 func set_clip_source(source: String) -> void:
@@ -2239,6 +2286,9 @@ func set_clip_source(source: String) -> void:
 ## play its own clip (it uses its type's default or the normal attack), the
 ## stale copy is dropped; otherwise it says how to fix it. "" when all is well.
 func check_own_clip_files() -> String:
+	var pose_problem := _check_own_pose_files()
+	if not pose_problem.is_empty():
+		return pose_problem
 	var clip: Variant = draft.get("attack_clip", {})
 	if not WeaponClip.is_set(clip):
 		return ""
@@ -2324,7 +2374,217 @@ func remove_clip() -> void:
 	_refresh_clip_section()
 	_set_status("Removed this weapon's own animation. It uses the %s default again." % type_label() if not weapon_type().is_empty() else "Removed this weapon's own animation.")
 
+# ---------- idle / walk (pose) animations ----------
+
+## This weapon's own idle or walk ({} if none).
+func current_pose_clip(animation: String) -> Dictionary:
+	return WeaponTypes.own_pose_clip(draft, animation)
+
+## The idle or walk the weapon plays: its own, its type's, or {} (the hero's own).
+func effective_pose_clip(animation: String) -> Dictionary:
+	return WeaponTypes.resolve_pose_clip(draft, type_library, animation)
+
+func effective_pose_clips() -> Dictionary:
+	return WeaponTypes.resolve_pose_clips(draft, type_library)
+
+func set_pose_source(animation: String, source: String) -> void:
+	if not WeaponTypes.SOURCES.has(source) or not WeaponTypes.POSE_ANIMATIONS.has(animation):
+		return
+	var sources: Dictionary = draft.get("pose_sources", {}) if draft.get("pose_sources") is Dictionary else {}
+	sources[animation] = source
+	draft["pose_sources"] = sources
+	_mark_dirty()
+	_refresh_clip_section()
+
+## Opens the importer on a new idle or walk for this weapon.
+func open_pose_importer(animation: String) -> void:
+	_sync_from_controls()
+	clip_importer.type_label = type_label()
+	clip_importer.editing_default = false
+	clip_importer.set_preview_options(preview_weapon_options(), str(draft.get("weapon_id", "")))
+	clip_importer.start_pose(str(draft.get("weapon_id", "")), animation, attack_interval())
+
+## Reopens the idle or walk in use (own, or the type's).
+func edit_pose_clip(animation: String) -> bool:
+	_sync_from_controls()
+	var editing_default := WeaponTypes.pose_source(draft, animation) == "type"
+	var project := WeaponTypes.default_project(type_library, weapon_type(), animation) if editing_default else str(current_pose_clip(animation).get("project", ""))
+	if project.is_empty():
+		_set_status("That %s has no importer project to edit. Make a new one instead." % animation, BAD)
+		return false
+	clip_importer.type_label = type_label()
+	clip_importer.editing_default = editing_default
+	clip_importer.set_preview_options(preview_weapon_options(), str(draft.get("weapon_id", "")))
+	return clip_importer.load_project(project, str(draft.get("weapon_id", "")), 0.0, attack_interval())
+
+func set_own_pose_as_type_default(animation: String) -> bool:
+	var own := current_pose_clip(animation)
+	if own.is_empty():
+		_set_status("This weapon has no %s of its own to share." % animation, BAD)
+		return false
+	if not _save_pose_type_default(animation, own):
+		return false
+	set_pose_source(animation, "type")
+	return true
+
+func remove_pose_clip(animation: String) -> void:
+	if WeaponTypes.pose_source(draft, animation) == "type":
+		if WeaponTypes.remove_default(weapon_type(), data_root, animation):
+			reload_type_library()
+			_refresh_clip_section()
+			_set_status("Removed the %s %s. %s weapons use the hero's own %s until a new one is set." % [type_label(), animation, type_label(), animation])
+		return
+	var clips: Dictionary = draft.get("pose_clips", {}) if draft.get("pose_clips") is Dictionary else {}
+	clips.erase(animation)
+	draft["pose_clips"] = clips
+	set_pose_source(animation, "type")
+	_set_status("Removed this weapon's own %s." % animation)
+
+func _on_pose_saved(animation: String, clip: Dictionary, target: String) -> void:
+	if target == "type":
+		if not _save_pose_type_default(animation, clip):
+			return
+		# Keep an own copy of the same project in step with the new sheet.
+		var own := current_pose_clip(animation)
+		if not own.is_empty() and str(own.get("project", "")) == str(clip.get("project", "")):
+			draft["pose_clips"][animation] = clip.duplicate(true)
+			_mark_dirty()
+		set_pose_source(animation, "type")
+		return
+	var clips: Dictionary = draft.get("pose_clips", {}) if draft.get("pose_clips") is Dictionary else {}
+	clips[animation] = clip.duplicate(true)
+	draft["pose_clips"] = clips
+	set_pose_source(animation, "own")
+	_set_status("Saved as this weapon's own %s: %d frames. See it in the Holding preview (tick Walk for the walk) or Test in arena." % [animation, int(clip.frame_count)], GOOD)
+
+func _save_pose_type_default(animation: String, clip: Dictionary) -> bool:
+	if weapon_type().is_empty():
+		_set_status("Pick this weapon's type first (Axe, Sword...), then save the %s as that type's." % animation, BAD)
+		return false
+	var result := WeaponTypes.set_default(weapon_type(), clip, data_root, asset_root, animation)
+	if not bool(result.ok):
+		_set_status("Couldn't set the %s %s: %s" % [type_label(), animation, str(result.error)], BAD)
+		return false
+	reload_type_library()
+	_refresh_clip_section()
+	_set_status("%s %s saved. Every %s weapon that uses its type's %s plays it now." % [type_label(), animation, type_label().to_lower(), animation], GOOD)
+	return true
+
+## Own idle / walk sheets that went missing (see check_own_clip_files).
+func _check_own_pose_files() -> String:
+	for animation in WeaponTypes.POSE_ANIMATIONS:
+		var clip := current_pose_clip(animation)
+		if clip.is_empty():
+			continue
+		var source := str(clip.get("source", ""))
+		var sheet := str(clip.get("sheet", ""))
+		var sheet_file := source if not source.is_empty() else (ProjectSettings.globalize_path(sheet) if sheet.begins_with("res://") and sheet != Store.PENDING_EFFECT_SHEET else sheet)
+		var hand_source := str(clip.get("hand_source", ""))
+		if (not sheet_file.is_empty() and FileAccess.file_exists(sheet_file)) and (hand_source.is_empty() or FileAccess.file_exists(hand_source)):
+			continue
+		if WeaponTypes.pose_source(draft, animation) != "own":
+			draft["pose_clips"].erase(animation)
+			_mark_dirty()
+			continue
+		return "This weapon's own %s sheet is missing (%s). Press Edit... next to %s in section 4 and save it again, then publish." % [animation, sheet_file.get_file(), animation.capitalize()]
+	return ""
+
+func _build_pose_rows() -> Control:
+	var box := VBoxContainer.new()
+	box.name = "PoseRows"
+	var title := Label.new()
+	title.text = "IDLE & WALK"
+	title.add_theme_font_size_override("font_size", 13)
+	title.add_theme_color_override("font_color", AMBER)
+	box.add_child(title)
+	var note := Label.new()
+	note.text = "Optional: how the hero stands and walks holding this weapon. Without one, the hero's own idle and walk play and the weapon rides in the fist."
+	note.add_theme_font_size_override("font_size", 12)
+	note.add_theme_color_override("font_color", MUTED)
+	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(note)
+	for animation in WeaponTypes.POSE_ANIMATIONS:
+		var row := HFlowContainer.new()
+		row.name = "Pose_" + animation
+		row.add_theme_constant_override("h_separation", 8)
+		box.add_child(row)
+		var caption := Label.new()
+		caption.text = str(WeaponTypes.POSE_LABELS[animation])
+		caption.custom_minimum_size = Vector2(40, 0)
+		row.add_child(caption)
+		var picker := OptionButton.new()
+		picker.name = "PoseSource_" + animation
+		for source in WeaponTypes.SOURCES:
+			picker.add_item(str(source))
+			picker.set_item_metadata(picker.item_count - 1, source)
+		picker.item_selected.connect(func(index: int) -> void:
+			if not _loading:
+				set_pose_source(animation, str(picker.get_item_metadata(index))))
+		row.add_child(picker)
+		var make := _button("Make...", true)
+		make.tooltip_text = "Open the clip importer on a new %s for this weapon." % animation
+		make.pressed.connect(func() -> void: open_pose_importer(animation))
+		row.add_child(make)
+		var edit := _button("Edit...", true)
+		edit.pressed.connect(func() -> void: edit_pose_clip(animation))
+		row.add_child(edit)
+		var share := _button("Make it the type's", true)
+		share.pressed.connect(func() -> void: set_own_pose_as_type_default(animation))
+		row.add_child(share)
+		var remove := _button("Remove", true)
+		remove.pressed.connect(func() -> void: remove_pose_clip(animation))
+		row.add_child(remove)
+		var summary := Label.new()
+		summary.add_theme_font_size_override("font_size", 12)
+		summary.add_theme_color_override("font_color", MUTED)
+		summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		summary.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		box.add_child(summary)
+		pose_rows[animation] = {"source": picker, "summary": summary, "make": make, "edit": edit, "default": share, "remove": remove}
+	return box
+
+func _refresh_pose_rows() -> void:
+	var label := type_label()
+	var was := _loading
+	_loading = true
+	for animation in pose_rows:
+		var row: Dictionary = pose_rows[animation]
+		var picker: OptionButton = row.source
+		var source := WeaponTypes.pose_source(draft, animation)
+		var words := {"type": "Use the %s %s" % [label, animation] if not label.is_empty() else "Use the type's %s" % animation, "own": "Own %s" % animation, "none": "Hero's own %s" % animation}
+		for index in range(picker.item_count):
+			var key := str(picker.get_item_metadata(index))
+			picker.set_item_text(index, str(words[key]))
+			picker.set_item_disabled(index, key == "type" and weapon_type().is_empty())
+			if key == source:
+				picker.select(index)
+		var own := current_pose_clip(animation)
+		var clip := effective_pose_clip(animation)
+		var project := WeaponTypes.default_project(type_library, weapon_type(), animation) if source == "type" else str(own.get("project", ""))
+		(row.edit as Button).disabled = clip.is_empty() or project.is_empty()
+		(row.default as Button).visible = not own.is_empty() and not weapon_type().is_empty()
+		(row.default as Button).text = "Make it the %s %s" % [label, animation] if not label.is_empty() else "Make it the type's"
+		(row.remove as Button).disabled = clip.is_empty() or source == "none"
+		var text := ""
+		if clip.is_empty():
+			match source:
+				"type":
+					text = "No %s %s yet: the hero's own %s plays." % [label, animation, animation] if not label.is_empty() else "No type picked: the hero's own %s plays." % animation
+				"own":
+					text = "No %s of its own yet: the hero's own %s plays. Make one." % [animation, animation]
+				_:
+					text = "The hero's own %s." % animation
+		else:
+			var normalized := WeaponClip.normalize(clip)
+			var whose := ("the %s %s" % [label, animation]) if source == "type" else "its own %s" % animation
+			text = "Plays %s \"%s\": %s, %d frames, %.2f s loop%s." % [whose, str(clip.get("label", "")), str(WeaponClip.MODE_LABELS.get(str(normalized.mode), "")), int(normalized.frame_count), WeaponClip.loop_length(normalized), " (not published yet)" if source == "own" and not str(own.get("source", "")).is_empty() else ""]
+		(row.summary as Label).text = text
+	_loading = was
+
 func _on_clip_saved(clip: Dictionary, target: String) -> void:
+	if clip_importer != null and clip_importer.is_pose():
+		_on_pose_saved(str(clip_importer.clip_animation), clip, target)
+		return
 	if target == "type":
 		if not _save_type_default(clip):
 			return
@@ -2474,6 +2734,7 @@ func _build_clip_section() -> Control:
 	clip_defaults_label.add_theme_font_size_override("font_size", 12)
 	clip_defaults_label.add_theme_color_override("font_color", MUTED)
 	side.add_child(clip_defaults_label)
+	column.add_child(_build_pose_rows())
 	return section
 
 func _refresh_clip_section() -> void:
@@ -2550,6 +2811,7 @@ func _refresh_clip_section() -> void:
 		defaults.append("%s (\"%s\")" % [WeaponTypes.label_of(type_id, type_library), str(entry.get("clip", {}).get("label", ""))])
 	clip_defaults_label.text = "Type defaults: " + (", ".join(defaults) if not defaults.is_empty() else "none yet.")
 	clip_preview.queue_redraw()
+	_refresh_pose_rows()
 	queue_showcase()
 
 ## Loops the animation in use in the preview box.
@@ -2973,7 +3235,7 @@ func refresh_showcase() -> void:
 		for index in range(WeaponClip.attack_ranges(normalized).size()):
 			longest = maxf(longest, float(WeaponClip.timeline(normalized, index, hit_seconds()).length))
 	var texture: Texture2D = world_preview.texture if world_preview != null else null
-	showcase.show_weapon({"texture": texture, "pivot": current_pivot(), "swing": swing, "effects": current_effects(), "clip": clip, "hand_fit": hand_fit(), "hit_seconds": hit_seconds(), "interval": interval, "loop_period": maxf(interval, longest + 0.35)})
+	showcase.show_weapon({"texture": texture, "pivot": current_pivot(), "swing": swing, "effects": current_effects(), "clip": clip, "poses": effective_pose_clips(), "hand_fit": hand_fit(), "hit_seconds": hit_seconds(), "interval": interval, "loop_period": maxf(interval, longest + 0.35)})
 	_refresh_readiness()
 
 ## Dragging the weapon in the Holding preview moves Hand X/Y.
@@ -2997,6 +3259,7 @@ func readiness_info() -> Dictionary:
 		"has_art": world_preview != null and world_preview.texture != null,
 		"weapon_type": weapon_type(),
 		"type_label": type_label(),
+		"behavior_id": str(BEHAVIORS[maxi(0, behavior_picker.selected)][0]) if behavior_picker != null else str(draft.get("behavior_id", "weapon.standard")),
 		"clip_source": WeaponTypes.clip_source(draft),
 		"clip": effective_clip(),
 		"grip": art.get("grip", [0.5, 0.75]),

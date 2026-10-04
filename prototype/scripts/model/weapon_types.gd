@@ -16,12 +16,25 @@ extends RefCounted
 ##     "project": "<clip importer project folder>"}}}
 ## Setting a default copies its sheet into a new immutable revision folder, so
 ## every weapon of that type picks it up without being republished.
+##
+## Idle and walk ("pose" animations) work the same way, one per animation:
+## a revision's "pose_sources" {idle: type|own|none, walk: ...} picks the
+## source, its own clips live in "pose_clips" {idle: clip, walk: clip}, and a
+## type's defaults live under "poses" in its library entry:
+##   "poses": {"idle": {"revision": 1, "clip": {...}, "project": "..."}}
+## with sheets in <asset_root>/_types/<type>/<animation>/<revision>/clip.png.
+## A missing pose source means "own" when the weapon has its own clip for
+## that animation, else "type"; without a type default the hero's normal idle
+## or walk plays (the weapon follows the fist).
 
 const WeaponClipScript = preload("res://scripts/model/weapon_clip.gd")
 
 const LIBRARY_NAME := "type_clips.json"
 const TYPES_ASSET_FOLDER := "_types"
 const SOURCES := ["type", "own", "none"]
+## Animations besides the attack that a weapon can bring its own art for.
+const POSE_ANIMATIONS := ["idle", "walk"]
+const POSE_LABELS := {"idle": "Idle", "walk": "Walk"}
 const BUILTIN := ["sword", "axe", "hammer", "spear", "dagger", "club", "staff", "gun", "bow"]
 const KEYWORDS := {
 	"axe": ["axe", "ax ", "hatchet", "cleaver"],
@@ -86,8 +99,95 @@ static func resolve_clip(revision: Dictionary, library: Dictionary) -> Dictionar
 			var own: Variant = revision.get("attack_clip", {})
 			return own if WeaponClipScript.is_set(own) else {}
 		"type":
-			return default_clip(library, str(revision.get("weapon_type", "")))
+			var type_id := str(revision.get("weapon_type", ""))
+			var clip := default_clip(library, type_id)
+			# Ranged weapons whose type has no animation of its own (no type, a
+			# new type, a bow without a bow default...) use the gun's attack.
+			if is_ranged(revision) and clip.is_empty():
+				var gun_clip := default_clip(library, RANGED_DEFAULT_TYPE)
+				if not gun_clip.is_empty():
+					clip = gun_clip
+			return clip
 	return {}
+
+## The type whose default animation every ranged weapon falls back to.
+const RANGED_DEFAULT_TYPE := "gun"
+
+## Ranged = anything that isn't a melee weapon (they shoot the nearest monster).
+static func is_ranged(revision: Dictionary) -> bool:
+	return str(revision.get("behavior_id", "")) != "weapon.melee"
+
+## Types that swing or shoot by nature. A weapon of one of these types gets the
+## matching behavior when its type is picked, and the lab warns when they
+## disagree (a sword set to Ranged fires bolts instead of swinging).
+const MELEE_TYPES := ["sword", "axe", "hammer", "spear", "dagger", "club"]
+const RANGED_TYPES := ["gun", "bow"]
+
+## "weapon.melee", "weapon.standard", or "" when the type doesn't decide it
+## (staffs, custom categories, no type).
+static func default_behavior(type_id: String) -> String:
+	if MELEE_TYPES.has(type_id):
+		return "weapon.melee"
+	if RANGED_TYPES.has(type_id):
+		return "weapon.standard"
+	return ""
+
+## True when the behavior fights the type: a melee type set to a ranged
+## behavior, or a gun/bow set to melee.
+static func behavior_mismatch(type_id: String, behavior_id: String) -> bool:
+	var wanted := default_behavior(type_id)
+	if wanted.is_empty():
+		return false
+	return (wanted == "weapon.melee") != (behavior_id == "weapon.melee")
+
+# ---------- idle / walk ("pose") animations ----------
+
+## "type" | "own" | "none" for `animation` (idle or walk).
+static func pose_source(revision: Dictionary, animation: String) -> String:
+	var sources: Variant = revision.get("pose_sources", {})
+	var source := str(sources.get(animation, "")) if sources is Dictionary else ""
+	if SOURCES.has(source):
+		return source
+	return "own" if WeaponClipScript.is_set(own_pose_clip(revision, animation)) else "type"
+
+## The weapon's own clip for `animation` ({} if none).
+static func own_pose_clip(revision: Dictionary, animation: String) -> Dictionary:
+	var clips: Variant = revision.get("pose_clips", {})
+	var clip: Variant = clips.get(animation, {}) if clips is Dictionary else {}
+	return clip if WeaponClipScript.is_set(clip) else {}
+
+## The idle or walk clip a weapon actually plays ({} = the hero's own).
+static func resolve_pose_clip(revision: Dictionary, library: Dictionary, animation: String) -> Dictionary:
+	match pose_source(revision, animation):
+		"own":
+			return own_pose_clip(revision, animation)
+		"type":
+			return default_pose_clip(library, str(revision.get("weapon_type", "")), animation)
+	return {}
+
+## {idle: clip, walk: clip} for every pose animation the weapon plays.
+static func resolve_pose_clips(revision: Dictionary, library: Dictionary) -> Dictionary:
+	var result := {}
+	for animation in POSE_ANIMATIONS:
+		var clip := resolve_pose_clip(revision, library, animation)
+		if not clip.is_empty():
+			result[animation] = clip
+	return result
+
+static func default_pose_clip(library: Dictionary, type_id: String, animation: String) -> Dictionary:
+	if type_id.is_empty():
+		return {}
+	var poses: Variant = library.get("types", {}).get(type_id, {}).get("poses", {})
+	var clip: Variant = poses.get(animation, {}).get("clip", {}) if poses is Dictionary and poses.get(animation) is Dictionary else {}
+	return clip if WeaponClipScript.is_set(clip) else {}
+
+## The importer project of a type default ("" if none). animation: attack, idle or walk.
+static func default_project(library: Dictionary, type_id: String, animation: String = "attack") -> String:
+	var entry: Dictionary = library.get("types", {}).get(type_id, {})
+	if animation == "attack":
+		return str(entry.get("project", ""))
+	var poses: Variant = entry.get("poses", {})
+	return str(poses.get(animation, {}).get("project", "")) if poses is Dictionary and poses.get(animation) is Dictionary else ""
 
 static func default_clip(library: Dictionary, type_id: String) -> Dictionary:
 	if type_id.is_empty():
@@ -132,16 +232,25 @@ static func known_types(library: Dictionary, extra: Array = []) -> Array:
 ## Makes `clip` the default attack animation for `type_id`. The clip's sheet
 ## (a draft file or another published sheet) is copied into
 ## <asset_root>/_types/<type>/<revision>/clip.png. Returns {ok, error, clip}.
-static func set_default(type_id: String, clip: Dictionary, data_root: String, asset_root: String) -> Dictionary:
+static func set_default(type_id: String, clip: Dictionary, data_root: String, asset_root: String, animation: String = "attack") -> Dictionary:
 	if not is_valid_type(type_id) or type_id.is_empty():
 		return {"ok": false, "error": "Pick a weapon type first.", "clip": {}}
 	if not WeaponClipScript.is_set(clip):
 		return {"ok": false, "error": "There's no animation to use.", "clip": {}}
+	if animation != "attack" and not POSE_ANIMATIONS.has(animation):
+		return {"ok": false, "error": "Unknown animation \"%s\"." % animation, "clip": {}}
+	if animation != "attack" and not ["hero", "hero_weapon"].has(str(clip.get("mode", ""))):
+		return {"ok": false, "error": "Idle and walk animations show the hero (with the weapon drawn in, or each weapon placed in the hands).", "clip": {}}
 	var library := load_library(data_root)
 	var types: Dictionary = library.get("types", {})
-	var previous: Dictionary = types.get(type_id, {})
+	var type_entry: Dictionary = types.get(type_id, {})
+	var poses: Dictionary = type_entry.get("poses", {}) if type_entry.get("poses") is Dictionary else {}
+	var previous: Dictionary = type_entry if animation == "attack" else (poses.get(animation, {}) if poses.get(animation) is Dictionary else {})
 	var revision := int(previous.get("revision", 0)) + 1
-	var folder := asset_root.path_join(TYPES_ASSET_FOLDER).path_join(type_id).path_join(str(revision))
+	var folder := asset_root.path_join(TYPES_ASSET_FOLDER).path_join(type_id)
+	if animation != "attack":
+		folder = folder.path_join(animation)
+	folder = folder.path_join(str(revision))
 	var source := WeaponClipScript.sheet_path(clip)
 	var source_file := ProjectSettings.globalize_path(source) if source.begins_with("res://") else source
 	var target := folder.path_join("clip.png")
@@ -166,7 +275,16 @@ static func set_default(type_id: String, clip: Dictionary, data_root: String, as
 	if not check.valid:
 		return {"ok": false, "error": str(check.error), "clip": {}}
 	_backup(library, data_root)
-	types[type_id] = {"label": label_of(type_id, library), "revision": revision, "clip": published, "project": project}
+	if animation == "attack":
+		type_entry["label"] = label_of(type_id, library)
+		type_entry["revision"] = revision
+		type_entry["clip"] = published
+		type_entry["project"] = project
+	else:
+		type_entry["label"] = label_of(type_id, library)
+		poses[animation] = {"revision": revision, "clip": published, "project": project}
+		type_entry["poses"] = poses
+	types[type_id] = type_entry
 	library["schema_version"] = 1
 	library["types"] = types
 	if not _write(library, data_root):
@@ -174,15 +292,21 @@ static func set_default(type_id: String, clip: Dictionary, data_root: String, as
 	reload_game_library()
 	return {"ok": true, "error": "", "clip": published}
 
-static func remove_default(type_id: String, data_root: String) -> bool:
+static func remove_default(type_id: String, data_root: String, animation: String = "attack") -> bool:
 	var library := load_library(data_root)
 	if not library.get("types", {}).has(type_id):
 		return false
 	_backup(library, data_root)
 	# Keep the category (and its revision count); only the animation goes.
 	var entry: Dictionary = library.types[type_id]
-	entry.erase("clip")
-	entry.erase("project")
+	if animation == "attack":
+		entry.erase("clip")
+		entry.erase("project")
+	else:
+		var poses: Variant = entry.get("poses", {})
+		if poses is Dictionary and poses.get(animation) is Dictionary:
+			poses[animation].erase("clip")
+			poses[animation].erase("project")
 	reload_game_library()
 	return _write(library, data_root)
 

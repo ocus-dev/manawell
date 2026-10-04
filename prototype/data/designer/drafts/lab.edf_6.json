@@ -16,10 +16,10 @@
       9.0
     ],
     "icon": "",
-    "job_id": "job_20260927T174727",
+    "job_id": "job_20260928T134700",
     "rotation_degrees": -3.0,
     "source": "art/ui-items/Weapons/edf6.png",
-    "world_scale": 0.5,
+    "world_scale": 0.55,
     "world_sprite": ""
   },
   "attack_clip": {},
@@ -29,17 +29,11 @@
       "operation": "flat",
       "stat": "attack_damage",
       "value": 0.0
-    },
-    {
-      "family": "designer.base.attacks_per_second",
-      "operation": "increased",
-      "stat": "attacks_per_second",
-      "value": 0.1
     }
   ],
   "base_stats": {
-    "attack_damage": 10.0,
-    "attacks_per_second": 1.66
+    "attack_damage": 20.0,
+    "attacks_per_second": 1.0
   },
   "behavior_id": "weapon.melee",
   "clip_source": "type",
@@ -65,7 +59,7 @@
       ],
       "opacity": 1.0,
       "rotation": 0.0,
-      "sheet": "res://assets/weapons/edf_6/9/effects/0.png",
+      "sheet": "res://assets/weapons/edf_6/10/effects/0.png",
       "size": 120.0,
       "trigger": "windup"
     }
@@ -81,7 +75,7 @@
     "cutout_method": "auto",
     "tolerance": 38.0
   },
-  "label": "Edf 6",
+  "label": "test ax 1",
   "rarity": "common",
   "schema_version": 1.0,
   "swing": {

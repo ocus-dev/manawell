@@ -4,6 +4,7 @@ extends RefCounted
 const Catalog = preload("res://scripts/model/weapon_catalog.gd")
 const DEFAULT_PATH := "res://data/loot/weapon_registrations.json"
 const DEFAULT_INDEX_PATH := "res://data/weapons/index.json"
+const DEFAULT_DATA_ROOT := "res://data/weapons"
 const TABLE_ID := "foundry_physical_v1"
 const SCHEMA_VERSION := 1
 
@@ -61,11 +62,22 @@ static func validate_entry(entry: Variant, weapon_id: String = "") -> Dictionary
 		return _failure("registration item level range is invalid")
 	if str(entry.get("recipe_id", "")).is_empty():
 		return _failure("registration recipe ID is required")
+	# Optional per-creature chances (CreatureDrops), percent per kill.
+	if entry.has("monster_chances"):
+		var chances: Variant = entry.monster_chances
+		if not chances is Dictionary:
+			return _failure("registration monster chances must be an object")
+		for key in chances:
+			var chance: Variant = chances[key]
+			if not key is String or str(key).is_empty() or str(key).length() > 40 or not (chance is int or chance is float) or not is_finite(float(chance)) or float(chance) < 0.0 or float(chance) > 100.0:
+				return _failure("registration monster chance must be 0-100 for a named creature")
 	return {"valid": true, "diagnostics": []}
 
-static func update_weapon(weapon_id: String, published_entry: Dictionary, enabled: bool, weight: float, min_item_level: int, max_item_level: int, path: String = DEFAULT_PATH, table_id: String = TABLE_ID) -> Dictionary:
+## `monster_chances` = per-creature chances ({creature: percent}); null keeps
+## whatever the weapon already has (the Weapon Lab doesn't edit them).
+static func update_weapon(weapon_id: String, published_entry: Dictionary, enabled: bool, weight: float, min_item_level: int, max_item_level: int, path: String = DEFAULT_PATH, table_id: String = TABLE_ID, data_root: String = DEFAULT_DATA_ROOT, monster_chances: Variant = null) -> Dictionary:
 	var revision := int(published_entry.get("revision", 0))
-	var recipe := _read_recipe(weapon_id, revision)
+	var recipe := _read_recipe(weapon_id, revision, data_root)
 	if recipe.is_empty():
 		return _failure("published recipe is missing")
 	var revision_check := Catalog.validate_revision(published_entry, false)
@@ -75,10 +87,20 @@ static func update_weapon(weapon_id: String, published_entry: Dictionary, enable
 	if not recipe_check.valid:
 		return recipe_check
 	var entry := {"weapon_id": weapon_id, "enabled": enabled, "weight": weight, "min_item_level": min_item_level, "max_item_level": max_item_level, "revision": revision, "recipe_id": str(recipe.get("recipe_id", ""))}
+	var document := load_document(path)
+	var chances: Variant = monster_chances
+	if chances == null:
+		chances = document.get("tables", {}).get(table_id, {}).get("weapons", {}).get(weapon_id, {}).get("monster_chances", null)
+	if chances is Dictionary:
+		var kept := {}
+		for key in chances:
+			if float(chances[key]) > 0.0:
+				kept[str(key)] = float(chances[key])
+		if not kept.is_empty():
+			entry["monster_chances"] = kept
 	var entry_check := validate_entry(entry, weapon_id)
 	if not entry_check.valid:
 		return entry_check
-	var document := load_document(path)
 	if not document.tables.has(table_id):
 		document.tables[table_id] = {"weapons": {}}
 	document.tables[table_id].weapons[weapon_id] = entry
@@ -88,22 +110,35 @@ static func update_weapon(weapon_id: String, published_entry: Dictionary, enable
 		return _failure("could not persist loot registration")
 	return {"valid": true, "committed": true, "registration": entry, "document": document, "diagnostics": []}
 
-static func snapshot_for(table_id: String = TABLE_ID, item_level: int = 1, path: String = DEFAULT_PATH, index_path: String = DEFAULT_INDEX_PATH) -> Dictionary:
+## The weapons that can drop at `item_level`. A registration drops the
+## weapon's *current* published revision: republishing it (Weapon Lab, Dev
+## Encyclopedia) doesn't silently take it out of the loot table.
+## `overrides` ({weapon_id: registration}) replaces saved registrations; the Dev
+## Encyclopedia uses it to try unsaved drop settings in a running level.
+static func snapshot_for(table_id: String = TABLE_ID, item_level: int = 1, path: String = DEFAULT_PATH, index_path: String = DEFAULT_INDEX_PATH, overrides: Dictionary = {}) -> Dictionary:
 	var document := load_document(path)
 	var table: Dictionary = document.get("tables", {}).get(table_id, {})
 	var index := _read_json(index_path)
+	var data_root := index_path.get_base_dir()
+	var registrations: Dictionary = table.get("weapons", {}).duplicate(true)
+	for weapon_id in overrides:
+		registrations[weapon_id] = overrides[weapon_id]
 	var pool: Array[Dictionary] = []
-	for weapon_id in table.get("weapons", {}).keys():
-		var registration: Dictionary = table.weapons[weapon_id]
+	for weapon_id in registrations.keys():
+		var registration: Dictionary = registrations[weapon_id]
 		if not bool(registration.get("enabled", false)) or item_level < int(registration.get("min_item_level", 1)) or item_level > int(registration.get("max_item_level", 3)):
 			continue
 		var published: Dictionary = index.get("weapons", {}).get(weapon_id, {})
-		if published.is_empty() or int(published.get("revision", 0)) != int(registration.get("revision", 0)):
+		if published.is_empty():
 			continue
-		var recipe := _read_recipe(weapon_id, int(registration.get("revision", 0)))
+		var revision := int(published.get("revision", 0))
+		var recipe := _read_recipe(weapon_id, revision, data_root)
 		if recipe.is_empty():
 			continue
-		pool.append({"weapon_id": weapon_id, "revision": int(registration.revision), "weight": float(registration.weight), "min_item_level": int(registration.min_item_level), "max_item_level": int(registration.max_item_level), "recipe": recipe.duplicate(true), "definition": published.duplicate(true)})
+		var pooled := {"weapon_id": weapon_id, "revision": revision, "weight": float(registration.get("weight", 1.0)), "min_item_level": int(registration.get("min_item_level", 1)), "max_item_level": int(registration.get("max_item_level", 3)), "recipe": recipe.duplicate(true), "definition": published.duplicate(true)}
+		if registration.get("monster_chances") is Dictionary and not registration.monster_chances.is_empty():
+			pooled["monster_chances"] = registration.monster_chances.duplicate(true)
+		pool.append(pooled)
 	pool.sort_custom(func(left: Dictionary, right: Dictionary): return str(left.weapon_id) < str(right.weapon_id))
 	return {"schema_version": SCHEMA_VERSION, "table_id": table_id, "registration_revision": int(document.get("registration_revision", 0)), "item_level": item_level, "pool": pool}
 
@@ -111,8 +146,8 @@ static func registration_for(weapon_id: String, path: String = DEFAULT_PATH, tab
 	var document := load_document(path)
 	return document.get("tables", {}).get(table_id, {}).get("weapons", {}).get(weapon_id, {"weapon_id": weapon_id, "enabled": false, "weight": 1.0, "min_item_level": 1, "max_item_level": 3, "revision": 0, "recipe_id": ""}).duplicate(true)
 
-static func _read_recipe(weapon_id: String, revision: int) -> Dictionary:
-	return _read_json("res://data/weapons/%s/%d/recipe.json" % [weapon_id, revision])
+static func _read_recipe(weapon_id: String, revision: int, data_root: String = DEFAULT_DATA_ROOT) -> Dictionary:
+	return _read_json(data_root.path_join(weapon_id).path_join(str(revision)).path_join("recipe.json"))
 
 static func _read_json(path: String) -> Dictionary:
 	var file := FileAccess.open(ProjectSettings.globalize_path(path), FileAccess.READ)

@@ -15,16 +15,18 @@ func _run() -> void:
 			await process_frame
 		var operations = controller.encounter_hud.operations
 		var viewport_rect := Rect2(Vector2.ZERO, operations.size)
-		assert(operations.navigation_buttons.size() == 5, "Top navigation should expose operations, map, research, inventory, and crew pages")
-		operations.navigation_buttons["research"].emit_signal("pressed")
+		# Research and Crew are hidden for now (2026-09-28); their pages still exist.
+		assert(operations.navigation_buttons.size() == 3 and operations.navigation_buttons.has("operations") and operations.navigation_buttons.has("map") and operations.navigation_buttons.has("inventory"), "Top navigation should expose operations, map, and inventory")
+		assert(not operations.navigation_buttons.has("research") and not operations.navigation_buttons.has("crew"), "Research and Crew tabs are hidden")
+		operations.navigation_buttons["inventory"].emit_signal("pressed")
 		await process_frame
-		assert(not operations.body.visible and operations.research_panel.visible, "Research navigation should isolate the research page")
-		operations.navigation_buttons["crew"].emit_signal("pressed")
+		assert(not operations.body.visible and operations.inventory_panel.visible, "Inventory navigation should isolate the inventory page")
+		operations._show_page("research")
 		await process_frame
-		assert(not operations.research_panel.visible and operations.crew_panel.visible, "Crew navigation should isolate the crew page")
+		assert(not operations.inventory_panel.visible and operations.research_panel.visible, "The hidden research page can still be shown")
 		operations.navigation_buttons["operations"].emit_signal("pressed")
 		await process_frame
-		assert(operations.body.visible and not operations.crew_panel.visible, "Operations navigation should restore the launch page")
+		assert(operations.body.visible and not operations.research_panel.visible, "Operations navigation should restore the launch page")
 		print("Operations size: ", operations.size)
 		for widget in [operations.resource_strip, operations.expedition_panel.start_button, operations.viewport_settings_button]:
 			print(widget.name, " ", widget.get_global_rect(), " minimum ", widget.get_combined_minimum_size())

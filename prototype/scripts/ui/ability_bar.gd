@@ -33,7 +33,7 @@ func _build() -> void:
 	dash_button.name = "Dash"
 	dash_button.pressed.connect(ability_requested.emit.bind("dash"))
 	row.add_child(dash_button)
-	pulse_button = _ability_button("pulse", "pulse", "Pulse", "Damage nearby enemies.")
+	pulse_button = _ability_button("pulse", "pulse", "Pulse", "Fire a quick 3-shot burst at the nearest monster.")
 	pulse_button.name = "Pulse"
 	pulse_button.pressed.connect(ability_requested.emit.bind("pulse"))
 	row.add_child(pulse_button)

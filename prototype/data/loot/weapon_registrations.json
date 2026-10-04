@@ -1,16 +1,76 @@
 {
-  "registration_revision": 6,
+  "registration_revision": 20,
   "schema_version": 1.0,
   "tables": {
     "foundry_physical_v1": {
       "weapons": {
         "156": {
           "enabled": false,
+          "max_item_level": 3.0,
+          "min_item_level": 1.0,
+          "recipe_id": "156.common.r2.r3",
+          "revision": 3.0,
+          "weapon_id": "156",
+          "weight": 1.0
+        },
+        "edf_6": {
+          "enabled": true,
           "max_item_level": 3,
           "min_item_level": 1,
-          "recipe_id": "156.common.r2.r3",
-          "revision": 3,
-          "weapon_id": "156",
+          "monster_chances": {
+            "pursuer": 15.0
+          },
+          "recipe_id": "edf_6.common.r13",
+          "revision": 13,
+          "weapon_id": "edf_6",
+          "weight": 1.0
+        },
+        "edf_9": {
+          "enabled": true,
+          "max_item_level": 3.0,
+          "min_item_level": 1.0,
+          "monster_chances": {
+            "pursuer": 15.0
+          },
+          "recipe_id": "edf_9.common.r5",
+          "revision": 5.0,
+          "weapon_id": "edf_9",
+          "weight": 0.49
+        },
+        "gun_test": {
+          "enabled": true,
+          "max_item_level": 3.0,
+          "min_item_level": 1.0,
+          "monster_chances": {
+            "pursuer": 15.0
+          },
+          "recipe_id": "gun_test.common.r5",
+          "revision": 5.0,
+          "weapon_id": "gun_test",
+          "weight": 1.0
+        },
+        "leftsword": {
+          "enabled": true,
+          "max_item_level": 3.0,
+          "min_item_level": 1.0,
+          "monster_chances": {
+            "pursuer": 15.0
+          },
+          "recipe_id": "leftsword.common.r3",
+          "revision": 3.0,
+          "weapon_id": "leftsword",
+          "weight": 1.0
+        },
+        "sword": {
+          "enabled": true,
+          "max_item_level": 3.0,
+          "min_item_level": 1.0,
+          "monster_chances": {
+            "pursuer": 15.0
+          },
+          "recipe_id": "sword.common.r3",
+          "revision": 3.0,
+          "weapon_id": "sword",
           "weight": 1.0
         }
       }

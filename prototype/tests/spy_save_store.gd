@@ -5,6 +5,7 @@ class_name SpySaveStore
 var account: RefCounted
 var loaded_production_utc_timestamp: float = 0.0
 var loaded_snapshot: Dictionary = {}
+var loaded_campaign_state: Dictionary = {}
 var writes_allowed: bool = true
 var last_error: String = ""
 var recovery_message: String = ""

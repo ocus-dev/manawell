@@ -4,6 +4,7 @@ extends Node2D
 const BalanceData = preload("res://data/balance.gd")
 const ArenaLayoutScript = preload("res://data/arena_layout.gd")
 const VisualScript = preload("res://scripts/game/side_view_actor_visual.gd")
+const VisualConfigScript = preload("res://scripts/game/side_view_visual_config.gd")
 const WeaponSwingScript = preload("res://scripts/model/weapon_swing.gd")
 const WeaponEffectsScript = preload("res://scripts/model/weapon_effects.gd")
 const WeaponEffectScript = preload("res://scripts/game/weapon_effect.gd")
@@ -23,6 +24,13 @@ const HELD_WEAPON_GAME_REFERENCE_MAX_DIMENSION: float = 96.0
 const HELD_WEAPON_ATTACK_PRESENTATION_DURATION: float = 0.34
 
 var last_facing: int = 1
+## How far the hero can walk. Defaults to the combat arena; a wider area
+## (the Home base) widens these after configuring the hero.
+var left_bound: float = LEFT_BOUND
+var right_bound: float = RIGHT_BOUND
+## Multiplies the normal walking speed (not dashing). 1.0 in combat; Home
+## raises it so the long base is quicker to cross.
+var walk_speed_multiplier: float = 1.0
 var visual: Node
 var hero_id := "hero_1"
 var vertical_velocity: float = 0.0
@@ -74,6 +82,25 @@ var held_weapon_hand_fit: Dictionary = {}
 var _weapon_tip := Vector2.ZERO
 var _hand_placed := false
 var _base_weapon_grip := Vector2(0.5, 0.75)
+## Idle / walk: how far the weapon tilts with the arm (degrees, see
+## SideViewActorVisual.hand_follow_tilt).
+var held_weapon_tilt_degrees := 0.0
+## The weapon's own idle / walk clips (WeaponClip), keyed by state.
+var held_weapon_pose_clips: Dictionary = {}
+## Swing trail: when a hero_weapon attack jumps to its next frame, faint
+## copies of the weapon fill in the arc between the two poses, so a 12 fps
+## sheet reads as one smooth swing.
+const SWING_TRAIL_STEPS := 3
+const SWING_TRAIL_LIFE := 0.12
+const SWING_TRAIL_ALPHA := 0.42
+## Smallest turn (degrees) or far-end move (share of the weapon's length)
+## that leaves a trail.
+const SWING_TRAIL_MIN_TURN := 14.0
+const SWING_TRAIL_MIN_MOVE := 0.3
+var swing_trail_enabled := true
+var _trail: Array = []
+var _placed_frame := -1
+var _placed_transform := Transform2D.IDENTITY
 
 func _ready() -> void:
 	visual = VisualScript.new()
@@ -84,22 +111,46 @@ func _ready() -> void:
 	visual.set_facing(last_facing)
 	visual.attack_started.connect(_start_held_weapon_attack_presentation)
 	visual.attack_finished.connect(_on_attack_clip_finished)
+	_ensure_held_weapon()
+	_update_held_weapon_transform()
+
+## The weapon socket and sprite. Made on demand so a weapon can be equipped
+## before the hero has finished entering the scene.
+func _ensure_held_weapon() -> void:
+	if held_weapon != null:
+		return
 	weapon_socket = Node2D.new()
 	weapon_socket.name = "WeaponSocket"
 	weapon_socket.z_index = 2
+	weapon_socket.scale = Vector2.ONE * display_scale()
 	add_child(weapon_socket)
 	held_weapon = Sprite2D.new()
 	held_weapon.name = "HeldWeapon"
 	held_weapon.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	held_weapon.visible = false
 	weapon_socket.add_child(held_weapon)
-	_update_held_weapon_transform()
 
 func configure_hero(new_hero_id: String) -> bool:
 	hero_id = new_hero_id if new_hero_id == "hero_2" else "hero_1"
+	if weapon_socket != null:
+		weapon_socket.scale = Vector2.ONE * display_scale()
 	if visual == null:
 		return false
 	return visual.configure("hero_2" if hero_id == "hero_2" else "hero")
+
+## How much bigger than its art calibration the mech is drawn
+## (SideViewVisualConfig.HERO_DISPLAY_SCALE). The weapon socket scales by the
+## same amount around the feet, so held weapons, their hand offsets, swings and
+## effects stay in proportion with the body.
+func display_scale() -> float:
+	return VisualConfigScript.display_scale("hero_2" if hero_id == "hero_2" else "hero")
+
+## Where the weapon socket rests (before the fist follow), scaled with the
+## body about the feet.
+func _socket_rest_position(facing_sign: float) -> Vector2:
+	var ground := Vector2(0.0, float(visual.ground_local_y) if visual != null else 40.0)
+	var rest := Vector2(absf(WEAPON_SOCKET_LOCAL.x) * facing_sign, WEAPON_SOCKET_LOCAL.y)
+	return ground + (rest - ground) * display_scale()
 
 func configure_held_weapon(texture: Texture2D, grip: Vector2 = Vector2(0.5, 0.75), facing: String = "right", world_scale: float = 1.0, rotation_degrees: float = 0.0, hand_offset: Vector2 = Vector2.ZERO) -> void:
 	held_weapon_grip = Vector2(clampf(grip.x, 0.0, 1.0), clampf(grip.y, 0.0, 1.0))
@@ -111,6 +162,7 @@ func configure_held_weapon(texture: Texture2D, grip: Vector2 = Vector2(0.5, 0.75
 	held_weapon_attack_rotation_offset_degrees = 0.0
 	held_weapon_attack_elapsed = 0.0
 	_stop_weapon_clip()
+	_ensure_held_weapon()
 	held_weapon.texture = texture
 	held_weapon.visible = texture != null
 	_base_weapon_texture = texture
@@ -122,6 +174,20 @@ func _process(delta: float) -> void:
 	_advance_attack_clips(delta)
 	_advance_swing(delta)
 	_place_weapon_in_hands()
+	_follow_hand()
+	_advance_swing_trail(delta)
+
+## Idle and walk: the held weapon rides along with the front fist and tilts
+## a little with the arm.
+func _follow_hand() -> void:
+	if weapon_socket == null or visual == null or held_weapon_clip_playing or _hand_placed:
+		return
+	var tilt: float = visual.hand_follow_tilt()
+	if absf(tilt - held_weapon_tilt_degrees) > 0.01:
+		held_weapon_tilt_degrees = tilt
+		_update_held_weapon_transform()
+	var hero_facing_sign := -1.0 if last_facing < 0 else 1.0
+	weapon_socket.position = _socket_rest_position(hero_facing_sign) + visual.hand_follow_offset()
 
 func _advance_swing(delta: float) -> void:
 	if not held_weapon_attack_active or held_weapon == null or held_weapon.texture == null:
@@ -192,7 +258,7 @@ func spawn_weapon_effect(index: int) -> Node2D:
 		parent.add_child(node)
 		node.global_position = held_weapon.to_global(anchor_local) + world_offset
 		node.global_rotation = (held_weapon.global_rotation if bool(effect.align) else 0.0) + deg_to_rad(float(effect.rotation)) * facing
-		node.scale = Vector2(facing, 1.0)
+		node.scale = Vector2(facing, 1.0) * display_scale()
 		node.z_index = 6
 	effects_spawned += 1
 	return node
@@ -231,6 +297,26 @@ func configure_attack_clip(clip: Dictionary, hit_seconds: float = 0.0, attack_in
 	_update_weapon_visibility()
 
 var held_weapon_clip_hit_seconds := 0.0
+
+## Sets the weapon's own idle and walk ({idle: clip, walk: clip}; missing or
+## {} = the hero's normal art, with the weapon following the fist).
+## hero_weapon clips draw this weapon's picture in the hands (`hand_fit`).
+func configure_pose_clips(clips: Dictionary, hand_fit: Dictionary = {}) -> void:
+	if not hand_fit.is_empty():
+		held_weapon_hand_fit = WeaponClipScript.normalize_hand_fit(hand_fit)
+		_refresh_weapon_tip()
+	held_weapon_pose_clips = {}
+	for state in ["idle", "walk"]:
+		var clip: Variant = clips.get(state, {})
+		var texture: Texture2D = WeaponClipScript.load_sheet(clip) if WeaponClipScript.is_set(clip) else null
+		if texture != null and ["hero", "hero_weapon"].has(str(clip.get("mode", ""))):
+			held_weapon_pose_clips[state] = WeaponClipScript.normalize(clip)
+			if visual != null:
+				visual.set_pose_clip(state, clip, texture, WeaponClipScript.load_hand(clip) if str(clip.mode) == "hero_weapon" else null)
+		elif visual != null:
+			visual.set_pose_clip(state, {}, null)
+	_update_weapon_visibility()
+	_place_weapon_in_hands()
 
 func has_attack_clip() -> bool:
 	return not held_weapon_clip.is_empty() or (visual != null and visual.has_attack_clip())
@@ -288,20 +374,78 @@ func _refresh_weapon_tip() -> void:
 func _place_weapon_in_hands() -> void:
 	if held_weapon == null or visual == null:
 		return
-	var placing: bool = visual.clip_places_weapon() and held_weapon.texture != null
+	var placing: bool = visual.places_weapon() and held_weapon.texture != null and not held_weapon_clip_playing
 	if not placing:
 		if _hand_placed:
 			_hand_placed = false
+			_placed_frame = -1
 			weapon_socket.z_index = 2
 			_update_held_weapon_transform()
 		return
-	var clip: Dictionary = visual.attack_clip
-	var frame: int = visual.clip_frame
+	var clip: Dictionary = visual.placing_clip()
+	var frame: int = visual.placing_frame()
 	var local := WeaponClipScript.hand_transform(clip, frame, Vector2(held_weapon.texture.get_size()), held_weapon_grip, _weapon_tip, held_weapon_hand_fit)
-	held_weapon.global_transform = visual.clip_cell_to_global() * local
+	if not _hand_placed:
+		# The socket goes back to its rest spot (no fist follow) while the clip places the weapon.
+		weapon_socket.position = _socket_rest_position(-1.0 if last_facing < 0 else 1.0)
+	var placed: Transform2D = visual.placing_cell_to_global() * local
+	held_weapon.global_transform = placed
 	held_weapon.visible = true
 	weapon_socket.z_index = 0 if bool(clip.track[clampi(frame, 0, clip.track.size() - 1)].get("behind", false)) else 2
+	# Attacks (not idle / walk) leave a trail when the weapon jumps.
+	if _hand_placed and frame != _placed_frame and _placed_frame >= 0 and visual.clip_places_weapon():
+		_spawn_swing_trail(_placed_transform, placed)
+	_placed_frame = frame
+	_placed_transform = placed
 	_hand_placed = true
+
+## Faint copies of the weapon between two placements (skipped for small moves
+## and when the hero turned around between them).
+func _spawn_swing_trail(from: Transform2D, to: Transform2D) -> void:
+	if not swing_trail_enabled or held_weapon == null or held_weapon.texture == null:
+		return
+	if signf(from.determinant()) != signf(to.determinant()):
+		return
+	var size := Vector2(held_weapon.texture.get_size())
+	var tip_local := _weapon_tip - size * 0.5
+	var grip_local := held_weapon_grip * size - size * 0.5
+	var turn := absf(rad_to_deg(angle_difference(from.get_rotation(), to.get_rotation())))
+	var reach := (tip_local - grip_local).length() * absf(to.get_scale().x)
+	if turn < SWING_TRAIL_MIN_TURN and (from * tip_local).distance_to(to * tip_local) < reach * SWING_TRAIL_MIN_MOVE:
+		return
+	for step in range(1, SWING_TRAIL_STEPS + 1):
+		var t := float(step) / float(SWING_TRAIL_STEPS + 1)
+		var ghost := Sprite2D.new()
+		ghost.name = "SwingTrail"
+		ghost.texture = held_weapon.texture
+		ghost.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+		ghost.top_level = true
+		ghost.global_transform = from.interpolate_with(to, t)
+		ghost.z_index = weapon_socket.z_index - 1
+		var alpha := SWING_TRAIL_ALPHA * t
+		ghost.self_modulate = Color(1.0, 1.0, 1.0, alpha)
+		add_child(ghost)
+		_trail.append({"node": ghost, "age": 0.0, "alpha": alpha})
+
+func _advance_swing_trail(delta: float) -> void:
+	if _trail.is_empty():
+		return
+	var kept: Array = []
+	for entry in _trail:
+		var node: Sprite2D = entry.node
+		if not is_instance_valid(node):
+			continue
+		entry.age = float(entry.age) + delta
+		if float(entry.age) >= SWING_TRAIL_LIFE:
+			node.queue_free()
+			continue
+		node.self_modulate.a = float(entry.alpha) * (1.0 - float(entry.age) / SWING_TRAIL_LIFE)
+		kept.append(entry)
+	_trail = kept
+
+## Live swing trail pieces (tests).
+func swing_trail_count() -> int:
+	return _trail.size()
 
 ## Where this weapon's picture sits in the hands for `frame` (tests, previews).
 func hand_placed_transform() -> Transform2D:
@@ -310,8 +454,11 @@ func hand_placed_transform() -> Transform2D:
 func _update_weapon_visibility() -> void:
 	if held_weapon == null:
 		return
-	var hidden: bool = visual != null and visual.clip_hides_weapon()
+	var hidden: bool = visual != null and visual.hides_weapon()
 	held_weapon.self_modulate.a = 0.0 if hidden else 1.0
+	if visual != null:
+		# The fist is drawn over the weapon while it's held in idle / walk.
+		visual.set_fist_overlay(held_weapon.visible and held_weapon.texture != null and not hidden)
 
 func configure_held_weapon_swing(swing: Dictionary) -> void:
 	held_weapon_swing = WeaponSwingScript.normalize(swing) if not swing.is_empty() else {}
@@ -350,6 +497,8 @@ func _held_weapon_attack_pose_degrees(progress: float) -> float:
 func clear_held_weapon() -> void:
 	_stop_weapon_clip()
 	_base_weapon_texture = null
+	if held_weapon == null:
+		return
 	held_weapon.texture = null
 	held_weapon.visible = false
 
@@ -359,10 +508,10 @@ func _update_held_weapon_transform() -> void:
 	var hero_facing_sign := -1.0 if last_facing < 0 else 1.0
 	var authored_facing_sign := -1.0 if held_weapon_facing == "left" else 1.0
 	var art_facing_sign := hero_facing_sign * authored_facing_sign
-	weapon_socket.position = Vector2(absf(WEAPON_SOCKET_LOCAL.x) * hero_facing_sign, WEAPON_SOCKET_LOCAL.y)
+	weapon_socket.position = _socket_rest_position(hero_facing_sign)
 	var render_scale := _held_weapon_render_scale()
 	held_weapon.scale = Vector2(render_scale * art_facing_sign, render_scale)
-	var presentation_rotation_degrees := held_weapon_rotation_degrees + (held_weapon_attack_rotation_offset_degrees if held_weapon_attack_active else 0.0)
+	var presentation_rotation_degrees := held_weapon_rotation_degrees + (held_weapon_attack_rotation_offset_degrees if held_weapon_attack_active else held_weapon_tilt_degrees)
 	held_weapon.rotation = deg_to_rad(presentation_rotation_degrees)
 	if held_weapon.texture != null:
 		var size := Vector2(held_weapon.texture.get_size())
@@ -371,6 +520,9 @@ func _update_held_weapon_transform() -> void:
 		# Rotate the center offset with the art so the authored grip remains
 		# anchored to the socket at every angle.
 		held_weapon.position = scaled_pivot.rotated(held_weapon.rotation) + held_weapon_hand_offset_local() + (held_weapon_attack_offset if held_weapon_attack_active else Vector2.ZERO)
+	if _hand_placed:
+		# An idle / walk / attack clip is placing the weapon: keep it there.
+		_place_weapon_in_hands()
 
 func held_weapon_base_position() -> Vector2:
 	if held_weapon == null or held_weapon.texture == null:
@@ -482,12 +634,12 @@ func simulate_motion(delta: float, signed_input: float, dash_direction: int, das
 	var horizontal_input := clampf(signed_input, -1.0, 1.0)
 	if not is_zero_approx(horizontal_input):
 		last_facing = 1 if horizontal_input > 0.0 else -1
-	var horizontal_speed := BalanceData.DASH_SPEED * 32.0 if dash_active else BalanceData.HERO_HORIZONTAL_SPEED
+	var horizontal_speed := BalanceData.DASH_SPEED * 32.0 if dash_active else BalanceData.HERO_HORIZONTAL_SPEED * walk_speed_multiplier
 	var horizontal_direction := horizontal_input
 	if dash_active:
 		horizontal_direction = -1.0 if dash_direction < 0 else 1.0
 		last_facing = -1 if dash_direction < 0 else 1
-	position.x = clampf(position.x + horizontal_direction * horizontal_speed * delta, LEFT_BOUND, RIGHT_BOUND)
+	position.x = clampf(position.x + horizontal_direction * horizontal_speed * delta, left_bound, right_bound)
 	drop_through_remaining = maxf(0.0, drop_through_remaining - delta)
 	if ignored_support_id != "" and position.y > ArenaLayoutScript.hero_support_y(ignored_support_id) + ArenaLayoutScript.DROP_THROUGH_CLEARANCE:
 		ignored_support_id = ""
@@ -529,13 +681,11 @@ func simulate_motion(delta: float, signed_input: float, dash_direction: int, das
 			support_id = landing_id
 			coyote_remaining = BalanceData.HERO_COYOTE_TIME
 	if visual != null:
+		visual.set_dashing(dash_active)
+		visual.set_airborne(not grounded, vertical_velocity)
 		visual.set_locomotion(not is_zero_approx(horizontal_direction) and grounded)
 		visual.set_facing(last_facing)
 		_update_held_weapon_transform()
-	queue_redraw()
-
-func simulate_dash_tick(delta: float, direction: int) -> void:
-	simulate_motion(delta, 0.0, direction, true)
 
 static func normalized_horizontal_input(left_strength: float, right_strength: float) -> float:
 	return clampf(right_strength - left_strength, -1.0, 1.0)
@@ -544,6 +694,8 @@ func capture_snapshot_state() -> Dictionary:
 	return {"last_facing": last_facing, "vertical_velocity": vertical_velocity, "grounded": grounded, "support_id": support_id, "ignored_support_id": ignored_support_id, "drop_through_remaining": drop_through_remaining, "jump_buffer_remaining": jump_buffer_remaining, "coyote_remaining": coyote_remaining}
 
 func reset_motion() -> void:
+	if visual != null:
+		visual.revive()
 	vertical_velocity = 0.0
 	grounded = true
 	support_id = ArenaLayoutScript.FLOOR_ID

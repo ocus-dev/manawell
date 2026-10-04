@@ -8,6 +8,7 @@ extends RefCounted
 ##   has_art          bool   a cut-out world sprite exists
 ##   weapon_type      String ("" = none)
 ##   type_label       String
+##   behavior_id      String  "weapon.melee", "weapon.standard"... ("" = unknown)
 ##   clip_source      "type" | "own" | "none"
 ##   clip             Dictionary  the animation it actually plays ({} = none)
 ##   grip             Array  [x, y] normalized
@@ -20,6 +21,7 @@ extends RefCounted
 ##   status  "ok" | "warn" | "need"
 
 const WeaponClipScript = preload("res://scripts/model/weapon_clip.gd")
+const WeaponTypesScript = preload("res://scripts/model/weapon_types.gd")
 
 const TITLES := {
 	"art": "Needs art",
@@ -50,6 +52,11 @@ static func check(info: Dictionary) -> Dictionary:
 	# Type.
 	if weapon_type.is_empty():
 		items.append(_item("type", "warn", "No weapon type. Pick one so it can share that type's attack animation."))
+	elif info.has("behavior_id") and WeaponTypesScript.behavior_mismatch(weapon_type, str(info.behavior_id)):
+		if WeaponTypesScript.default_behavior(weapon_type) == "weapon.melee":
+			items.append(_item("type", "warn", "A %s set to a ranged Behavior shoots bolts instead of swinging. Set Behavior to Melee." % type_label.to_lower()))
+		else:
+			items.append(_item("type", "warn", "A %s set to Melee swings instead of shooting. Set Behavior to Ranged." % type_label.to_lower()))
 	else:
 		items.append(_item("type", "ok", "Type: %s." % type_label))
 	# Animation.

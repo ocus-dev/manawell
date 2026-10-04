@@ -1,7 +1,8 @@
 class_name HeroAnimations
 extends RefCounted
 
-## Installs a hero animation (idle, walk or attack) made in the clip importer
+## Installs a hero animation (any SideViewVisualConfig.STATES state: idle,
+## walk, attack, windup, hurt, dash, jump, fall, death, spawn) made in the clip importer
 ## as the game's own hero art: assets/side-view/animations/hero_<name>/ gets a
 ## new atlas.png, animation.tres and manifest.json in the same layout as the
 ## existing ones, so SideViewActorVisual plays it with no other changes.
@@ -17,9 +18,13 @@ extends RefCounted
 
 const ConfigScript = preload("res://scripts/game/side_view_visual_config.gd")
 const WeaponClipScript = preload("res://scripts/model/weapon_clip.gd")
+const ImportScript = preload("res://scripts/tools/weapon_clip_import.gd")
 
-const ANIMATIONS := ["idle", "walk", "attack"]
-const LOOPS := {"idle": true, "walk": true, "attack": false}
+## Front fist overlay: how far around the tracked fist (as a share of the
+## hero's height) the hand is cut out to be drawn over a held weapon.
+const HAND_RADIUS := 0.05
+
+const ANIMATIONS := ConfigScript.STATES
 const ANIMATIONS_ROOT := "res://assets/side-view/animations"
 const BACKUPS_RELATIVE := "art/side-view/backups"
 const MAX_COLUMNS := 8
@@ -39,7 +44,7 @@ static func folder_path(animation: String, asset_id: String = "hero") -> String:
 ## Returns {ok, error, frames: SpriteFrames, frame_count, folder}.
 static func install(clip: Dictionary, animation: String, still_frame: int = -1, asset_id: String = "hero") -> Dictionary:
 	if not ANIMATIONS.has(animation):
-		return _fail("Pick idle, walk or attack.")
+		return _fail("Pick one of: %s." % ", ".join(ANIMATIONS))
 	if not WeaponClipScript.is_set(clip):
 		return _fail("There's no animation to install.")
 	var normalized := WeaponClipScript.normalize(clip)
@@ -103,12 +108,27 @@ static func install(clip: Dictionary, animation: String, still_frame: int = -1, 
 		"playback_fps": speed,
 		"frame_durations": durations,
 		"motion": animation,
-		"loop_requested": bool(LOOPS[animation]),
+		"loop_requested": ConfigScript.loops(animation),
 		"source": "hero animation importer",
 		"source_sheet": sheet_path,
 		"source_frames": indices,
 		"installed_at": Time.get_datetime_string_from_system(),
 	}
+	# The front fist per frame, relative to the feet, in the shared source
+	# canvas (held weapons follow it, see SideViewActorVisual.hand_follow_offset).
+	var fists: Variant = clip.get("hand_track", [])
+	if fists is Array and fists.size() == count:
+		var track: Array = []
+		for index in indices:
+			var fist: Array = fists[int(index)]
+			track.append([snappedf((float(fist[0]) - float(anchor[0])) * scale, 0.01), snappedf((float(fist[1]) - float(anchor[1])) * scale, 0.01)])
+		manifest["hand_track"] = track
+		# The fist cut out of every frame, drawn over held weapons.
+		var hand_atlas := hand_atlas_image(atlas, track, columns, out_cell, crop_left, crop_top, source_anchor, reference_height)
+		if hand_atlas != null:
+			if hand_atlas.save_png(ProjectSettings.globalize_path(directory.path_join("hand_atlas.png"))) == OK:
+				manifest["hand_atlas"] = "hand_atlas.png"
+				ConfigScript.runtime_hand_atlases[folder] = ImageTexture.create_from_image(hand_atlas)
 	var manifest_file := FileAccess.open(ProjectSettings.globalize_path(directory.path_join("manifest.json")), FileAccess.WRITE)
 	if manifest_file == null:
 		return _fail("Couldn't write the manifest in %s." % directory)
@@ -123,6 +143,7 @@ static func install(clip: Dictionary, animation: String, still_frame: int = -1, 
 	var frames := runtime_frames(atlas, animation, indices.size(), columns, out_cell, speed, durations)
 	ConfigScript.runtime_frames[folder] = frames
 	ConfigScript.runtime_manifests[folder] = manifest
+	ConfigScript.clear_disk_cache()
 	return {"ok": true, "error": "", "frames": frames, "frame_count": indices.size(), "folder": directory}
 
 ## SpriteFrames built straight from the image, for the run the art was made in.
@@ -132,7 +153,7 @@ static func runtime_frames(atlas: Image, animation: String, count: int, columns:
 	if frames.has_animation(&"default"):
 		frames.remove_animation(&"default")
 	frames.add_animation(StringName(animation))
-	frames.set_animation_loop(StringName(animation), bool(LOOPS[animation]))
+	frames.set_animation_loop(StringName(animation), ConfigScript.loops(animation))
 	frames.set_animation_speed(StringName(animation), speed)
 	for index in range(count):
 		var piece := AtlasTexture.new()
@@ -160,7 +181,7 @@ static func _tres_text(directory: String, animation: String, count: int, columns
 	var entries: Array = []
 	for index in range(count):
 		entries.append("{\n\"duration\": %s,\n\"texture\": SubResource(\"Frame_%d\")\n}" % [str(float(durations[index])), index])
-	lines.append("animations = [{\n\"frames\": [%s],\n\"loop\": %s,\n\"name\": &\"%s\",\n\"speed\": %s\n}]" % [", ".join(entries), "true" if bool(LOOPS[animation]) else "false", animation, str(snappedf(speed, 0.001))])
+	lines.append("animations = [{\n\"frames\": [%s],\n\"loop\": %s,\n\"name\": &\"%s\",\n\"speed\": %s\n}]" % [", ".join(entries), "true" if ConfigScript.loops(animation) else "false", animation, str(snappedf(speed, 0.001))])
 	lines.append("")
 	return "\n".join(lines)
 
@@ -192,9 +213,65 @@ static func _backup(directory: String, folder: String) -> void:
 	var root := backups_root if not backups_root.is_empty() else ProjectSettings.globalize_path("res://").trim_suffix("/").get_base_dir().path_join(BACKUPS_RELATIVE)
 	var target := root.path_join("%s_%s" % [folder, Time.get_datetime_string_from_system().replace(":", "").replace("-", "")])
 	DirAccess.make_dir_recursive_absolute(target)
-	for name in ["atlas.png", "animation.tres", "manifest.json"]:
+	for name in ["atlas.png", "animation.tres", "manifest.json", "hand_atlas.png"]:
 		if FileAccess.file_exists(source.path_join(name)):
 			DirAccess.copy_absolute(source.path_join(name), target.path_join(name))
+
+## The front fist of every frame of `atlas`, cut out around the fist track
+## (relative to the feet, source canvas px) and packed in the same layout.
+static func hand_atlas_image(atlas: Image, track: Array, columns: int, cell: Vector2i, crop_left: float, crop_top: float, source_anchor: Vector2, reference_height: float) -> Image:
+	if atlas == null or atlas.is_empty() or track.is_empty():
+		return null
+	var source := atlas
+	if source.get_format() != Image.FORMAT_RGBA8:
+		source = atlas.duplicate() as Image
+		source.convert(Image.FORMAT_RGBA8)
+	var result := Image.create_empty(source.get_width(), source.get_height(), false, Image.FORMAT_RGBA8)
+	var any := false
+	for index in range(track.size()):
+		var region := Rect2i(index % columns * cell.x, index / columns * cell.y, cell.x, cell.y)
+		if region.end.x > source.get_width() or region.end.y > source.get_height():
+			break
+		var frame := source.get_region(region)
+		var fist: Array = track[index]
+		var point := source_anchor + Vector2(float(fist[0]), float(fist[1])) - Vector2(crop_left, crop_top)
+		var mask := ImportScript.hand_mask(frame, point, maxf(6.0, reference_height * HAND_RADIUS))
+		var hand := ImportScript.masked(frame, mask)
+		result.blit_rect(hand, Rect2i(Vector2i.ZERO, region.size), region.position)
+		any = any or hand.get_used_rect().size != Vector2i.ZERO
+	return result if any else null
+
+## Rebuilds hand_atlas.png for an installed animation from its atlas.png and
+## manifest (for art installed before the fist overlay existed).
+static func build_hand_atlas(animation: String, asset_id: String = "hero") -> Dictionary:
+	var directory := folder_path(animation, asset_id)
+	var manifest_path := ProjectSettings.globalize_path(directory.path_join("manifest.json"))
+	if not FileAccess.file_exists(manifest_path):
+		return _fail("No %s animation installed." % animation)
+	var manifest: Variant = JSON.parse_string(FileAccess.get_file_as_string(manifest_path))
+	if not manifest is Dictionary or not manifest.get("hand_track") is Array or manifest.hand_track.is_empty():
+		return _fail("The %s has no front fist marked (Hero animations..., Mark the front fist)." % animation)
+	var atlas := Image.load_from_file(ProjectSettings.globalize_path(directory.path_join("atlas.png")))
+	if atlas == null or atlas.is_empty():
+		return _fail("Couldn't read the %s atlas." % animation)
+	var asset: Dictionary = ConfigScript.ASSETS.get(asset_id, {})
+	var cell: Array = manifest.get("cell_size", [0, 0])
+	var crop: Array = manifest.get("union_crop", [0, 0, 0, 0])
+	var image := hand_atlas_image(atlas, manifest.hand_track, maxi(1, int(manifest.get("columns", 1))), Vector2i(int(cell[0]), int(cell[1])), float(crop[0]), float(crop[1]), asset.animation_source_anchor, float(asset.animation_reference_height))
+	if image == null:
+		return _fail("Couldn't find the fist in the %s frames." % animation)
+	if image.save_png(ProjectSettings.globalize_path(directory.path_join("hand_atlas.png"))) != OK:
+		return _fail("Couldn't write hand_atlas.png.")
+	manifest["hand_atlas"] = "hand_atlas.png"
+	var file := FileAccess.open(manifest_path, FileAccess.WRITE)
+	if file != null:
+		file.store_string(JSON.stringify(manifest, "\t"))
+		file.close()
+	var folder := folder_for(animation, asset_id)
+	ConfigScript.runtime_hand_atlases[folder] = ImageTexture.create_from_image(image)
+	if ConfigScript.runtime_manifests.has(folder):
+		ConfigScript.runtime_manifests[folder]["hand_atlas"] = "hand_atlas.png"
+	return {"ok": true, "error": "", "frames": null, "frame_count": int(manifest.get("frame_count", 0)), "folder": directory}
 
 static func _fail(message: String) -> Dictionary:
 	return {"ok": false, "error": message, "frames": null, "frame_count": 0, "folder": ""}

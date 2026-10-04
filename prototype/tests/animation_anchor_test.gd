@@ -32,20 +32,37 @@ func _init() -> void:
                         clip.frame = frame
                         assert(clip.position == original_position, "Frame-dependent ground snapping")
                     # All imported clips start at the same reference pose (within one source pixel).
-                    var first_box: Array = m["frame_metrics"][0]["bbox"]
+                    var first_box: Array = _first_frame_bbox(m, "res://assets/side-view/animations/%s_%s" % [asset["animation_folder"], motion])
                     var first_height := float(first_box[3] - first_box[1]) * expected_scale
-                    assert(absf(first_height - float(asset["initial_visible_height"]) * multiplier) < 0.6)
+                    # Hand-cut clips match within one source pixel. Importer clips are scaled by
+                    # the body height, so antennas/outline can add a couple of percent.
+                    var height_tolerance := 0.6 if m.has("frame_metrics") else maxf(0.6, float(asset["initial_visible_height"]) * multiplier * 0.03)
+                    assert(absf(first_height - float(asset["initial_visible_height"]) * multiplier) < height_tolerance, "%s %s reference height" % [actor_id, motion])
                     var foot_y: float = clip.position.y + (float(first_box[3]) - half.y) * clip.scale.y
-                    assert(absf(foot_y - 23.0) < 0.6, "Reference feet float")
+                    # Importer clips put the feet line on the placed anchor; outline pixels can hang just below it.
+                    var foot_tolerance := 0.6 if m.has("frame_metrics") else maxf(0.6, float(asset["initial_visible_height"]) * multiplier * 0.015)
+                    assert(absf(foot_y - 23.0) < foot_tolerance, "Reference feet float")
                     clip.frame = 0
                 var static_anchor: Vector2 = asset["ground_anchor"]
                 assert((visual.sprite.position + (static_anchor - visual.sprite.texture.get_size() * 0.5) * visual.sprite.scale - Vector2(0, 23)).length() < 0.001)
         visual.set_locomotion(true)
-        assert(visual.walk_sprite.visible or visual.idle_sprite.visible)
+        # Actors without animations (hero_2) fall back to the static sprite.
+        assert(visual.walk_sprite.visible or visual.idle_sprite.visible or visual.sprite.visible)
         visual.play_attack()
         visual.set_locomotion(false)
         visual._on_attack_animation_finished()
-        assert(visual.idle_sprite.visible)
+        assert(visual.idle_sprite.visible or (visual.idle_sprite.sprite_frames == null and visual.sprite.visible))
     visual.free()
     print("PASS: all actors/clips, reference heights/feet, fixed frame pivots, repeated facing/scaling, reconfigure and fallback")
     quit(0)
+
+## [left, top, right, bottom] of the visible pixels in frame 1. Older clips
+## store it as frame_metrics; clips from the hero importer don't, so it is
+## measured from the atlas.
+func _first_frame_bbox(manifest: Dictionary, folder: String) -> Array:
+    if manifest.has("frame_metrics"):
+        return manifest["frame_metrics"][0]["bbox"]
+    var atlas := Image.load_from_file(ProjectSettings.globalize_path(folder.path_join("atlas.png")))
+    var cell: Array = manifest["cell_size"]
+    var used := atlas.get_region(Rect2i(0, 0, int(cell[0]), int(cell[1]))).get_used_rect()
+    return [used.position.x, used.position.y, used.end.x, used.end.y]

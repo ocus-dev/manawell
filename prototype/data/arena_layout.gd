@@ -2,7 +2,7 @@ class_name ArenaLayout
 extends RefCounted
 
 const FLOOR_ID := "floor"
-const CONFIG_ID := "foundry-platforms-v1"
+const CONFIG_ID := "foundry-floor-v2"
 const FLOOR_TOP_Y: float = 652.0 # 8 px above the hotbar at y=660.
 const LEFT_BOUND: float = 96.0
 const RIGHT_BOUND: float = 1184.0
@@ -11,10 +11,9 @@ const HERO_FEET_OFFSET: float = 40.0
 const DROP_THROUGH_DURATION: float = 0.12
 const DROP_THROUGH_CLEARANCE: float = 8.0
 
-const SUPPORTS: Array[Dictionary] = [
-	{"id": "platform_left", "rect": Rect2(260.0, FLOOR_TOP_Y - 110.0, 210.0, 16.0)},
-	{"id": "platform_right", "rect": Rect2(810.0, FLOOR_TOP_Y - 110.0, 210.0, 16.0)},
-]
+## The two floating walkways (platform_left at x 260, platform_right at x 810,
+## 110 px above the floor, 210 x 16) were removed 2026-09-28: floor only.
+const SUPPORTS: Array[Dictionary] = []
 
 static func support_by_id(support_id: String) -> Dictionary:
 	if support_id == FLOOR_ID:
@@ -35,6 +34,9 @@ static func platform_supports() -> Array[Dictionary]:
 	return SUPPORTS.duplicate(true)
 
 static func overlaps_hero(support: Dictionary, hero_x: float) -> bool:
+	# An unknown support (e.g. a removed platform) doesn't hold the hero up.
+	if not support.has("rect"):
+		return false
 	var rect: Rect2 = support["rect"]
 	return hero_x + HERO_HALF_WIDTH >= rect.position.x and hero_x - HERO_HALF_WIDTH <= rect.end.x
 

@@ -112,7 +112,7 @@ func _init() -> void:
 	for container in [attack.container, hold_container]:
 		(container as Control).resized.connect(_fit_cameras)
 
-## weapon: {texture, pivot, swing, effects, clip, hand_fit, hit_seconds,
+## weapon: {texture, pivot, swing, effects, clip, poses, hand_fit, hit_seconds,
 ## interval, loop_period}. texture null shows the empty-handed hero.
 func show_weapon(weapon: Dictionary) -> void:
 	var texture: Texture2D = weapon.get("texture")
@@ -135,6 +135,10 @@ func show_weapon(weapon: Dictionary) -> void:
 			hero.visual.set_locomotion(walking and hero == hold_hero)
 	if attack_hero.is_inside_tree():
 		attack_hero.configure_attack_clip(weapon.get("clip", {}), hit, interval, weapon.get("hand_fit", {}))
+	# The weapon's own idle / walk (if any) in both previews.
+	for hero in [attack_hero, hold_hero]:
+		if hero.is_inside_tree():
+			hero.configure_pose_clips(weapon.get("poses", {}) if texture != null else {}, weapon.get("hand_fit", {}))
 	loop_period = maxf(0.4, float(weapon.get("loop_period", interval)))
 	loop_clock = loop_period
 	attack_note.text = "Attack loop" + ("" if _has_weapon else " (no art yet)")

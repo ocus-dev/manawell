@@ -11,7 +11,9 @@ const ItemDefinitionsScript = preload("res://scripts/model/item_definitions.gd")
 const WeaponCatalogScript = preload("res://scripts/model/weapon_catalog.gd")
 const CampaignCatalogScript = preload("res://scripts/model/campaign_catalog.gd")
 const LootGeneratorScript = preload("res://scripts/model/loot_generator.gd")
-const INVENTORY_CAPACITY := 100
+const SalvageScript = preload("res://scripts/model/salvage.gd")
+const SkillTreeScript = preload("res://scripts/model/skill_tree.gd")
+const INVENTORY_CAPACITY := 500
 const INVENTORY_MIGRATION_VERSION := 1
 const MAX_PENDING_REWARDS := 3200000
 
@@ -30,6 +32,10 @@ var inventory_command_error := ""
 var published_weapons: Dictionary = {}
 
 var bank: float = 0.0
+## Scrap from salvaged items, stored for future crafting.
+var scrap: int = 0
+## Powered skill-tree nodes (node id -> true). See SkillTree.
+var skill_nodes: Dictionary = {}
 var credited_run_ids: Dictionary = {}
 var run_sequence: int = 1
 var committed_run_id: String = ""
@@ -42,6 +48,11 @@ var unlocked_wells: Dictionary = {"well_1": true}
 var commissioned_wells: Dictionary = {}
 var roster_heroes: Dictionary = {"hero_1": true}
 var hero_assignments: Dictionary = {"hero_1": {"role": "active", "well_id": ""}}
+## Surge limit the player picked for each level (well id -> surge, 0 = none).
+var surge_limits: Dictionary = {}
+## Per-creature weapon drops (CreatureDrops): kills since each weapon last
+## dropped from each creature, {"weapon_id|creature": misses}. Kept across runs.
+var loot_streaks: Dictionary = {}
 var well_loadouts: Dictionary = {"well_1": LoadoutScript.STANDARD, "well_2": LoadoutScript.STANDARD, "well_3": LoadoutScript.STANDARD}
 
 var content_catalog: RefCounted = ContentCatalogScript.new()
@@ -49,15 +60,34 @@ var content_catalog: RefCounted = ContentCatalogScript.new()
 func _init() -> void:
 	_register_published_weapons()
 
+## Parsed published-weapon files, shared by every AccountState. Each entry is
+## re-read only when its file changes (modified time + size), so making a new
+## AccountState no longer reads every recipe from disk.
+static var _json_cache: Dictionary = {}
+
+## Forget the cached weapon files (the publisher calls this after writing).
+static func clear_published_cache() -> void:
+	_json_cache.clear()
+
+static func _cached_json(path: String) -> Variant:
+	if not FileAccess.file_exists(path):
+		_json_cache.erase(path)
+		return null
+	var stamp := [FileAccess.get_modified_time(path), FileAccess.get_size(path)]
+	var entry: Dictionary = _json_cache.get(path, {})
+	if not entry.is_empty() and entry.stamp == stamp:
+		return entry.value
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return null
+	var value: Variant = JSON.parse_string(file.get_as_text())
+	file.close()
+	_json_cache[path] = {"stamp": stamp, "value": value}
+	return value
+
 func _register_published_weapons() -> void:
 	var path := ProjectSettings.globalize_path("res://data/weapons/index.json")
-	if not FileAccess.file_exists(path):
-		return
-	var index_file := FileAccess.open(path, FileAccess.READ)
-	if index_file == null:
-		return
-	var index_value = JSON.parse_string(index_file.get_as_text())
-	index_file.close()
+	var index_value: Variant = _cached_json(path)
 	if not index_value is Dictionary:
 		return
 	var retired: Dictionary = index_value.get("retired", {}) if index_value.get("retired", {}) is Dictionary else {}
@@ -93,13 +123,43 @@ func _register_published_weapons() -> void:
 		if not is_retired:
 			published_weapons[str(weapon_id)] = {"revision": revision.duplicate(true), "recipe": recipe}
 
+## Copies of a published weapon follow its latest numbers: their built-in
+## bonuses (implicit modifiers) are set to the current revision's, so a weapon
+## re-tuned in the Weapon Lab or Dev Encyclopedia doesn't strand old copies
+## (save validation requires the implicits to match the registered base).
+## Changes the given instance Dictionaries in place.
+static func refresh_authored_implicits(instances: Array) -> void:
+	for instance in instances:
+		if not instance is Dictionary or not instance.has("weapon_id") or not instance.has("revision"):
+			continue
+		var base: Dictionary = ItemDefinitionsScript.RUNTIME_BASES.get(str(instance.get("base_id", "")), {})
+		if base.is_empty() or not base.get("implicits") is Array:
+			continue
+		instance["implicit_modifiers"] = base.implicits.duplicate(true)
+
+## Dev Encyclopedia > Weapons: puts new numbers ({base_stats, base_modifiers,
+## behavior_id}) for a published weapon into this session: its registered base,
+## its publication, and the copies already owned.
+func apply_weapon_patch(weapon_id: String, patch: Dictionary) -> void:
+	var base: Dictionary = ItemDefinitionsScript.base_for(weapon_id)
+	if base.is_empty():
+		return
+	if patch.get("base_modifiers") is Array:
+		base["implicits"] = patch.base_modifiers.duplicate(true)
+	if patch.get("base_stats") is Dictionary:
+		base["base_stats"] = patch.base_stats.duplicate(true)
+	ItemDefinitionsScript.register_runtime_base(weapon_id, base)
+	if published_weapons.has(weapon_id):
+		var revision: Dictionary = published_weapons[weapon_id].revision
+		for key in ["base_stats", "base_modifiers", "behavior_id"]:
+			if patch.has(key):
+				revision[key] = patch[key].duplicate(true) if patch[key] is Dictionary or patch[key] is Array else patch[key]
+	refresh_authored_implicits(item_instances.values())
+
 func _read_json_file(path: String) -> Dictionary:
-	var file := FileAccess.open(path, FileAccess.READ)
-	if file == null:
-		return {}
-	var value = JSON.parse_string(file.get_as_text())
-	file.close()
-	return value if value is Dictionary else {}
+	var value: Variant = _cached_json(path)
+	# A copy: callers keep and change these.
+	return value.duplicate(true) if value is Dictionary else {}
 
 func to_save_payload() -> Dictionary:
 	var credited_ids: Array[String] = []
@@ -118,6 +178,8 @@ func to_save_payload() -> Dictionary:
 	instances.sort_custom(func(left: Dictionary, right: Dictionary): return str(left.get("instance_id", "")) < str(right.get("instance_id", "")))
 	return {
 		"bank": bank,
+		"scrap": scrap,
+		"skill_nodes": _known_ids(skill_nodes),
 		"owned_items": _known_ids(owned_items),
 		"new_items": _known_ids(new_items),
 		"item_reward_run_id": item_reward_run_id,
@@ -141,6 +203,8 @@ func to_save_payload() -> Dictionary:
 		"roster_heroes": _known_ids(roster_heroes),
 		"hero_assignments": hero_assignments.duplicate(true),
 		"well_loadouts": well_loadouts.duplicate(true),
+		"surge_limits": surge_limits.duplicate(true),
+		"loot_streaks": loot_streaks.duplicate(true),
 	}
 
 func _known_ids(values: Dictionary) -> Array[String]:
@@ -158,7 +222,8 @@ static func validate_save_payload(payload: Dictionary, definitions: RefCounted =
 	var catalog: RefCounted = ContentCatalogScript.new() if definitions == null else definitions
 	var item_instance_values: Variant = payload.get("item_instances", [])
 	if not item_instance_values is Array or item_instance_values.size() > INVENTORY_CAPACITY:
-		return {"valid": false, "error": "item instances must be an array of at most 100 items"}
+		return {"valid": false, "error": "item instances must be an array of at most %d items" % INVENTORY_CAPACITY}
+	refresh_authored_implicits(item_instance_values)
 	var item_definitions: RefCounted = ItemDefinitionsScript.new()
 	var production_catalog: Dictionary = ItemDefinitionsScript.runtime_bases()
 	var production_affixes: Dictionary = ItemDefinitionsScript.PRODUCTION_AFFIXES
@@ -240,6 +305,16 @@ static func validate_save_payload(payload: Dictionary, definitions: RefCounted =
 	var bank_value: float = float(payload["bank"])
 	if not is_finite(bank_value) or bank_value < 0.0:
 		return {"valid": false, "error": "bank must be a finite nonnegative number"}
+	if payload.has("scrap") and (not _valid_integer(payload["scrap"]) or int(payload["scrap"]) < 0):
+		return {"valid": false, "error": "scrap must be a nonnegative integer"}
+	if payload.has("skill_nodes"):
+		if not payload["skill_nodes"] is Array:
+			return {"valid": false, "error": "skill_nodes must be an array"}
+		var seen_skills := {}
+		for node_id in payload["skill_nodes"]:
+			if not node_id is String or not SkillTreeScript.has_skill(node_id) or seen_skills.has(node_id):
+				return {"valid": false, "error": "skill nodes must be known, unique IDs"}
+			seen_skills[node_id] = true
 	if not payload.has("credited_run_ids") or not payload["credited_run_ids"] is Array:
 		return {"valid": false, "error": "credited_run_ids must be an array"}
 	if payload.has("run_sequence") and (not (payload["run_sequence"] is int or payload["run_sequence"] is float) or int(payload["run_sequence"]) < 1):
@@ -323,6 +398,7 @@ func from_save_payload(payload: Dictionary) -> void:
 	item_instances.clear()
 	for instance in payload.get("item_instances", []):
 		item_instances[str(instance.instance_id)] = instance.duplicate(true)
+	refresh_authored_implicits(item_instances.values())
 	hero_kits = payload.get("hero_kits", {}).duplicate(true)
 	inventory_migration_version = int(payload.get("inventory_migration_version", 0))
 	last_loot_result = payload.get("last_loot_result", {"run_id": "", "item_ids": []}).duplicate(true)
@@ -337,6 +413,11 @@ func from_save_payload(payload: Dictionary) -> void:
 		owned_items.clear()
 		new_items.clear()
 	bank = float(payload["bank"])
+	scrap = int(payload.get("scrap", 0))
+	var saved_skills := {}
+	for node_id in payload.get("skill_nodes", []):
+		saved_skills[str(node_id)] = true
+	skill_nodes = SkillTreeScript.sanitize(saved_skills)
 	credited_run_ids.clear()
 	legacy_identity_error = ""
 	run_sequence = maxi(1, int(payload.get("run_sequence", 1)))
@@ -392,12 +473,37 @@ func from_save_payload(payload: Dictionary) -> void:
 	for well_id in payload.get("well_loadouts", {}).keys():
 		if is_well_commissioned(well_id) and LoadoutScript.is_available(payload["well_loadouts"][well_id], is_well_commissioned("well_2")):
 			well_loadouts[well_id] = payload["well_loadouts"][well_id]
+	surge_limits = {}
+	var saved_limits: Variant = payload.get("surge_limits", {})
+	if saved_limits is Dictionary:
+		for well_id in saved_limits.keys():
+			var limit: Variant = saved_limits[well_id]
+			if (limit is int or limit is float) and int(limit) > 0:
+				surge_limits[str(well_id)] = int(limit)
+	loot_streaks = {}
+	var saved_streaks: Variant = payload.get("loot_streaks", {})
+	if saved_streaks is Dictionary:
+		for key in saved_streaks.keys():
+			var misses: Variant = saved_streaks[key]
+			if key is String and (misses is int or misses is float) and int(misses) > 0:
+				loot_streaks[key] = mini(int(misses), 1000000)
 
 func is_well_unlocked(well_id: String) -> bool:
 	return unlocked_wells.has(well_id)
 
 func is_well_commissioned(well_id: String) -> bool:
 	return commissioned_wells.has(well_id)
+
+func get_surge_limit(well_id: String) -> int:
+	return int(surge_limits.get(well_id, 0))
+
+func set_surge_limit(well_id: String, limit: int) -> void:
+	if well_id.is_empty():
+		return
+	if limit > 0:
+		surge_limits[well_id] = limit
+	else:
+		surge_limits.erase(well_id)
 
 func get_loadout_for_well(well_id: String) -> String:
 	return well_loadouts.get(well_id, LoadoutScript.STANDARD)
@@ -472,9 +578,6 @@ func _normalize_assignments() -> void:
 	if not active_seen and not roster_heroes.is_empty():
 		var fallback: String = roster_heroes.keys()[0]
 		hero_assignments[fallback] = {"role": "active", "well_id": ""}
-
-func credit_terminal_result_with_commission(result: Dictionary, well_id: String, completed_surges: int) -> bool:
-	return complete_run(result, result.get("run_id", ""), well_id, completed_surges)
 
 func complete_run(result: Dictionary, expected_run_id: String, well_id: String, completed_surges: int) -> bool:
 	if result.is_empty() or result.get("phase", -1) != RunStateScript.Phase.SUCCESS:
@@ -575,7 +678,7 @@ func grant_published_weapon(weapon_id: String) -> bool:
 		inventory_command_error = "Published weapon is unavailable."
 		return false
 	if item_instances.size() >= INVENTORY_CAPACITY:
-		inventory_command_error = "Inventory is full (100 items)."
+		inventory_command_error = "Inventory is full (%d items)." % INVENTORY_CAPACITY
 		return false
 	var publication: Dictionary = published_weapons[weapon_id]
 	var revision: Dictionary = publication.revision
@@ -628,7 +731,7 @@ func add_transitional_item(base_id: String, run_id: String, node_id: String) -> 
 		new_items[base_id] = true
 		return true
 	if item_instances.size() >= INVENTORY_CAPACITY:
-		inventory_command_error = "Inventory is full (100 items)."
+		inventory_command_error = "Inventory is full (%d items)." % INVENTORY_CAPACITY
 		return false
 	var base: Dictionary = ItemDefinitionsScript.PRODUCTION_BASES.get(base_id, {})
 	if base.is_empty():
@@ -642,6 +745,9 @@ func add_transitional_item(base_id: String, run_id: String, node_id: String) -> 
 
 func inspect_item(id: String) -> bool:
 	if item_instances.has(id):
+		# Only a first look changes anything (and needs a save).
+		if bool(item_instances[id].get("inspected", false)):
+			return false
 		item_instances[id].inspected = true
 		return true
 	if not owned_items.has(id) or not new_items.has(id):
@@ -655,7 +761,7 @@ func reconcile_item_rewards(completed: Dictionary) -> bool:
 	if not catalog.is_valid():
 		return false
 	for act_id in catalog.act_order:
-		for node_id in catalog.level_ids(act_id):
+		for node_id in catalog.node_ids(act_id):
 			var completion_key := "%s/%s" % [act_id, node_id]
 			if not completed.has(completion_key):
 				continue
@@ -762,32 +868,115 @@ func set_instance_locked(instance_id: String, locked: bool, active_run: bool = f
 	item_instances[instance_id].locked = locked
 	return true
 
-func discard_instance(instance_id: String, confirmed_name: String = "", active_run: bool = false) -> bool:
+## Why an item cannot be salvaged right now ("" when it can).
+func salvage_blocker(instance_id: String, active_run: bool = false) -> String:
+	if active_run:
+		return "Salvage is unavailable during a run."
+	if not item_instances.has(instance_id):
+		return "Unknown item."
+	if bool(item_instances[instance_id].get("locked", false)):
+		return "Locked items cannot be salvaged."
+	if _is_equipped(instance_id):
+		return "Equipped items cannot be salvaged."
+	return ""
+
+## Payout preview for the salvageable items among instance_ids.
+func salvage_preview(instance_ids: Array, active_run: bool = false) -> Dictionary:
+	var ready: Array = []
+	var blocked := 0
+	for instance_id in _unique_ids(instance_ids):
+		if salvage_blocker(instance_id, active_run).is_empty():
+			ready.append(item_instances[instance_id])
+		else:
+			blocked += 1
+	var total := SalvageScript.total_for(ready)
+	total["blocked"] = blocked
+	return total
+
+## Salvage every eligible item in instance_ids. Locked, equipped and unknown
+## items are skipped. Returns {"salvaged": [...], "skipped": {id: reason},
+## "mana": float, "scrap": int}. Mana goes to the bank, scrap to storage.
+func salvage_instances(instance_ids: Array, active_run: bool = false) -> Dictionary:
 	inventory_command_error = ""
-	if active_run or not item_instances.has(instance_id):
-		inventory_command_error = "Unknown item."
+	var salvaged: Array[String] = []
+	var skipped: Dictionary = {}
+	var payout: Array = []
+	for instance_id in _unique_ids(instance_ids):
+		var reason := salvage_blocker(instance_id, active_run)
+		if not reason.is_empty():
+			skipped[instance_id] = reason
+			continue
+		payout.append(item_instances[instance_id].duplicate(true))
+		_remove_instance(instance_id)
+		salvaged.append(instance_id)
+	var total := SalvageScript.total_for(payout)
+	bank += float(total.mana)
+	scrap += int(total.scrap)
+	if salvaged.is_empty():
+		inventory_command_error = "No items could be salvaged." if skipped.is_empty() else str(skipped.values()[0])
+	return {"salvaged": salvaged, "skipped": skipped, "mana": float(total.mana), "scrap": int(total.scrap)}
+
+## Single-item salvage (replaces the old discard).
+func salvage_instance(instance_id: String, active_run: bool = false) -> bool:
+	return not salvage_instances([instance_id], active_run).salvaged.is_empty()
+
+## Skill tree (Home > command center). Powering a node costs Scrap; it can only
+## be done at home, never during a run.
+func skill_unlock_blocker(node_id: String, active_run: bool = false) -> String:
+	if active_run:
+		return "The skill tree can only be changed at home."
+	return SkillTreeScript.unlock_blocker(skill_nodes, scrap, node_id)
+
+func unlock_skill_node(node_id: String, active_run: bool = false) -> bool:
+	if not skill_unlock_blocker(node_id, active_run).is_empty():
 		return false
+	scrap -= int(SkillTreeScript.node_def(node_id).cost)
+	skill_nodes[node_id] = true
+	return true
+
+## Unpowers every node and returns all the Scrap spent on them.
+func refund_skill_nodes(active_run: bool = false) -> int:
+	if active_run:
+		return 0
+	var refund := SkillTreeScript.spent_scrap(skill_nodes)
+	scrap += refund
+	skill_nodes = {}
+	return refund
+
+## Old name kept for existing callers: every removal now salvages (pays out).
+## The confirmed name is no longer required.
+func discard_instance(instance_id: String, _confirmed_name: String = "", active_run: bool = false) -> bool:
+	return salvage_instance(instance_id, active_run)
+
+static func _unique_ids(instance_ids: Array) -> Array[String]:
+	var seen := {}
+	var ids: Array[String] = []
+	for value in instance_ids:
+		var id := str(value)
+		if not seen.has(id):
+			seen[id] = true
+			ids.append(id)
+	return ids
+
+func _remove_instance(instance_id: String) -> void:
 	var instance: Dictionary = item_instances[instance_id]
-	if instance.locked or _is_equipped(instance_id):
-		inventory_command_error = "Equipped or locked items cannot be discarded."
-		return false
-	var label: String = str(ItemDefinitionsScript.base_for(str(instance.base_id)).get("label", instance.base_id))
-	if confirmed_name != label:
-		inventory_command_error = "Item name confirmation is required."
-		return false
+	var base_id := str(instance.get("base_id", ""))
 	var provenance: Dictionary = instance.get("provenance", {})
 	if provenance.get("kind", "") == "campaign":
-		var reward_id := _campaign_reward_id_for_node(str(provenance.get("node_id", "")), str(instance.get("base_id", "")))
+		var reward_id := _campaign_reward_id_for_node(str(provenance.get("node_id", "")), base_id)
 		if not reward_id.is_empty():
 			discarded_reward_ids[reward_id] = true
 			if reward_entitlements.has(reward_id):
 				reward_entitlements[reward_id].item_ids.erase(instance_id)
 				reward_entitlements[reward_id].delivered_item_ids.erase(instance_id)
 	item_instances.erase(instance_id)
-	owned_items.erase(instance.base_id)
-	new_items.erase(instance.base_id)
 	last_loot_result.item_ids.erase(instance_id)
-	return true
+	# Other copies of the same base keep it owned.
+	for other in item_instances.values():
+		if str(other.get("base_id", "")) == base_id:
+			return
+	owned_items.erase(base_id)
+	new_items.erase(base_id)
 
 func _campaign_reward_id_for_node(node_id: String, base_id: String) -> String:
 	var catalog: RefCounted = CampaignCatalogScript.new()
@@ -799,11 +988,10 @@ func _campaign_reward_id_for_node(node_id: String, base_id: String) -> String:
 			return str(reward.get("reward_id", ""))
 	return ""
 
-func credit_terminal_result(result: Dictionary) -> bool:
-	return complete_run(result, result.get("run_id", ""), "", 0)
-
 func add_monster_instance(instance: Dictionary) -> bool:
 	inventory_command_error = ""
+	# A designer weapon re-tuned this session drops with its current bonuses.
+	refresh_authored_implicits([instance])
 	var validation: Dictionary = ItemDefinitionsScript.new().validate_instance(instance, ItemDefinitionsScript.runtime_bases(), ItemDefinitionsScript.PRODUCTION_AFFIXES)
 	if not validation.valid or instance.get("generation_version", "") != ItemDefinitionsScript.GENERATION_VERSION or instance.get("provenance", {}).get("kind", "") != "monster":
 		inventory_command_error = "Invalid monster item."
@@ -813,7 +1001,7 @@ func add_monster_instance(instance: Dictionary) -> bool:
 		inventory_command_error = "Monster item was already secured."
 		return false
 	if item_instances.size() >= INVENTORY_CAPACITY:
-		inventory_command_error = "Inventory is full (100 items)."
+		inventory_command_error = "Inventory is full (%d items)." % INVENTORY_CAPACITY
 		return false
 	item_instances[instance_id] = instance.duplicate(true)
 	var base_id := str(instance.get("base_id", ""))

@@ -1,0 +1,96 @@
+{
+  "assets": {
+    "icon": "res://assets/weapons/edf_6/12/icon.png",
+    "world_sprite": "res://assets/weapons/edf_6/12/world-sprite.png"
+  },
+  "base_modifiers": [
+    {
+      "family": "designer.base.attack_damage",
+      "operation": "flat",
+      "stat": "attack_damage",
+      "value": 0.0
+    },
+    {
+      "family": "designer.base.attacks_per_second",
+      "operation": "increased",
+      "stat": "attacks_per_second",
+      "value": 0.09
+    }
+  ],
+  "base_stats": {
+    "attack_damage": 20.0,
+    "attacks_per_second": 1.0
+  },
+  "behavior_id": "weapon.melee",
+  "clip_source": "type",
+  "description": "No description yet.",
+  "effects": [
+    {
+      "additive": true,
+      "align": true,
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "at": 0.5,
+      "columns": 10.0,
+      "follow": true,
+      "fps": 20.0,
+      "frame_count": 10.0,
+      "label": "Glow pulse",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "opacity": 1.0,
+      "rotation": 0.0,
+      "sheet": "res://assets/weapons/edf_6/10/effects/0.png",
+      "size": 120.0,
+      "trigger": "windup"
+    }
+  ],
+  "hand_fit": {
+    "angle": 0.0,
+    "flip": false,
+    "scale": 1.3
+  },
+  "label": "test ax 1",
+  "pivot": {
+    "coordinate_space": "normalized",
+    "facing": "right",
+    "grip": [
+      0.02,
+      0.75
+    ],
+    "hand_offset": [
+      -18.0,
+      9.0
+    ],
+    "origin": "top_left",
+    "rotation_degrees": -3.0,
+    "world_scale": 0.55
+  },
+  "revision": 12,
+  "schema_version": 1.0,
+  "source_hashes": {
+    "icon_sha256": "1e62aee1740ac50d14f06769de69113eb98dc72a0def3e7c668952ce9237ab2e",
+    "job_id": "job_20260928T134700",
+    "manifest_sha256": "e27bcec73f10dff2a62b4e3dfbf2a2891007bd65ae66161194513a7b459fca40",
+    "world_sprite_sha256": "0a87421e758741717d0b24bda95096d5d672410e463e99f734432e15d77105ba"
+  },
+  "swing": {
+    "duration": 0.8,
+    "preset": "test_axe",
+    "settle_angle": 0.0,
+    "snap": -0.6,
+    "strike_angle": 95.0,
+    "strike_lift": -8.0,
+    "strike_push": 6.0,
+    "strike_time": 0.5,
+    "windup_angle": -150.0,
+    "windup_push": -6.0,
+    "windup_time": 0.35
+  },
+  "weapon_id": "edf_6",
+  "weapon_type": "axe"
+}

@@ -1,0 +1,53 @@
+{
+  "art": {
+    "crop": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "facing": "right",
+    "grip": [
+      0.5,
+      0.75
+    ],
+    "hand_offset": [
+      0.0,
+      0.0
+    ],
+    "icon": "",
+    "job_id": "job_20260930T181654",
+    "rotation_degrees": 0.0,
+    "source": "art/ui-items/Weapons/edf8.png",
+    "world_scale": 1.0,
+    "world_sprite": ""
+  },
+  "base_modifiers": [
+    {
+      "family": "designer.base.attack_damage",
+      "operation": "flat",
+      "stat": "attack_damage",
+      "value": 0.0
+    }
+  ],
+  "base_stats": {
+    "attack_damage": 10.0,
+    "attacks_per_second": 1.67
+  },
+  "behavior_id": "weapon.standard",
+  "clip_source": "type",
+  "description": "No description yet.",
+  "draft_id": "lab.edf_2",
+  "effects": [],
+  "explicit_modifiers": [],
+  "item_level": 1.0,
+  "lab": {
+    "cutout_method": "auto",
+    "tolerance": 38.0
+  },
+  "label": "Edf 2",
+  "rarity": "common",
+  "schema_version": 1.0,
+  "weapon_id": "edf_2",
+  "weapon_type": ""
+}

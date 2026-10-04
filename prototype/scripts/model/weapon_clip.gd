@@ -223,6 +223,25 @@ static func frame_at(line: Dictionary, time: float) -> int:
 			result = frames[index]
 	return result
 
+## Looping animations (a weapon's idle or walk): the frame showing `time`
+## seconds in, cycling through every frame at its own hold.
+static func loop_length(clip: Dictionary) -> float:
+	var holds: Array = clip.get("frame_ms", [])
+	var total := 0.0
+	for frame in range(maxi(1, int(clip.get("frame_count", 1)))):
+		total += _hold(holds, frame)
+	return maxf(0.016, total)
+
+static func loop_frame_at(clip: Dictionary, time: float) -> int:
+	var holds: Array = clip.get("frame_ms", [])
+	var count := maxi(1, int(clip.get("frame_count", 1)))
+	var t := fposmod(time, loop_length(clip))
+	for frame in range(count):
+		t -= _hold(holds, frame)
+		if t < 0.0:
+			return frame
+	return count - 1
+
 static func frame_rect(clip: Dictionary, frame: int) -> Rect2:
 	var cell: Array = clip.get("cell", [1.0, 1.0])
 	var columns := maxi(1, int(clip.get("columns", 1)))

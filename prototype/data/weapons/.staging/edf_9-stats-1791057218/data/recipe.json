@@ -1,0 +1,14 @@
+{
+  "explicit_modifiers": [],
+  "item_level": 1.0,
+  "provenance": {
+    "kind": "designer",
+    "run_id": "",
+    "source_id": "lab.edf_9"
+  },
+  "rarity": "common",
+  "recipe_id": "edf_9.common.r5",
+  "revision": 5,
+  "schema_version": 1.0,
+  "weapon_id": "edf_9"
+}

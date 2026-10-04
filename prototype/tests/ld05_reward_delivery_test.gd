@@ -73,15 +73,19 @@ func _test_replay_and_nine_migrated_rewards() -> void:
 	var campaign := Campaign.new()
 	var catalog := Catalog.new()
 	assert(catalog.is_valid())
-	for index in range(9):
-		var node_id := "act_01_node_%02d" % (index + 1)
+	# Every authored Act 1 level (the act has been trimmed from 9 to 8 before).
+	var level_count := _act_level_count(catalog)
+	assert(level_count > 0)
+	for index in range(level_count):
+		# In map order (the tutorial, Sector B, comes first).
+		var node_id: String = catalog.node_ids("act_01")[index]
 		assert(campaign.start_node("act_01", node_id, catalog))
 		var result := _success("ld05-nine-%02d" % index, 1)
 		assert(campaign.commit_terminal_result(result, account, catalog))
 		assert(not campaign.commit_terminal_result(result, account, catalog))
-	assert(account.reward_entitlements.size() == 9)
-	assert(account.item_instances.size() == 9)
-	for index in range(9):
+	assert(account.reward_entitlements.size() == level_count)
+	assert(account.item_instances.size() == level_count)
+	for index in range(level_count):
 		var node_id := "act_01_node_%02d" % (index + 1)
 		var authored_level: Dictionary = catalog.get_node("act_01", node_id).level_data
 		var authored_reward: Dictionary = authored_level.rewards.guaranteed_items[0]
@@ -96,8 +100,8 @@ func _test_replay_and_nine_migrated_rewards() -> void:
 	var payload := account.to_save_payload()
 	var restored := Account.new()
 	restored.from_save_payload(payload)
-	assert(restored.item_instances.size() == 9)
-	assert(restored.reward_entitlements.size() == 9)
+	assert(restored.item_instances.size() == level_count)
+	assert(restored.reward_entitlements.size() == level_count)
 	assert(restored.claim_pending_rewards() == 0)
 
 func _success(run_id: String, completed_surges: int) -> Dictionary:
@@ -107,3 +111,9 @@ func _generated_campaign_item(identity: String, base_id: String, rarity: String,
 	var reward_id := "fixture.%s" % identity
 	var instance_id := "reward:%s:0" % reward_id
 	return Generator.generate_guaranteed({"reward_id": reward_id, "instance_id": instance_id, "base_id": base_id, "rarity": rarity, "item_level": item_level, "run_id": "fixture-run", "node_id": identity}, Generator.seed_for(instance_id))
+
+func _act_level_count(catalog: RefCounted) -> int:
+	var count := 0
+	while not catalog.get_node("act_01", "act_01_node_%02d" % (count + 1)).is_empty():
+		count += 1
+	return count

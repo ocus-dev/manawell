@@ -3,8 +3,8 @@
 [node name="AnimationVisual" type="Node2D"]
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 texture_filter = 2
-position = Vector2(25.71177504393673, -43.24253075571177)
-scale = Vector2(0.3339191564147627, 0.3339191564147627)
+position = Vector2(0.16888888888888889, -93.90222222222222)
+scale = Vector2(0.3377777777777778, 0.3377777777777778)
 sprite_frames = ExtResource("1")
 animation = &"idle"
 autoplay = "idle"

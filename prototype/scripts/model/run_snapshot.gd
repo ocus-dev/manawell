@@ -336,6 +336,13 @@ static func _canonical_json(value: Variant) -> String:
 		for item in value:
 			entries.append(_canonical_json(item))
 		return "[" + ",".join(entries) + "]"
+	# Saves go through JSON, which turns every number into a float (3 -> 3.0).
+	# Hash whole numbers the same either way so a loaded checkpoint still
+	# matches the hash it was saved with.
+	if value is int:
+		return str(value)
+	if value is float and is_finite(value) and value == floorf(value) and absf(value) < 1e15:
+		return str(int(value))
 	return JSON.stringify(value)
 
 static func _valid_vector(value: Variant) -> bool:

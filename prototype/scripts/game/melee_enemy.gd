@@ -31,6 +31,11 @@ var damage_feedback_remaining := 0.0
 var damage_feedback_amount := 0.0
 var controller: Node
 var damage_multiplier: float = 1.0
+## Zone boss (see make_boss): tougher, bigger, labelled.
+var is_boss := false
+var boss_health_multiplier := 1.0
+var boss_damage_multiplier := 1.0
+var boss_size := 1.0
 var visual: Node
 
 func _ready() -> void:
@@ -40,6 +45,7 @@ func _ready() -> void:
 	add_child(visual)
 	visual.configure(VisualConfigScript.enemy_asset(enemy_kind))
 	visual.set_facing(-side)
+	visual.play_spawn()
 
 func setup(kind: EnemyKind, id: int, spawn_side: int, owner_controller: Node, new_damage_multiplier: float = 1.0) -> void:
 	enemy_kind = kind
@@ -83,7 +89,20 @@ func take_damage(amount: float) -> bool:
 		else:
 			queue_free()
 		return true
+	if visual != null:
+		visual.play_hurt()
 	return true
+
+## On death: hands the visual to `new_parent` (keeping its place on screen) so
+## it can play its death animation after this enemy is freed. Presentation only.
+func release_death_visual(new_parent: Node) -> void:
+	if visual == null or not is_instance_valid(visual) or new_parent == null:
+		return
+	var body: Node2D = visual
+	visual = null
+	body.name = "DyingEnemyVisual"
+	body.reparent(new_parent, true)
+	body.play_death(true)
 
 func _simulate_melee(_delta: float) -> void:
 	var target_kind := "hero" if enemy_kind == EnemyKind.PURSUER else "machine"
@@ -107,6 +126,9 @@ func _simulate_ranged(delta: float) -> void:
 		if is_zero_approx(windup_remaining):
 			locked_target_point = CombatGeometryScript.body_center("hero", controller.hero.position)
 			controller.spawn_hostile_projectile(position.x, locked_target_point.x, attack_damage, self, locked_target_point.y)
+			# With its own wind-up clip, the shot gets the attack clip now.
+			if visual != null and visual.has_state("windup"):
+				visual.play_attack()
 			# attack_interval is shot-to-shot time, so the wind-up counts toward it.
 			cooldown_remaining = maxf(0.0, attack_interval - windup_duration)
 		return
@@ -116,7 +138,7 @@ func _simulate_ranged(delta: float) -> void:
 		windup_remaining = windup_duration
 		warning_remaining = windup_duration
 		if visual != null:
-			visual.play_attack()
+			visual.play_windup()
 
 func monster_id() -> String:
 	return MonsterStatsScript.id_for_kind(enemy_kind)
@@ -134,7 +156,25 @@ func _apply_stats() -> void:
 		windup_duration = MonsterStatsScript.get_stat(id, "windup")
 	else:
 		attack_range_pixels = MonsterStatsScript.get_stat(id, "attack_range") * pixels_per_unit
+	if is_boss:
+		max_health *= boss_health_multiplier
+		attack_damage *= boss_damage_multiplier
 	health = max_health
+
+## Turns this creature into the zone boss. `keep_health` is for restoring a
+## saved boss mid-fight.
+func make_boss(health_multiplier: float, damage_multiplier_scale: float, size: float, keep_health: bool = false) -> void:
+	var current_health := health
+	is_boss = true
+	boss_health_multiplier = maxf(1.0, health_multiplier)
+	boss_damage_multiplier = maxf(0.1, damage_multiplier_scale)
+	boss_size = clampf(size, 1.0, 3.0)
+	_apply_stats()
+	if keep_health:
+		health = clampf(current_health, 0.001, max_health)
+	if visual != null:
+		visual.set_scale_multiplier(boss_size)
+	queue_redraw()
 
 ## Re-reads stats after a live edit, keeping the enemy's current health ratio.
 func refresh_stats() -> void:
@@ -147,7 +187,7 @@ func refresh_stats() -> void:
 	queue_redraw()
 
 func capture_snapshot_state() -> Dictionary:
-	return {"side": side, "enemy_id": enemy_id, "damage_multiplier": damage_multiplier, "locked_target_point": [locked_target_point.x, locked_target_point.y], "warning_remaining": warning_remaining, "warning_visible": warning_visible, "damage_feedback_remaining": damage_feedback_remaining, "damage_feedback_amount": damage_feedback_amount}
+	return {"boss": is_boss, "boss_health_multiplier": boss_health_multiplier, "boss_damage_multiplier": boss_damage_multiplier, "boss_size": boss_size, "side": side, "enemy_id": enemy_id, "damage_multiplier": damage_multiplier, "locked_target_point": [locked_target_point.x, locked_target_point.y], "warning_remaining": warning_remaining, "warning_visible": warning_visible, "damage_feedback_remaining": damage_feedback_remaining, "damage_feedback_amount": damage_feedback_amount}
 
 func restore_snapshot_state(state: Dictionary) -> void:
 	side = -1 if int(state.get("side", side)) < 0 else 1
@@ -159,12 +199,20 @@ func restore_snapshot_state(state: Dictionary) -> void:
 	warning_visible = bool(state.get("warning_visible", false))
 	damage_feedback_remaining = maxf(0.0, float(state.get("damage_feedback_remaining", 0.0)))
 	damage_feedback_amount = maxf(0.0, float(state.get("damage_feedback_amount", 0.0)))
+	if bool(state.get("boss", false)):
+		make_boss(float(state.get("boss_health_multiplier", 1.0)), float(state.get("boss_damage_multiplier", 1.0)), float(state.get("boss_size", 1.0)), true)
 
 func _draw() -> void:
 	var body_top: float = visual.visible_top_local_y() if visual != null else -34.0
 	var health_ratio := clampf(health / max_health, 0.0, 1.0)
-	draw_rect(Rect2(-24.0, body_top - 32.0, 48.0, 6.0), Color("111b21"), true)
-	draw_rect(Rect2(-23.0, body_top - 31.0, 46.0 * health_ratio, 4.0), Color("65d18b") if health_ratio > 0.35 else Color("e56b5d"), true)
+	if is_boss:
+		# Wider, amber bar with a BOSS tag.
+		draw_rect(Rect2(-45.0, body_top - 34.0, 90.0, 9.0), Color("111b21"), true)
+		draw_rect(Rect2(-44.0, body_top - 33.0, 88.0 * health_ratio, 7.0), Color("f0a836"), true)
+		draw_string(ThemeDB.fallback_font, Vector2(-45.0, body_top - 40.0), "BOSS", HORIZONTAL_ALIGNMENT_CENTER, 90.0, 15, Color("ffd27a"))
+	else:
+		draw_rect(Rect2(-24.0, body_top - 32.0, 48.0, 6.0), Color("111b21"), true)
+		draw_rect(Rect2(-23.0, body_top - 31.0, 46.0 * health_ratio, 4.0), Color("65d18b") if health_ratio > 0.35 else Color("e56b5d"), true)
 	if warning_visible:
 		draw_arc(Vector2.ZERO, 24.0, 0.0, TAU, 24, Color("ffb347"), 3.0)
 	if damage_feedback_remaining > 0.0:

@@ -11,27 +11,35 @@ const BASE := "res://../work/reviews/inventory-test-profile"
 func _init() -> void:
     var account := Account.new()
     var campaign := Campaign.new()
-    for i in range(9):
-        var id := "act_01_node_%02d" % (i + 1)
+    # Every authored Act 1 level (the act has been trimmed from 9 to 8 before).
+    var levels := _act_level_count()
+    var catalog = preload("res://scripts/model/campaign_catalog.gd").new()
+    var farm_payouts := 0
+    for i in range(levels):
+        # In map order (the tutorial, Sector B, comes first).
+        var id: String = catalog.node_ids("act_01")[i]
         assert(campaign.start_node("act_01", id))
         var result := {"run_id": "inventory-%d" % i, "phase": Run.Phase.FAILED, "payout": 10, "completed_surges": 1}
         assert(not campaign.commit_terminal_result(result, account))
         assert(account.item_instances.size() == i)
-        if i in [1, 4, 7]:
-            result.phase = Run.Phase.SUCCESS
-            result.completed_surges = 0
-            assert(not campaign.commit_terminal_result(result, account))
-            result.completed_surges = 1
+        # Well levels also need a completed surge before they count as cleared.
+        if str(catalog.get_node("act_01", id).level_data.get("type", "")) == "well":
+            # A harvest before the first surge is a farming run: paid, no item, no clear.
+            var farming := {"run_id": "inventory-farm-%d" % i, "phase": Run.Phase.SUCCESS, "payout": 10, "completed_surges": 0}
+            assert(campaign.commit_terminal_result(farming, account))
+            assert(account.item_instances.size() == i)
+            farm_payouts += 1
+            assert(campaign.start_node("act_01", id))
         result.phase = Run.Phase.SUCCESS
         assert(campaign.commit_terminal_result(result, account))
         assert(account.item_instances.size() == i + 1)
         assert(account.item_reward_ids.size() == i + 1)
         assert(not campaign.commit_terminal_result(result, account))
-    assert(account.bank == 90)
+    assert(account.bank == (levels + farm_payouts) * 10)
     assert(campaign.start_node("act_01", "act_01_node_01"))
     assert(campaign.commit_terminal_result({"run_id": "inventory-replay", "phase": Run.Phase.SUCCESS, "payout": 10}, account))
-    assert(account.item_instances.size() == 9)
-    assert(account.item_reward_ids.size() == 9)
+    assert(account.item_instances.size() == levels)
+    assert(account.item_reward_ids.size() == levels)
     var first_instance_id := "reward:act_01_node_01.first_clear.heavy_breech:0"
     print("LD05 replay instances=", account.item_instances.keys())
     assert(account.item_instances.has(first_instance_id))
@@ -53,7 +61,7 @@ func _init() -> void:
     legacy.owned_items = []
     legacy.new_items = []
     legacy.inventory_migration_version = 0
-    for key in ["item_reward_ids", "item_reward_run_id"]:
+    for key in ["item_reward_ids", "item_reward_run_id", "reward_entitlements", "item_instances"]:
         legacy.erase(key)
     assert(Account.validate_save_payload(legacy).valid)
     var restored := Account.new()
@@ -69,8 +77,8 @@ func _init() -> void:
     assert(store.save_envelope({"account": account, "campaign_state": campaign.to_save_payload()}))
     var session := Session.new(Store.new(BASE + ".json", BASE + ".tmp", BASE + ".bak"), Account.new(), Callable(), Callable(), Campaign.new())
     var loaded = session.load_account()
-    assert(loaded.item_instances.size() == 9 and loaded.new_items.size() == 9)
-    assert(loaded.bank == 100)
+    assert(loaded.item_instances.size() == levels and loaded.new_items.size() == levels)
+    assert(loaded.bank == (levels + farm_payouts + 1) * 10)
     var spy := preload("res://tests/spy_save_store.gd").new(account)
     spy.fail_next_saves = 1
     var retry_session := Session.new(spy, account, Callable(), Callable(), campaign)
@@ -78,8 +86,8 @@ func _init() -> void:
     assert(retry_session.has_pending_save())
     assert(retry_session.retry_pending_save())
     assert(not retry_session.has_pending_save())
-    assert(account.item_instances.size() == 9 and account.new_items.size() == 9)
-    assert(account.bank == 100 and spy.saved_envelopes.size() == 1)
+    assert(account.item_instances.size() == levels and account.new_items.size() == levels)
+    assert(account.bank == (levels + farm_payouts + 1) * 10 and spy.saved_envelopes.size() == 1)
     restored.from_save_payload(legacy)
     assert(restored.reconcile_item_rewards(campaign.completed_nodes))
     assert(store.save_envelope({"account": restored, "campaign_state": campaign.to_save_payload()}))
@@ -92,3 +100,10 @@ func _init() -> void:
             DirAccess.remove_absolute(BASE + suffix)
     print("PASS inventory drops: nine clears, failures, commissioning, duplicate commits, replay, inspect, validation, legacy reconciliation, disk persistence, failed-save retry")
     quit(0)
+
+func _act_level_count() -> int:
+    var catalog = preload("res://scripts/model/campaign_catalog.gd").new()
+    var count := 0
+    while not catalog.get_node("act_01", "act_01_node_%02d" % (count + 1)).is_empty():
+        count += 1
+    return count

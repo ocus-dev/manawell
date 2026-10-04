@@ -7,6 +7,7 @@ const IndustrialThemeScript = preload("res://scripts/ui/industrial_theme.gd")
 signal resume_requested
 signal settings_requested
 signal abandon_requested
+signal quit_to_title_requested
 signal return_requested
 signal retry_requested
 
@@ -28,6 +29,12 @@ func show_pause(view_data: Dictionary) -> void:
 	if pause_panel == null:
 		_build()
 	pause_panel.configure(view_data)
+	# Offsets from the screen centre (the panel is centre-anchored).
+	var screen_height := size.y if size.y > 0.0 else 720.0
+	pause_panel.offset_left = -180.0
+	pause_panel.offset_top = -125.0 - screen_height * PAUSE_RAISE
+	if mode != "pause":
+		pause_panel.close_confirmation()
 	mode = "pause"
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	pause_panel.visible = true
@@ -45,10 +52,15 @@ func show_results(view_data: Dictionary) -> void:
 	result_panel.get_node("ResultContent/ReturnToOperations").grab_focus()
 
 func hide_overlays() -> void:
+	if pause_panel != null:
+		pause_panel.close_confirmation()
 	mode = "hidden"
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	pause_panel.visible = false
 	result_panel.visible = false
+
+const PAUSE_SCALE := 0.85
+const PAUSE_RAISE := 0.10
 
 func _build() -> void:
 	if pause_panel != null:
@@ -58,10 +70,15 @@ func _build() -> void:
 	pause_panel = PausePanelScript.new()
 	pause_panel.name = "PausePanel"
 	pause_panel.set_anchors_preset(Control.PRESET_CENTER)
+	# 85% size, shrinking toward its top-centre, and raised 10% of the screen
+	# so the abandon confirmation fits below it.
+	pause_panel.scale = Vector2(PAUSE_SCALE, PAUSE_SCALE)
+	pause_panel.pivot_offset = Vector2(180, 0)
 	pause_panel.position = Vector2(-180, -125)
 	pause_panel.resume_requested.connect(_on_resume_requested)
 	pause_panel.settings_requested.connect(settings_requested.emit)
 	pause_panel.abandon_requested.connect(abandon_requested.emit)
+	pause_panel.quit_to_title_requested.connect(quit_to_title_requested.emit)
 	add_child(pause_panel)
 	result_panel = ResultPanelScript.new()
 	result_panel.name = "ResultPanel"

@@ -20,11 +20,21 @@ func _run() -> void:
 	map.configure(view_state)
 	var first: Vector2 = map.normalized_to_map(Vector2(0.1, 0.79))
 	assert(map.map_content_rect().has_point(first))
+	# The start of the path (bottom-left) is the tutorial, the first level.
+	await process_frame
+	await process_frame
+	var click := InputEventMouseButton.new()
+	click.button_index = MOUSE_BUTTON_LEFT
+	click.pressed = true
+	click.position = first
+	map._gui_input(click)
+	assert(map.selected_node_id == "act_01_node_02", "the first spot on the map is Sector B (Tutorial)")
 	assert(map.select_node("act_01_node_01"))
 	assert(map.selected_node_id == "act_01_node_01")
-	assert(map.details_content.get_child_count() == 6)
+	assert(map.details_content.get_child_count() == 7)
+	assert(map.detail_progress.text.begins_with("To progress: reach surge"), "card shows how to progress")
 	map.configure(view_state)
-	assert(map.details_content.get_child_count() == 6)
+	assert(map.details_content.get_child_count() == 7)
 	map.size = Vector2(1920.0, 1080.0)
 	map.configure(view_state)
 	assert(map.map_content_rect().has_point(map.normalized_to_map(Vector2(0.74, 0.18))))

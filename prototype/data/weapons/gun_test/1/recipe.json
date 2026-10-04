@@ -1,0 +1,14 @@
+{
+  "explicit_modifiers": [],
+  "item_level": 1,
+  "provenance": {
+    "kind": "designer",
+    "run_id": "",
+    "source_id": "lab.gun_test"
+  },
+  "rarity": "common",
+  "recipe_id": "gun_test.common",
+  "revision": 1,
+  "schema_version": 1,
+  "weapon_id": "gun_test"
+}

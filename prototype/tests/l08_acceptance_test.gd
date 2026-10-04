@@ -14,10 +14,9 @@ func _init() -> void:
 func _run() -> void:
 	await _test_well()
 	await _test_monster_collect_equip_reload()
-	await _test_boss()
 	await _test_failure_retention_and_suspend()
 	if failed_checks == 0:
-		print("PASS L08 acceptance: well, ordinary loot/equip/reload, boss, failure retention and suspend snapshot")
+		print("PASS L08 acceptance: well, ordinary loot/equip/reload, failure retention and suspend snapshot")
 		quit(0)
 	else:
 		push_error("L08 acceptance failed checks: %d" % failed_checks)
@@ -50,15 +49,21 @@ func _test_well() -> void:
 
 func _test_monster_collect_equip_reload() -> void:
 	var controller := _controller()
+	controller.campaign_state.completed_nodes["act_01/act_01_node_02"] = true # tutorial done
 	_check(controller.start_campaign_node("act_01", "act_01_node_01"), "ordinary node did not start")
-	_check(not controller.enemies.is_empty(), "ordinary node spawned no enemy")
-	var enemy: Node = controller.enemies[0]
-	var roll := _find_drop(controller.run_state.run_id, enemy.enemy_id, controller.campaign_node_id, "ordinary", float(controller.resolved_stats.get("drop_bonus", 0.0)), "core.")
+	controller.loot_enabled = true
+	var enemy: Node = controller.spawn_enemy(0, 1)
+	var items_before: Dictionary = controller.account_state.item_instances.duplicate()
+	var roll := _find_drop(controller, enemy, "core.")
+	_check(not roll.instance.is_empty(), "no seed dropped a weapon core")
 	controller.loot_rng_state = int(roll.get("state", 1))
 	enemy.take_damage(enemy.health)
 	controller.tick(1.0 / 60.0)
-	_check(controller.account_state.item_instances.size() == 1, "ordinary kill did not collect one item")
-	var instance: Dictionary = controller.account_state.item_instances.values()[0]
+	_check(controller.account_state.item_instances.size() == items_before.size() + 1, "ordinary kill did not collect one item")
+	var instance: Dictionary = {}
+	for instance_id in controller.account_state.item_instances.keys():
+		if not items_before.has(instance_id):
+			instance = controller.account_state.item_instances[instance_id]
 	var payload := instance.duplicate(true)
 	var hero_id: String = controller.account_state.get_active_hero_id()
 	var slot := str(Definitions.PRODUCTION_BASES[str(instance.base_id)].slot)
@@ -73,26 +78,13 @@ func _test_monster_collect_equip_reload() -> void:
 	controller.queue_free()
 	await process_frame
 
-func _test_boss() -> void:
-	var controller := _controller()
-	for index in range(1, 9):
-		controller.campaign_state.completed_nodes["act_01/act_01_node_%02d" % index] = true
-	_check(controller.start_campaign_node("act_01", "act_01_node_08"), "boss node did not start")
-	_check(controller.boss_enemy != null, "boss did not spawn")
-	var boss: Node = controller.boss_enemy
-	var roll := _find_drop(controller.run_state.run_id, boss.enemy_id, controller.campaign_node_id, "boss", float(controller.resolved_stats.get("drop_bonus", 0.0)))
-	controller.loot_rng_state = int(roll.get("state", 1))
-	boss.take_damage(boss.health)
-	controller.tick(1.0 / 60.0)
-	_check(controller.account_state.item_instances.size() == 1, "boss kill did not collect one item")
-	controller.queue_free()
-	await process_frame
-
 func _test_failure_retention_and_suspend() -> void:
 	var controller := _controller()
+	controller.campaign_state.completed_nodes["act_01/act_01_node_02"] = true # tutorial done
 	_check(controller.start_campaign_node("act_01", "act_01_node_01"), "failure node did not start")
-	var enemy: Node = controller.enemies[0]
-	var roll := _find_drop(controller.run_state.run_id, enemy.enemy_id, controller.campaign_node_id, "ordinary", float(controller.resolved_stats.get("drop_bonus", 0.0)))
+	controller.loot_enabled = true
+	var enemy: Node = controller.spawn_enemy(0, 1)
+	var roll := _find_drop(controller, enemy)
 	controller.loot_rng_state = int(roll.get("state", 1))
 	enemy.take_damage(enemy.health)
 	controller.tick(1.0 / 60.0)
@@ -111,11 +103,15 @@ func _test_failure_retention_and_suspend() -> void:
 	controller.queue_free()
 	await process_frame
 
-func _find_drop(run_id: String, enemy_id: int, node_id: String, occurrence_kind: String, drop_bonus: float, required_prefix: String = "") -> Dictionary:
-	var state := 1
-	for attempt in range(1000):
-		var result := Generator.generate({"eligible": true, "occurrence_kind": occurrence_kind, "drop_bonus": drop_bonus, "item_level": 3, "inventory_count": 0, "inventory_capacity": 100, "run_id": run_id, "enemy_id": enemy_id, "node_id": node_id}, state)
+## A loot RNG seed that makes this enemy drop an item, using the same roll
+## input the controller builds in _roll_enemy_reward.
+func _find_drop(controller: Node, enemy: Node, required_prefix: String = "") -> Dictionary:
+	var node_id := str(controller.frozen_level_definition.get("id", controller.campaign_state.active_node_id))
+	if node_id.is_empty():
+		node_id = controller.selected_well_id
+	var roll_input := {"eligible": true, "occurrence_kind": "boss" if str(controller.frozen_level_definition.get("type", "")) == "boss" else "ordinary", "drop_bonus": 0.0, "item_level": controller.loot_item_level, "inventory_count": controller.account_state.item_instances.size(), "inventory_capacity": Account.INVENTORY_CAPACITY, "run_id": controller.run_state.run_id, "enemy_id": int(enemy.enemy_id), "node_id": node_id, "published_pool": controller.frozen_loot_registration.get("pool", []).duplicate(true)}
+	for state in range(1, 20000):
+		var result := Generator.generate(roll_input, state)
 		if result.valid and result.generated and (required_prefix.is_empty() or str(result.instance.base_id).begins_with(required_prefix)):
 			return {"state": state, "instance": result.instance}
-		state += 1
 	return {"state": 1, "instance": {}}

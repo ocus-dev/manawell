@@ -40,11 +40,11 @@ func _run() -> void:
 	var slot := str(Definitions.PRODUCTION_BASES[str(second.base_id)].slot)
 	assert(controller.equip_inventory_item(hero_id, slot, second.instance_id))
 	assert(controller.account_state.hero_kits[hero_id][slot] == second.instance_id)
-	assert(not controller.discard_inventory_item(second.instance_id, str(Definitions.PRODUCTION_BASES[str(second.base_id)].label)))
+	assert(not controller.salvage_inventory_item(second.instance_id)
 	assert(controller.lock_inventory_item(first_id, true))
-	assert(not controller.discard_inventory_item(first_id, str(Definitions.PRODUCTION_BASES[str(generated.base_id)].label)))
+	assert(not controller.salvage_inventory_item(first_id)
 	assert(controller.lock_inventory_item(first_id, false))
-	assert(controller.discard_inventory_item(first_id, str(Definitions.PRODUCTION_BASES[str(generated.base_id)].label)))
+	assert(controller.salvage_inventory_item(first_id)
 	for index in range(99):
 		var filler := generated.duplicate(true)
 		filler.instance_id = "loot:l07:fill:%03d" % index
@@ -53,9 +53,9 @@ func _run() -> void:
 	controller._update_hud()
 	await process_frame
 	assert(controller.account_state.item_instances.size() == 100)
-	assert(panel.summary.text.contains("100 / 100"))
+	assert(panel.summary.text.contains("100 / 500"))
 	controller.queue_free()
-	print("PASS L07 inventory: duplicate instances, retained controls, filters/sort, equip, lock/discard confirmation and capacity")
+	print("PASS L07 inventory: duplicate instances, retained controls, filters/sort, equip, lock/salvage guards and capacity")
 	quit(0)
 
 func _generated_instance(seed: int) -> Dictionary:

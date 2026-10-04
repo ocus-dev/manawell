@@ -24,7 +24,7 @@ static func generate(input: Dictionary, rng_state: int) -> Dictionary:
         return {"valid": false, "error": table_result.error, "rng_state": initial_state}
     if not bool(input.get("eligible", true)):
         return _no_roll("ineligible", initial_state)
-    if int(input.get("inventory_count", 0)) >= int(input.get("inventory_capacity", 100)):
+    if int(input.get("inventory_count", 0)) >= int(input.get("inventory_capacity", 500)):
         return _no_roll("capacity", initial_state)
     var input_result: Dictionary = _validate_input(input)
     if not input_result.valid:
@@ -166,7 +166,7 @@ static func _validate_input(input: Dictionary) -> Dictionary:
     if not is_finite(drop_bonus) or drop_bonus < 0.0 or drop_bonus > 0.50:
         return {"valid": false, "error": "drop bonus must be between 0 and 0.50"}
     var inventory_count: Variant = input.get("inventory_count", 0)
-    var inventory_capacity: Variant = input.get("inventory_capacity", 100)
+    var inventory_capacity: Variant = input.get("inventory_capacity", 500)
     if not (inventory_count is int or inventory_count is float) or not (inventory_capacity is int or inventory_capacity is float) or int(inventory_count) < 0 or int(inventory_capacity) < 0:
         return {"valid": false, "error": "inventory capacity values are invalid"}
     var occurrence_kind: String = str(input.get("occurrence_kind", "ordinary"))
@@ -191,6 +191,9 @@ static func _published_choice(pool: Array, item_level: int, state: int) -> Dicti
         var definition: Dictionary = entry.get("definition", {})
         if recipe.is_empty() or definition.is_empty():
             continue
+        # Weapons with per-creature chances drop through CreatureDrops instead.
+        if _has_creature_chances(entry):
+            continue
         var weight_units := maxi(1, int(round(float(entry.get("weight", 1.0)) * 100.0)))
         choices.append({"legacy": false, "weight": weight_units, "entry": entry})
     var total := 0
@@ -205,6 +208,15 @@ static func _published_choice(pool: Array, item_level: int, state: int) -> Dicti
         if remaining < 0:
             return {"rng_state": int(draw[0]), "entry": choice.get("entry", {}) if not bool(choice.legacy) else {}}
     return {"rng_state": int(draw[0])}
+
+static func _has_creature_chances(entry: Dictionary) -> bool:
+    var chances: Variant = entry.get("monster_chances", {})
+    if not chances is Dictionary:
+        return false
+    for key in chances:
+        if float(chances[key]) > 0.0:
+            return true
+    return false
 
 static func _generate_published_instance(entry: Dictionary, input: Dictionary, state: int) -> Dictionary:
     var weapon_id := str(entry.get("weapon_id", ""))

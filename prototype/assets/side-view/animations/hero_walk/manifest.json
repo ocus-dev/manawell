@@ -19,7 +19,42 @@
 		143.344589233398,
 		439.055450439453
 	],
-	"installed_at": "2026-09-27T19:57:22",
+	"hand_atlas": "hand_atlas.png",
+	"hand_track": [
+		[
+			108.26,
+			-223.54
+		],
+		[
+			98.24,
+			-230.55
+		],
+		[
+			105.25,
+			-227.55
+		],
+		[
+			115.28,
+			-261.63
+		],
+		[
+			105.25,
+			-227.55
+		],
+		[
+			99.24,
+			-230.55
+		],
+		[
+			108.26,
+			-226.54
+		],
+		[
+			106.26,
+			-249.6
+		]
+	],
+	"installed_at": "2026-09-28T14:03:05",
 	"loop_requested": true,
 	"motion": "walk",
 	"playback_fps": 16.1290322580645,
@@ -35,7 +70,7 @@
 		6,
 		7
 	],
-	"source_sheet": "/tmp/art/weapons/clips/hero/run/sheet_12333.png",
+	"source_sheet": "/tmp/art/weapons/clips/hero/run_2/sheet_12785.png",
 	"union_crop": [
 		145,
 		57,

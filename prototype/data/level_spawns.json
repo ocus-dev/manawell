@@ -1,0 +1,141 @@
+{
+	"format_version": 1,
+	"levels": {
+		"act_01_node_01": {
+			"boss_damage": 1.5,
+			"boss_health": 2.0,
+			"boss_monster": "pursuer",
+			"boss_size": 1.5,
+			"interval": 4.0,
+			"max_alive": 12.0,
+			"min_interval": 0.6,
+			"mix": {
+				"breaker": 0.0,
+				"pursuer": 100.0,
+				"ranged": 0.0
+			},
+			"mode": "custom",
+			"progress_surge": 3.0,
+			"surge_speedup": 11.0
+		},
+		"act_01_node_03": {
+			"boss_damage": 1.5,
+			"boss_health": 2.0,
+			"boss_monster": "pursuer",
+			"boss_size": 1.55,
+			"interval": 3.0,
+			"max_alive": 12.0,
+			"min_interval": 0.6,
+			"mix": {
+				"breaker": 0.0,
+				"pursuer": 100.0,
+				"ranged": 0.0
+			},
+			"mode": "custom",
+			"progress_surge": 3.0,
+			"surge_speedup": 8.0
+		},
+		"act_01_node_04": {
+			"boss_damage": 1.5,
+			"boss_health": 2.0,
+			"boss_monster": "pursuer",
+			"boss_size": 1.5,
+			"interval": 3.1,
+			"max_alive": 12.0,
+			"min_interval": 0.6,
+			"mix": {
+				"breaker": 0.0,
+				"pursuer": 100.0,
+				"ranged": 0.0
+			},
+			"mode": "custom",
+			"progress_surge": 3.0,
+			"surge_speedup": 11.0
+		},
+		"act_01_node_05": {
+			"boss_damage": 1.5,
+			"boss_health": 2.0,
+			"boss_monster": "pursuer",
+			"boss_size": 1.5,
+			"interval": 3.1,
+			"max_alive": 12.0,
+			"min_interval": 0.6,
+			"mix": {
+				"breaker": 0.0,
+				"pursuer": 100.0,
+				"ranged": 0.0
+			},
+			"mode": "custom",
+			"progress_surge": 3.0,
+			"surge_speedup": 11.0
+		},
+		"act_01_node_06": {
+			"boss_damage": 1.5,
+			"boss_health": 2.0,
+			"boss_monster": "pursuer",
+			"boss_size": 1.5,
+			"interval": 3.0,
+			"max_alive": 11.0,
+			"min_interval": 0.6,
+			"mix": {
+				"breaker": 0.0,
+				"pursuer": 100.0,
+				"ranged": 0.0
+			},
+			"mode": "custom",
+			"progress_surge": 3.0,
+			"surge_speedup": 12.0
+		},
+		"act_01_node_07": {
+			"boss_damage": 1.5,
+			"boss_health": 2.0,
+			"boss_monster": "pursuer",
+			"boss_size": 1.5,
+			"interval": 3.1,
+			"max_alive": 12.0,
+			"min_interval": 0.6,
+			"mix": {
+				"breaker": 0.0,
+				"pursuer": 100.0,
+				"ranged": 0.0
+			},
+			"mode": "custom",
+			"progress_surge": 3.0,
+			"surge_speedup": 11.0
+		},
+		"act_01_node_08": {
+			"boss_damage": 1.5,
+			"boss_health": 2.0,
+			"boss_monster": "pursuer",
+			"boss_size": 1.5,
+			"interval": 3.1,
+			"max_alive": 12.0,
+			"min_interval": 0.6,
+			"mix": {
+				"breaker": 0.0,
+				"pursuer": 100.0,
+				"ranged": 0.0
+			},
+			"mode": "custom",
+			"progress_surge": 3.0,
+			"surge_speedup": 11.0
+		},
+		"tutorial": {
+			"boss_damage": 1.5,
+			"boss_health": 2.5,
+			"boss_monster": "pursuer",
+			"boss_size": 2.5,
+			"interval": 3.8,
+			"max_alive": 12.0,
+			"min_interval": 0.6,
+			"mix": {
+				"breaker": 0.0,
+				"pursuer": 100.0,
+				"ranged": 0.0
+			},
+			"mode": "custom",
+			"progress_surge": 3.0,
+			"surge_speedup": 11.0
+		}
+	}
+}

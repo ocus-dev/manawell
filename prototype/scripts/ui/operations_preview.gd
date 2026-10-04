@@ -6,7 +6,6 @@ const UiPreviewFixturesScript = preload("res://scripts/ui/ui_preview_fixtures.gd
 const HeroPickerScript = preload("res://scripts/ui/hero_picker.gd")
 const ExpeditionPanelScript = preload("res://scripts/ui/expedition_panel.gd")
 const ResourceStripScript = preload("res://scripts/ui/resource_strip.gd")
-const UpgradeCardScript = preload("res://scripts/ui/upgrade_card.gd")
 const CampaignMapScript = preload("res://scripts/ui/campaign_map.gd")
 const ENVIRONMENT_THUMBNAIL: Texture2D = preload("res://assets/side-view/environment/backdrop_level_1.png")
 const MONSTER_PORTRAITS: Dictionary = {
@@ -19,6 +18,10 @@ const MONSTER_BRIEFINGS: Dictionary = {
 	"breaker": {"label": "Breaker", "role": "HARVESTER THREAT", "flavor": "Heavy forms that ignore the hero to reach the machine. Stop them before integrity starts to slip."},
 	"ranged": {"label": "Ranged", "role": "SUPPRESSION THREAT", "flavor": "Long-range hunters that turn open ground into a firing lane. Watch for the warning flash and keep moving."},
 }
+
+## The menu screens' solid background (behind the panels).
+const BACKDROP_COLOR := Color("0b1014")
+const BACKDROP_BLEED := 800.0
 
 @export var fixture_id: String = "one_well_commissioned"
 var include_notice_placeholder: bool = true
@@ -37,7 +40,7 @@ signal inventory_item_inspected(id: String)
 signal inventory_equip_requested(hero_id: String, slot: String, instance_id: String)
 signal inventory_unequip_requested(hero_id: String, slot: String)
 signal inventory_lock_toggled(instance_id: String, locked: bool)
-signal inventory_discard_requested(instance_id: String, confirmed_name: String)
+signal inventory_salvage_requested(instance_ids: Array)
 var viewport_settings_button: Button
 var navigation_bar: HBoxContainer
 var navigation_buttons: Dictionary = {}
@@ -71,6 +74,7 @@ signal research_equipment_requested(choice_id: String)
 signal settings_requested(opener: Control)
 signal campaign_node_selected(act_id: String, node_id: String)
 signal campaign_node_activate(act_id: String, node_id: String)
+signal home_requested
 
 func _ready() -> void:
 	theme = IndustrialThemeScript.create()
@@ -91,6 +95,19 @@ func _notification(what: int) -> void:
 func _build() -> void:
 	name = "OperationsPreview"
 	view_state = UiPreviewFixturesScript.make(fixture_id).view_state
+	# Solid backdrop behind every menu page so the level doesn't show through
+	# the gaps. It bleeds past the edges so it still fills the window when the
+	# UI scale setting shrinks the HUD.
+	var backdrop := ColorRect.new()
+	backdrop.name = "ScreenBackdrop"
+	backdrop.color = BACKDROP_COLOR
+	backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	backdrop.offset_left = -BACKDROP_BLEED
+	backdrop.offset_top = -BACKDROP_BLEED
+	backdrop.offset_right = BACKDROP_BLEED
+	backdrop.offset_bottom = BACKDROP_BLEED
+	add_child(backdrop)
 	var scroll := ScrollContainer.new()
 	operations_scroll = scroll
 	scroll.name = "OperationsScroll"
@@ -117,9 +134,8 @@ func _build() -> void:
 	content.add_child(navigation_bar)
 	_add_navigation_button("operations", "OPERATIONS")
 	_add_navigation_button("map", "MAP")
-	_add_navigation_button("research", "RESEARCH")
+	# Research and Crew are hidden for now (their pages still exist).
 	_add_navigation_button("inventory", "INVENTORY")
-	_add_navigation_button("crew", "CREW")
 	resource_strip = ResourceStripScript.new()
 	resource_strip.name = "ResourceStrip"
 	resource_strip.settings_requested.connect(func(opener: Control): settings_requested.emit(opener))
@@ -127,6 +143,8 @@ func _build() -> void:
 	resource_strip.configure(operations_state.get("research", {}))
 	content.add_child(resource_strip)
 	viewport_settings_button = resource_strip.get_node("ResourceStripContent/SettingsButton") as Button
+	# No Settings button on the menus (Settings stays in the pause menu).
+	viewport_settings_button.visible = false
 	body = BoxContainer.new()
 	body.name = "OperationsWorkspace"
 	body.custom_minimum_size.x = 0.0
@@ -141,6 +159,7 @@ func _build() -> void:
 	campaign_map.node_activate.connect(func(act_id: String, node_id: String): campaign_node_activate.emit(act_id, node_id))
 	if campaign_map.has_signal("manage_well_requested"):
 		campaign_map.manage_well_requested.connect(_manage_map_well)
+	campaign_map.home_requested.connect(func(): home_requested.emit())
 	content.add_child(campaign_map)
 	left_column = VBoxContainer.new()
 	left_column.name = "WellsResearchRegion"
@@ -166,7 +185,7 @@ func _build() -> void:
 	inventory_panel.equip_requested.connect(func(hero_id: String, slot: String, instance_id: String): inventory_equip_requested.emit(hero_id, slot, instance_id))
 	inventory_panel.unequip_requested.connect(func(hero_id: String, slot: String): inventory_unequip_requested.emit(hero_id, slot))
 	inventory_panel.lock_toggled.connect(func(instance_id: String, locked: bool): inventory_lock_toggled.emit(instance_id, locked))
-	inventory_panel.discard_requested.connect(func(instance_id: String, confirmed_name: String): inventory_discard_requested.emit(instance_id, confirmed_name))
+	inventory_panel.salvage_requested.connect(func(instance_ids: Array): inventory_salvage_requested.emit(instance_ids))
 	content.add_child(inventory_panel)
 	expedition_panel = ExpeditionPanelScript.new()
 	expedition_panel.name = "ExpeditionRegion"
@@ -221,7 +240,9 @@ func _briefing_region() -> PanelContainer:
 	var title := _label("MISSION BRIEFING", 16)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
-	header.add_child(_label("SECTOR B  /  LIVE INTEL", 11))
+	var intel_tag := _label("SECTOR B  /  LIVE INTEL", 11)
+	intel_tag.name = "IntelTag"
+	header.add_child(intel_tag)
 	content.add_child(header)
 	environment_thumbnail = TextureRect.new()
 	environment_thumbnail.name = "EnvironmentThumbnail"
@@ -309,6 +330,14 @@ func _update_briefing(expedition: Dictionary, campaign: Dictionary = {}) -> void
 	var node: Dictionary = campaign.get("briefing_node", {})
 	var level_data: Dictionary = node.get("level_data", {})
 	var stage_name := str(node.get("display_name", expedition.get("destination_label", "Intake Well")))
+	# The chosen level (map selection) drives the destination and picture.
+	if expedition_panel != null and expedition_panel.destination_label != null and not node.is_empty():
+		expedition_panel.destination_label.text = stage_name
+	if environment_thumbnail != null:
+		environment_thumbnail.texture = _level_thumbnail(str(level_data.get("backdrop_id", "")))
+	var intel_tag := mission_briefing.find_child("IntelTag", true, false) as Label
+	if intel_tag != null:
+		intel_tag.text = "%s  /  LIVE INTEL" % stage_name.to_upper()
 	var objective_data: Dictionary = level_data.get("completion", {})
 	match str(objective_data.get("objective", "")):
 		"extract":
@@ -333,11 +362,24 @@ func _update_briefing(expedition: Dictionary, campaign: Dictionary = {}) -> void
 			first_visible = monster_id
 			break
 	if not first_visible.is_empty():
-		_select_monster(first_visible)
+		# Keep the player's pick while it is still in this level's roster.
+		var keep: bool = monster_buttons.has(selected_monster_id) and monster_buttons[selected_monster_id].visible
+		_select_monster(selected_monster_id if keep else first_visible)
 	else:
 		monster_name_label.text = "NO THREAT PROFILE"
 		monster_role_label.text = ""
 		monster_flavor_label.text = "No field notes available for this encounter."
+
+const BACKDROP_ROOT := "res://assets/side-view/environment/"
+
+## The level's backdrop art for the briefing picture (generic art if it has none).
+func _level_thumbnail(backdrop_id: String) -> Texture2D:
+	var path := BACKDROP_ROOT + backdrop_id + ".png"
+	if not backdrop_id.is_empty() and ResourceLoader.exists(path):
+		var texture := load(path) as Texture2D
+		if texture != null:
+			return texture
+	return ENVIRONMENT_THUMBNAIL
 
 func _on_guard_picker_requested(well_id: String) -> void:
 	guard_picker_requested.emit(well_id)
@@ -369,6 +411,10 @@ func _add_navigation_button(page_id: String, label: String) -> void:
 	button.pressed.connect(_show_page.bind(page_id))
 	navigation_bar.add_child(button)
 	navigation_buttons[page_id] = button
+
+func show_page(page_id: String) -> void:
+	if navigation_buttons.has(page_id):
+		_show_page(page_id)
 
 func _show_page(page_id: String) -> void:
 	active_page = page_id

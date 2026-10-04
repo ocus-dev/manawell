@@ -1,4 +1,4 @@
-[gd_resource type="SpriteFrames" load_steps=10 format=3 uid="uid://pkocelh721mu"]
+[gd_resource type="SpriteFrames" format=3 uid="uid://pkocelh721mu"]
 
 [ext_resource type="Texture2D" uid="uid://c7mgrwi4v6bgj" path="res://assets/side-view/animations/hero_walk/atlas.png" id="1"]
 
@@ -61,7 +61,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("Frame_7")
 }],
-"loop": true,
+"loop": 1,
 "name": &"walk",
 "speed": 16.129
 }]

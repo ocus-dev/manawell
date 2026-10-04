@@ -11,9 +11,22 @@ var current_action: String = ""
 var current_signature: String = ""
 var dismissed_signature: String = ""
 
+## How see-through the notice's background is (0 = invisible, 1 = solid).
+const BACKGROUND_ALPHA := 0.72
+
 func _ready() -> void:
 	if title_label == null:
 		_build()
+	_apply_translucent_panel()
+
+## The theme's panel, with a see-through background (text stays solid).
+func _apply_translucent_panel() -> void:
+	var style := get_theme_stylebox("panel")
+	if style is StyleBoxFlat:
+		var translucent := (style as StyleBoxFlat).duplicate() as StyleBoxFlat
+		translucent.bg_color.a = BACKGROUND_ALPHA
+		translucent.border_color.a = minf(translucent.border_color.a, 0.85)
+		add_theme_stylebox_override("panel", translucent)
 
 func configure(notices: Dictionary) -> void:
 	if title_label == null:
@@ -21,14 +34,9 @@ func configure(notices: Dictionary) -> void:
 	current_action = ""
 	var title := ""
 	var message := ""
-	if not str(notices.get("save_failure", "")).is_empty():
-		title = "SAVE ISSUE"
-		message = str(notices.get("save_failure", ""))
-		current_action = "retry_save"
-	elif not str(notices.get("recovery", "")).is_empty():
-		title = "RECOVERY"
-		message = str(notices.get("recovery", ""))
-	elif not str(notices.get("offline", "")).is_empty():
+	# Save problems and save recovery aren't shown here (Settings still has
+	# the retry buttons).
+	if not str(notices.get("offline", "")).is_empty():
 		title = "WHILE AWAY"
 		message = str(notices.get("offline", ""))
 		if float(notices.get("offline_pending_total", 0.0)) > 0.0:
@@ -44,7 +52,7 @@ func configure(notices: Dictionary) -> void:
 		visible = current_signature != dismissed_signature
 	title_label.text = title
 	message_label.text = message
-	state_label.text = "Pending in memory; retry the action to confirm it was saved." if bool(notices.get("pending_save", false)) else ""
+	state_label.text = ""
 	state_label.visible = not state_label.text.is_empty()
 	action_button.visible = not current_action.is_empty()
 	action_button.text = "Retry save" if current_action == "retry_save" else "Retry settlement"

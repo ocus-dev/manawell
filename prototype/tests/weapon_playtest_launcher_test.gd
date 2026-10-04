@@ -18,7 +18,8 @@ func _run() -> void:
 	var published_list: ItemList = designer.find_child("PublishedWeaponList", true, false)
 	var launch_button: Button = designer.find_child("PlaytestSelectedWeapon", true, false)
 	assert(published_list != null and launch_button != null, "published playtest action should be present")
-	var selected_index := _index_for(published_list, "light blade")
+	var test_weapon := str(_published_weapon().id)
+	var selected_index := _index_for(published_list, test_weapon)
 	assert(selected_index >= 0, "published test weapon should be listed")
 	var live_account: RefCounted = AccountStateScript.new()
 	var live_save_sentinel: Dictionary = live_account.to_save_payload()
@@ -39,7 +40,7 @@ func _run() -> void:
 	var account: RefCounted = profile.get("account")
 	var instance_id := str(account.get("hero_kits").get("hero_1", {}).get("weapon", ""))
 	assert(not instance_id.is_empty(), "selected weapon should be equipped on the temporary hero")
-	assert(str(account.get("item_instances").get(instance_id, {}).get("base_id", "")) == "light blade", "selected weapon should be acquired")
+	assert(str(account.get("item_instances").get(instance_id, {}).get("base_id", "")) == test_weapon, "selected weapon should be acquired")
 	assert(not bool(controller.get("persistence_enabled")), "playtest must disable persistence")
 	assert(live_account.to_save_payload() == live_save_sentinel, "live profile sentinel must remain unchanged")
 	var spy := SpySaveStoreScript.new(account)
@@ -48,10 +49,10 @@ func _run() -> void:
 	assert(spy.save_count == 0, "playtest must not write through SaveStore")
 
 	var melee_profile: RefCounted = TestProfileScript.new()
-	var melee_publication: Dictionary = melee_profile.get("account").get("published_weapons")["light blade"].duplicate(true)
+	var melee_publication: Dictionary = melee_profile.get("account").get("published_weapons")[test_weapon].duplicate(true)
 	melee_publication["revision"]["behavior_id"] = "weapon.melee"
-	melee_profile.get("account").get("published_weapons")["light blade"] = melee_publication
-	var melee_acquisition: Dictionary = melee_profile.acquire_and_equip("light blade")
+	melee_profile.get("account").get("published_weapons")[test_weapon] = melee_publication
+	var melee_acquisition: Dictionary = melee_profile.acquire_and_equip(test_weapon)
 	assert(bool(melee_acquisition.get("valid", false)), "melee fixture should acquire and equip")
 	var melee_controller: Node = GameplayScene.instantiate()
 	melee_controller.set("persistence_enabled", false)
@@ -74,3 +75,13 @@ func _index_for(list: ItemList, weapon_id: String) -> int:
 		if str(list.get_item_metadata(index)) == weapon_id:
 			return index
 	return -1
+
+## Any weapon currently in the game (the tests used to rely on "light blade",
+## which has since been removed in the Weapon Lab).
+func _published_weapon() -> Dictionary:
+	var index: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/weapons/index.json"))
+	var weapons: Dictionary = index.get("weapons", {}) if index is Dictionary else {}
+	var ids: Array = weapons.keys()
+	ids.sort()
+	assert(not ids.is_empty(), "at least one weapon must be published")
+	return {"id": str(ids[0]), "revision": int(weapons[ids[0]].get("revision", 1))}

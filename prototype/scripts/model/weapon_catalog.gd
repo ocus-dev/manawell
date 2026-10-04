@@ -173,6 +173,23 @@ static func validate_revision(revision: Variant, check_assets: bool = false) -> 
             return _failure("revision.hand_fit", "INVALID_HAND_FIT", str(fit_check.error))
     if revision.has("clip_source") and not ["type", "own", "none"].has(str(revision.clip_source)):
         return _failure("revision.clip_source", "INVALID_CLIP_SOURCE", "clip_source must be type, own or none")
+    if revision.has("pose_sources"):
+        if not revision.pose_sources is Dictionary:
+            return _failure("revision.pose_sources", "INVALID_POSE_SOURCE", "pose_sources must be an object")
+        for key in revision.pose_sources:
+            if not ["idle", "walk"].has(str(key)) or not ["type", "own", "none"].has(str(revision.pose_sources[key])):
+                return _failure("revision.pose_sources", "INVALID_POSE_SOURCE", "pose_sources maps idle/walk to type, own or none")
+    if revision.has("pose_clips"):
+        if not revision.pose_clips is Dictionary:
+            return _failure("revision.pose_clips", "INVALID_POSE_CLIP", "pose_clips must be an object")
+        for key in revision.pose_clips:
+            if not ["idle", "walk"].has(str(key)):
+                return _failure("revision.pose_clips", "INVALID_POSE_CLIP", "pose_clips takes idle and walk")
+            var pose_check: Dictionary = WeaponClipScript.validate(revision.pose_clips[key])
+            if not pose_check.valid:
+                return _failure("revision.pose_clips.%s" % key, "INVALID_POSE_CLIP", str(pose_check.error))
+            if not revision.pose_clips[key].is_empty() and not ["hero", "hero_weapon"].has(str(revision.pose_clips[key].get("mode", ""))):
+                return _failure("revision.pose_clips.%s" % key, "INVALID_POSE_CLIP", "idle and walk animations must show the hero")
     if revision.has("attack_clip"):
         var clip_check: Dictionary = WeaponClipScript.validate(revision.attack_clip)
         if not clip_check.valid:

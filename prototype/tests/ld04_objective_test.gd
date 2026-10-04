@@ -92,6 +92,8 @@ func _check_failed_well_and_no_successor_launch() -> void:
 	campaign.active_node_id = "act_01_node_02"
 	var failed: bool = campaign.commit_terminal_result({"run_id": "ld04-failed", "phase": RunStateScript.Phase.FAILED, "payout": 0, "completed_surges": 0}, account, catalog)
 	_check(not failed and not account.is_well_commissioned("well_1"), "failed seal commissioned a well")
+	# Scrap Approach comes after the tutorial (Sector B).
+	campaign.completed_nodes["act_01/act_01_node_02"] = true
 	campaign.active_act_id = "act_01"
 	campaign.active_node_id = "act_01_node_01"
 	var success: bool = campaign.commit_terminal_result({"run_id": "ld04-success", "phase": RunStateScript.Phase.SUCCESS, "payout": 3, "completed_surges": 0}, account, catalog)

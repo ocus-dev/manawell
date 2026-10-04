@@ -7,6 +7,8 @@ const CampaignCatalogScript = preload("res://scripts/model/campaign_catalog.gd")
 signal node_selected(act_id: String, node_id: String)
 signal node_activate(act_id: String, node_id: String)
 signal manage_well_requested(well_id: String)
+## The map's Home button: opens the main city (not a map node).
+signal home_requested
 
 var map_rect := Rect2(16.0, 56.0, 760.0, 500.0)
 const PANEL_WIDTH := 300.0
@@ -26,16 +28,18 @@ var detail_title: Label
 var detail_status: Label
 var detail_reason: Label
 var detail_well: Label
+var detail_progress: Label
 var activate_button: Button
 var map_title: Label
 var map_subtitle: Label
 var manage_button: Button
+var home_button: Button
 
 func _ready() -> void:
 	theme = IndustrialThemeScript.create()
-	var image := Image.load_from_file("res://assets/world_map/master.png")
-	if image != null and not image.is_empty():
-		map_texture = ImageTexture.create_from_image(image)
+	# The imported texture: works in exported builds (raw res:// PNGs aren't
+	# shipped) and skips decoding the PNG on the main thread.
+	map_texture = load("res://assets/world_map/master.png") as Texture2D
 	focus_mode = Control.FOCUS_ALL
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	_build()
@@ -54,7 +58,12 @@ func configure(next_state: Dictionary) -> void:
 	if nodes.is_empty() and catalog.has_act(act_id):
 		nodes = catalog.get_act(act_id).get("nodes", [])
 	if selected_node_id.is_empty() or _find_node(nodes, selected_node_id).is_empty():
-		selected_node_id = str(nodes[0].get("id", "")) if not nodes.is_empty() else ""
+		# Start on the level Operations is set to, else the first one.
+		var active_id := str(campaign.get("active_node_id", ""))
+		if not active_id.is_empty() and not _find_node(nodes, active_id).is_empty():
+			selected_node_id = active_id
+		else:
+			selected_node_id = str(nodes[0].get("id", "")) if not nodes.is_empty() else ""
 	focus_index = clampi(focus_index, 0, maxi(0, nodes.size() - 1))
 	_refresh_details()
 	queue_redraw()
@@ -137,6 +146,11 @@ func _build() -> void:
 	detail_reason = Label.new()
 	detail_reason.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	details_content.add_child(detail_reason)
+	detail_progress = Label.new()
+	detail_progress.name = "Progress"
+	detail_progress.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	detail_progress.add_theme_color_override("font_color", Color("f0a836"))
+	details_content.add_child(detail_progress)
 	detail_well = Label.new()
 	detail_well.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	details_content.add_child(detail_well)
@@ -180,6 +194,13 @@ func _refresh_details() -> void:
 			if selected.get("type", "") == "well":
 				manage_well_requested.emit(str(selected.get("well_id", ""))))
 		details_content.add_child(manage_button)
+	if home_button == null:
+		home_button = Button.new()
+		home_button.name = "HomeButton"
+		home_button.text = "Home"
+		home_button.tooltip_text = "Go to the main city."
+		home_button.pressed.connect(func(): home_requested.emit())
+		details_content.add_child(home_button)
 	var campaign: Dictionary = view_state.get("campaign", {})
 	var node: Dictionary = _find_node(campaign.get("nodes", []), selected_node_id)
 	manage_button.visible = node.get("type", "") == "well"
@@ -187,6 +208,7 @@ func _refresh_details() -> void:
 		detail_title.text = ""
 		detail_status.text = ""
 		detail_reason.text = ""
+		detail_progress.text = ""
 		detail_well.text = ""
 		activate_button.disabled = true
 		return
@@ -196,6 +218,13 @@ func _refresh_details() -> void:
 	detail_title.text = "%s  /  %s" % [str(node.get("display_name", selected_node_id)), type_label]
 	detail_status.text = "STATUS  %s" % status_id.to_upper()
 	detail_reason.text = str(status.get("reason", ""))
+	var boss_surge := int(status.get("progress_surge", 0))
+	if boss_surge <= 0:
+		detail_progress.text = "Farming level (no boss)."
+	elif status_id == "completed":
+		detail_progress.text = "Cleared. Farm it any time; the boss returns at surge %d." % boss_surge
+	else:
+		detail_progress.text = "To progress: reach surge %d and defeat the zone boss." % boss_surge
 	detail_well.text = ""
 	if node.get("type", "") == "well":
 		var well: Dictionary = campaign.get("wells", {}).get(str(node.get("well_id", "")), {})

@@ -44,7 +44,26 @@ var comfy: Node
 ## "weapon" (an attack animation for weapons) or "hero" (the hero's own
 ## idle / walk / attack art, see start_hero()).
 var purpose := "weapon"
+## Weapon purpose: which of the weapon's animations this is: "attack", or a
+## looping "idle" / "walk" (no hit frames; see start_pose()).
+var clip_animation := "attack"
+const POSE_WORDS := {"idle": "standing (idle)", "walk": "walking"}
 var hero_target := "walk"
+## Hero purpose: the animations the frames can replace ([state, label]).
+## States without art fall back in the game (see SideViewActorVisual).
+const HERO_STATE_CHOICES := [
+	["idle", "Idle (standing)"],
+	["walk", "Walk"],
+	["attack", "Attack (the normal attack, for weapons without their own)"],
+	["dash", "Dash"],
+	["hurt", "Hurt (hit reaction)"],
+	["death", "Death"],
+	["jump", "Jump (rising)"],
+	["fall", "Fall"],
+	["spawn", "Spawn (entering)"],
+	["windup", "Wind-up (before an attack)"],
+]
+const HERO_STATE_WORDS := {"idle": "standing (idle)", "walk": "walking", "attack": "attacking", "dash": "dashing", "hurt": "getting hit", "death": "dying", "jump": "jumping (rising)", "fall": "falling", "spawn": "arriving", "windup": "winding up an attack"}
 ## Line-up used when frames are cut out ("feet" unless a hero cycle).
 var default_align := "feet"
 var still_only := false
@@ -52,6 +71,10 @@ var _title: Label
 var _hero_box: Control
 var _hero_picker: OptionButton
 var _still_check: CheckBox
+## Hero purpose: the front fist on each frame (frame pixels, or null), so a
+## held weapon can ride along with the hand. See mark_fist().
+var hand_track: Array = []
+var _fist_status: Label
 var weapon_id := ""
 ## The weapon's type label ("Axe"); empty hides "Save as default".
 var type_label := ""
@@ -108,8 +131,48 @@ var front_hand := true
 var hand_masks: Array = []
 var hand_painted: Array = []
 var hand_textures: Array = []
+## The masked picture behind each hand texture, kept so brush strokes can
+## update just the painted area.
+var hand_pictures: Array = []
+var _hand_uploads: Dictionary = {}
 ## Frames Auto-place wasn't sure about (worth a look).
 var auto_unsure: Array = []
+## Quick setup: two sheets (empty hands + the same poses with the weapon) and
+## one button. `advanced` shows every step instead (More options).
+var advanced := false
+var quick_body_path := ""
+var quick_weapon_path := ""
+## Frames okayed in the quick check ("Looks right").
+var checked: Array = []
+## Draw the weapon at one size on every frame (the middle length), so it
+## doesn't grow and shrink with ChatGPT's drawings.
+var steady_size := false
+## Holds from Imp.snappy_holds: wind-up and hit held, the swing itself fast.
+var snappy := false
+## Blink between the two sheets to check how they line up.
+var blink := false
+var _blink_time := 0.0
+var _blink_ref := false
+var quick_busy := false
+var _quick_intro: Label
+var _quick_body_label: Label
+var _quick_weapon_label: Label
+var _quick_run_button: Button
+var _quick_check: Control
+var _quick_frame_label: Label
+var _quick_behind: CheckBox
+var _quick_blink: CheckBox
+var _quick_steady: CheckBox
+var _quick_snappy: CheckBox
+var _quick_hit_label: Label
+var _quick_hit_button: Button
+var _quick_save: Control
+var _quick_save_default: Button
+var _quick_save_weapon: Button
+var _quick_more: Button
+var _quick_play: Button
+var _quick_body_dialog: FileDialog
+var _quick_weapon_dialog: FileDialog
 ## Weapons to pick from for the preview (set by the lab), and the pick.
 var preview_options: Array = []
 var preview_choice := ""
@@ -195,6 +258,12 @@ func _process(delta: float) -> void:
 	if playing:
 		play_time += delta
 		_view.queue_redraw()
+	if blink and not playing:
+		_blink_time += delta
+		if _blink_time >= 0.45:
+			_blink_time = 0.0
+			_blink_ref = not _blink_ref
+			_view.queue_redraw()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not visible or not event is InputEventKey or not event.pressed:
@@ -221,6 +290,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			set_playing(not playing)
 		KEY_F:
 			fit_view()
+		KEY_ENTER, KEY_KP_ENTER:
+			if is_quick() and placed_count() > 0:
+				approve_frame()
+			else:
+				handled = false
 		KEY_EQUAL, KEY_KP_ADD:
 			zoom_view(1.25, _view.size * 0.5)
 		KEY_MINUS, KEY_KP_SUBTRACT:
@@ -235,29 +309,67 @@ func _unhandled_input(event: InputEvent) -> void:
 ## Opens the importer on a new, empty clip for `new_weapon_id`.
 func start(new_weapon_id: String, new_hit_seconds: float, new_interval: float, new_purpose: String = "weapon") -> void:
 	purpose = new_purpose
+	clip_animation = "attack"
 	default_align = "feet"
 	weapon_id = new_weapon_id
 	hit_seconds = new_hit_seconds
 	attack_interval = new_interval
+	quick_body_path = ""
+	quick_weapon_path = ""
+	advanced = bool(Imp.load_settings().get("advanced", false))
 	_reset()
 	visible = true
 	_set_status("Open a pose sheet, a set of frames, or a video to begin.")
-	if _title != null:
-		_title.text = "HERO ANIMATION IMPORTER" if purpose == "hero" else "CLIP IMPORTER"
 	_refresh()
 
+## Opens the importer on a new weapon idle or walk: a looping animation of
+## the hero holding the weapon (whole hero with the weapon drawn in, or a
+## weapon-free sheet with each weapon placed in the hands).
+func start_pose(new_weapon_id: String, animation: String, new_interval: float = 1.0) -> void:
+	start(new_weapon_id, 0.0, new_interval)
+	clip_animation = animation if POSE_WORDS.has(animation) else "idle"
+	# Cycles keep the torso still, like the hero's own idle and walk.
+	default_align = "body"
+	align_mode = default_align
+	if _name_edit != null:
+		_name_edit.text = clip_animation.capitalize()
+	_set_status("Open a sheet of the hero %s with the weapon (side view, facing right), frame images, or a video. For one animation that fits every weapon of a type, use a weapon-free sheet and place the weapon in the hands." % str(POSE_WORDS[clip_animation]))
+	_refresh()
+
+func is_pose() -> bool:
+	return purpose == "weapon" and clip_animation != "attack"
 ## Opens the importer for the hero's own art (no weapon in the hands).
-## animation: "idle", "walk" or "attack".
+## animation: one of HERO_STATE_CHOICES (SideViewVisualConfig.STATES).
 func start_hero(animation: String = "walk") -> void:
 	start("_hero", 0.0, 1.0, "hero")
 	hero_target = animation
 	still_only = false
 	# Walk and idle cycles keep the torso in place; attacks line up the feet.
-	default_align = "body" if animation != "attack" else "feet"
+	default_align = "body" if ["idle", "walk", "dash"].has(animation) else "feet"
 	if _name_edit != null:
 		_name_edit.text = "Hero " + animation
-	_set_status("Open a sheet of the hero %s (side view, facing right, no weapon: empty hands closed as if gripping), frame images, or a video." % ("walking" if animation == "walk" else ("standing (idle)" if animation == "idle" else "attacking")))
+	_set_status("Open a sheet of the hero %s (side view, facing right, no weapon: empty hands closed as if gripping), frame images, or a video." % str(HERO_STATE_WORDS.get(animation, animation)))
 	_refresh()
+
+## The front fist on `index`. With no fist marked yet (or `track_all`), it is
+## found on every frame from there; otherwise only this frame changes.
+func mark_fist(index: int, point: Vector2, track_all: bool = false) -> void:
+	if cut.is_empty() or index < 0 or index >= cut.size():
+		return
+	if hand_track.size() != cut.size():
+		hand_track = []
+		hand_track.resize(cut.size())
+	var any := hand_track.any(func(p: Variant) -> bool: return p is Vector2)
+	if track_all or not any:
+		hand_track = Imp.track_patch(cut, index, point)
+		_set_status("Front fist found on all %d frames. Step through them (Q/E) and click to fix any that are off." % cut.size(), GOOD)
+	else:
+		hand_track[index] = point
+		_set_status("Front fist moved on frame %d." % (index + 1), GOOD)
+	_refresh()
+
+func fist_count() -> int:
+	return hand_track.filter(func(p: Variant) -> bool: return p is Vector2).size()
 
 ## Saves the frames as the hero's idle, walk or attack (hero purpose).
 func save_hero() -> Dictionary:
@@ -315,7 +427,14 @@ func _reset() -> void:
 	hand_masks = []
 	hand_painted = []
 	hand_textures = []
+	hand_pictures = []
 	auto_unsure = []
+	hand_track = []
+	checked = []
+	steady_size = false
+	snappy = false
+	blink = false
+	_blink_ref = false
 	if _name_edit != null:
 		_name_edit.text = "Attack"
 
@@ -483,6 +602,7 @@ func cut_out() -> bool:
 	hand_masks = []
 	hand_painted = []
 	hand_textures = []
+	hand_pictures = []
 	auto_unsure = []
 	_ensure_hand_arrays()
 	realign()
@@ -596,6 +716,7 @@ func erase_at(index: int, point: Vector2, radius: float) -> void:
 	if index < 0 or index >= cut.size():
 		return
 	Imp.erase_circle(cut[index], point, radius)
+	cut[index].remove_meta("visible_height")
 	(cut_textures[index] as ImageTexture).update(cut[index])
 	if _view != null:
 		_view.queue_redraw()
@@ -649,12 +770,16 @@ func set_playing(on: bool) -> void:
 	play_time = 0.0
 	if _play_check != null and _play_check.button_pressed != playing:
 		_play_check.set_pressed_no_signal(playing)
+	if _quick_play != null:
+		_quick_play.set_pressed_no_signal(playing)
 	if _view != null:
 		_view.queue_redraw()
 
 ## Frame shown `time` seconds into the looping combo preview (-1 in the gaps).
 func preview_frame_at(time: float) -> int:
 	var clip := preview_clip()
+	if is_pose():
+		return WeaponClip.loop_frame_at(clip, time)
 	var lines: Array = []
 	var total := 0.0
 	for index in range(current_attacks().size()):
@@ -717,9 +842,15 @@ func build_clip() -> Dictionary:
 				cell_track.append(null)
 				continue
 			var grip: Vector2 = (Vector2(entry.grip) - Vector2(anchors[index])) * scale + packed_anchor
-			var along: Vector2 = Vector2(entry.tip) - Vector2(entry.grip)
+			var along: Vector2 = Vector2(effective_tip(index)) - Vector2(entry.grip)
 			cell_track.append({"grip": [grip.x, grip.y], "angle": rad_to_deg(along.angle()), "length": along.length() * scale, "behind": bool(entry.behind)})
-	var label := _name_edit.text.strip_edges() if _name_edit != null and not _name_edit.text.strip_edges().is_empty() else "Attack"
+	var cell_hands: Array = []
+	if purpose == "hero" and hand_track.size() == cut.size() and fist_count() == cut.size():
+		var hand_anchor := Vector2(float(packed.anchor[0]), float(packed.anchor[1]))
+		for index in range(cut.size()):
+			var fist: Vector2 = (Vector2(hand_track[index]) - Vector2(anchors[index])) * float(packed.scale) + hand_anchor
+			cell_hands.append([fist.x, fist.y])
+	var label := _name_edit.text.strip_edges() if _name_edit != null and not _name_edit.text.strip_edges().is_empty() else ("Attack" if not is_pose() else clip_animation.capitalize())
 	return WeaponClip.normalize({
 		"label": label,
 		"mode": mode,
@@ -736,6 +867,7 @@ func build_clip() -> Dictionary:
 		"fit_hit": true,
 		"track": cell_track,
 		"hand_source": hand_path,
+		"hand_track": cell_hands,
 	})
 
 func save_clip(target: String = "") -> Dictionary:
@@ -746,6 +878,9 @@ func save_clip(target: String = "") -> Dictionary:
 		return {}
 	if mode == "hero_weapon" and placed_count() == 0:
 		_fail("Place the weapon in the hands on at least one frame first (Place weapon tool: click the hand, then the far end of the weapon).")
+		return {}
+	if is_pose() and mode == "weapon":
+		_fail("An idle or walk shows the hero: pick \"Hero attack (whole hero + weapon)\" or \"Hero body + each weapon's own art\" in step 6.")
 		return {}
 	_save_project()
 	var clip := build_clip()
@@ -799,6 +934,10 @@ func _save_project() -> void:
 		"label": _name_edit.text if _name_edit != null else "Attack",
 		"track": _track_to_json(),
 		"front_hand": front_hand,
+		"animation": clip_animation,
+		"steady_size": steady_size,
+		"snappy": snappy,
+		"checked": checked.duplicate(),
 		"reference": {"frames": ref_cut.size(), "offsets": ref_offsets.map(func(v: Vector2) -> Array: return [v.x, v.y]), "scale": ref_scale},
 	})
 
@@ -808,6 +947,9 @@ func load_project(dir: String, new_weapon_id: String, new_hit_seconds: float, ne
 	if project.is_empty():
 		return _fail("That clip's importer project wasn't found (%s)." % dir)
 	start(new_weapon_id, new_hit_seconds, new_interval)
+	clip_animation = str(project.get("animation", "attack"))
+	if not ["attack", "idle", "walk"].has(clip_animation):
+		clip_animation = "attack"
 	project_dir = dir
 	source_kind = str(project.get("source_kind", "sheet"))
 	if source_kind == "sheet":
@@ -852,6 +994,13 @@ func load_project(dir: String, new_weapon_id: String, new_hit_seconds: float, ne
 	while track.size() < cut.size():
 		track.append(_empty_track())
 	front_hand = bool(project.get("front_hand", true))
+	steady_size = bool(project.get("steady_size", false))
+	snappy = bool(project.get("snappy", false))
+	checked = []
+	for value in project.get("checked", []):
+		checked.append(bool(value))
+	while checked.size() < cut.size():
+		checked.append(false)
 	_ensure_hand_arrays()
 	var frame_entries: Array = project.get("frames", [])
 	for index in range(mini(frame_entries.size(), cut.size())):
@@ -952,53 +1101,323 @@ func _ensure_hand_arrays() -> void:
 		hand_masks.append(null)
 		hand_painted.append(false)
 		hand_textures.append(null)
+	while hand_pictures.size() < hand_masks.size():
+		hand_pictures.append(null)
 	if hand_masks.size() > cut.size():
 		hand_masks.resize(cut.size())
 		hand_painted.resize(cut.size())
 		hand_textures.resize(cut.size())
+		hand_pictures.resize(cut.size())
 
 ## Finds the weapon in the ghost and places it in the hands on `frames`
 ## (default: every frame), lines the ghost up, marks "behind the body", and
 ## makes the front hand. Needs the sheet with the weapon loaded.
 func auto_place(frames: Array = []) -> int:
+	if not _auto_ready():
+		return 0
+	var targets: Array = frames if not frames.is_empty() else range(cut.size())
+	var palette := Imp.body_palette(cut)
+	auto_unsure = auto_unsure.filter(func(i: int) -> bool: return not targets.has(i))
+	var placed := 0
+	for index in targets:
+		if _auto_place_frame(index, palette):
+			placed += 1
+	_finish_auto_place(placed, targets.size())
+	return placed
+
+func _auto_ready() -> bool:
 	if cut.is_empty() or ref_cut.size() != cut.size():
 		_fail("Load the sheet with the weapon first (Sheet with weapon...), then Auto-place.")
-		return 0
+		return false
 	if mode != "hero_weapon":
 		set_weapon_free(true)
 	_ensure_hand_arrays()
-	var targets: Array = frames if not frames.is_empty() else range(cut.size())
-	var palette := Imp.body_palette(cut)
-	var placed := 0
-	auto_unsure = auto_unsure.filter(func(i: int) -> bool: return not targets.has(i))
-	for index in targets:
-		var body: Image = cut[index]
-		var offset := Imp.align_reference(body, anchors[index], ref_cut[index], ref_anchors[index], ref_scale, ref_offsets[index])
-		ref_offsets[index] = offset
-		var found := Imp.find_weapon(body, anchors[index], ref_cut[index], ref_anchors[index], ref_scale, offset, palette)
-		if not bool(found.get("ok", false)):
-			auto_unsure.append(index)
-			continue
-		track[index] = {"grip": found.grip, "tip": found.tip, "behind": bool(found.behind)}
-		var length := Vector2(found.grip).distance_to(found.tip)
-		var figure := Imp.figure_height(body)
-		# Short weapons or a "hand" down at the legs usually mean a miss.
-		if length < figure * 0.25 or float(found.grip.y) > Vector2(anchors[index]).y - figure * 0.28:
-			auto_unsure.append(index)
-		hand_painted[index] = false
-		_auto_hand(index)
-		placed += 1
+	return true
+
+## Lines the ghost up on frame `index` and places the weapon there.
+func _auto_place_frame(index: int, palette: PackedByteArray) -> bool:
+	var body: Image = cut[index]
+	var offset := Imp.align_reference(body, anchors[index], ref_cut[index], ref_anchors[index], ref_scale, ref_offsets[index])
+	ref_offsets[index] = offset
+	var found := Imp.find_weapon(body, anchors[index], ref_cut[index], ref_anchors[index], ref_scale, offset, palette)
+	if not bool(found.get("ok", false)):
+		auto_unsure.append(index)
+		return false
+	track[index] = {"grip": found.grip, "tip": found.tip, "behind": bool(found.behind)}
+	var length := Vector2(found.grip).distance_to(found.tip)
+	var figure := Imp.figure_height(body)
+	# Short weapons, a "hand" down at the legs, or the old finder's guess
+	# usually mean a miss.
+	if length < figure * 0.25 or float(found.grip.y) > Vector2(anchors[index]).y - figure * 0.28 or str(found.get("how", "")) == "classic":
+		auto_unsure.append(index)
+	hand_painted[index] = false
+	_auto_hand(index)
+	return true
+
+func _finish_auto_place(placed: int, total: int) -> void:
+	# A weapon is one size: a frame whose weapon is much longer or shorter
+	# than the rest probably found something else.
+	var lengths: Array = []
+	for entry in track:
+		if entry.grip is Vector2 and entry.tip is Vector2:
+			lengths.append(Vector2(entry.grip).distance_to(entry.tip))
+	if lengths.size() >= 3:
+		lengths.sort()
+		var middle: float = lengths[lengths.size() / 2]
+		for index in range(track.size()):
+			var entry: Dictionary = track[index]
+			if entry.grip is Vector2 and entry.tip is Vector2:
+				var ratio := Vector2(entry.grip).distance_to(entry.tip) / maxf(1.0, middle)
+				if (ratio < 0.6 or ratio > 1.6) and not auto_unsure.has(index):
+					auto_unsure.append(index)
 	auto_unsure.sort()
 	front_hand = true
 	_after_track_changed()
 	_refresh()
-	var message := "Auto-placed the weapon on %d of %d frames." % [placed, targets.size()]
+	var message := "Auto-placed the weapon on %d of %d frames." % [placed, total]
 	if not auto_unsure.is_empty():
 		message += " Check frame%s %s: drag the green (hand) and orange (far end) dots if they're off." % ["" if auto_unsure.size() == 1 else "s", ", ".join(auto_unsure.map(func(i: int) -> String: return str(i + 1)))]
 	else:
 		message += " Step through the frames (Q/E) and drag any dot that's off."
 	_set_status(message, GOOD if auto_unsure.is_empty() else AMBER)
-	return placed
+
+# ---------- quick setup ----------
+
+## Quick setup is the default for weapon animations; More options shows
+## every step (slicing, cut-out settings, the hand brush, ...).
+func is_quick() -> bool:
+	return purpose == "weapon" and not advanced
+
+func set_advanced(on: bool) -> void:
+	advanced = on
+	var settings := Imp.load_settings()
+	settings["advanced"] = on
+	Imp.save_settings(settings)
+	_refresh()
+
+## `which`: "body" (the empty-hands sheet) or "weapon" (the same poses with
+## the weapon drawn in).
+func set_quick_sheet(which: String, path: String) -> void:
+	if which == "body":
+		quick_body_path = path
+	else:
+		quick_weapon_path = path
+	if not path.is_empty():
+		var settings := Imp.load_settings()
+		settings["last_dir"] = path.get_base_dir()
+		Imp.save_settings(settings)
+	_refresh()
+	if quick_body_path.is_empty():
+		_set_status("Now pick the sheet with empty hands (1).")
+	elif quick_weapon_path.is_empty():
+		_set_status("Now pick the same poses with the weapon (2).")
+	else:
+		_set_status("Both sheets picked. Press \"Line up & place the weapon\".", GOOD)
+
+## Quick setup in one go: cuts out the empty-hands sheet, loads the sheet with
+## the weapon as the ghost, lines each pair of frames up, places the weapon in
+## the hands on every frame, keeps it one size, and guesses the hit frame and a
+## snappy timing. Coroutine.
+func quick_run() -> bool:
+	if quick_busy or busy:
+		return false
+	if quick_body_path.is_empty() or quick_weapon_path.is_empty():
+		return _fail("Pick both sheets first: the poses with empty hands (1) and the same poses with the weapon (2).")
+	quick_busy = true
+	var body_path := quick_body_path
+	var weapon_path := quick_weapon_path
+	_set_status("Finding the poses on the empty-hands sheet...")
+	if is_inside_tree():
+		await get_tree().process_frame
+	var opened := open_sheet(body_path)
+	quick_body_path = body_path
+	quick_weapon_path = weapon_path
+	if not opened:
+		return _quick_stop()
+	if boxes.size() <= 1:
+		_fail("Couldn't find separate poses on the empty-hands sheet (they touch). Open More options and set the number of frames.")
+		return _quick_stop()
+	if not await cut_out():
+		return _quick_stop()
+	set_weapon_free(true)
+	_set_status("Lining up the sheet with the weapon...")
+	if is_inside_tree():
+		await get_tree().process_frame
+	if not open_reference(weapon_path):
+		last_error += " Both sheets need the same poses in the same order."
+		_set_status(last_error, BAD)
+		return _quick_stop()
+	if not _auto_ready():
+		return _quick_stop()
+	var palette := Imp.body_palette(cut)
+	auto_unsure = []
+	var placed := 0
+	for index in range(cut.size()):
+		_set_status("Finding the weapon on frame %d of %d..." % [index + 1, cut.size()])
+		if is_inside_tree():
+			await get_tree().process_frame
+		if _auto_place_frame(index, palette):
+			placed += 1
+	steady_size = true
+	if not is_pose():
+		var hit := Imp.guess_hit(track, anchors)
+		if hit >= 0:
+			starts = []
+			hits = [hit]
+			snappy = true
+			holds = Imp.snappy_holds(track, anchors, hit, WeaponClip.DEFAULT_FRAME_MS)
+	checked = []
+	for _i in range(cut.size()):
+		checked.append(false)
+	_finish_auto_place(placed, cut.size())
+	tool = "weapon"
+	quick_busy = false
+	select_frame(int(auto_unsure[0]) if not auto_unsure.is_empty() else 0)
+	_refresh()
+	var message := "Weapon placed on %d of %d frames. Step through them: if the green dot is in the fist and the orange dot on the far end of the gold weapon, press Looks right (Enter)." % [placed, cut.size()]
+	if not auto_unsure.is_empty():
+		message = "Weapon placed on %d of %d frames. Frame%s %s marked ? need a look: drag the dots onto the gold weapon, then press Looks right (Enter)." % [placed, cut.size(), "" if auto_unsure.size() == 1 else "s", ", ".join(auto_unsure.map(func(i: int) -> String: return str(i + 1)))]
+	_set_status(message, GOOD if auto_unsure.is_empty() else AMBER)
+	return true
+
+func _quick_stop() -> bool:
+	quick_busy = false
+	busy = false
+	_refresh()
+	return false
+
+## "Looks right": marks the frame checked and moves on to the next one that
+## isn't (frames marked ? first).
+func approve_frame() -> void:
+	if cut.is_empty():
+		return
+	while checked.size() < cut.size():
+		checked.append(false)
+	var approved := selected
+	checked[approved] = true
+	auto_unsure.erase(approved)
+	var next := -1
+	for offset in range(1, cut.size() + 1):
+		var index := (selected + offset) % cut.size()
+		if not bool(checked[index]):
+			next = index
+			break
+	if next < 0:
+		_refresh_strip_labels()
+		_refresh_frame_controls()
+		_set_status("Every frame checked. Press Play (Space) to watch it, then save.", GOOD)
+		return
+	select_frame(next)
+	_set_status("Frame %d okayed. Now frame %d%s." % [approved + 1, selected + 1, " (marked ?: check it closely)" if auto_unsure.has(selected) else ""], GOOD)
+
+func checked_count() -> int:
+	return checked.filter(func(c: Variant) -> bool: return bool(c)).size()
+
+## Swaps the hand and far-end dots (for a weapon found back to front).
+func swap_ends(index: int) -> void:
+	if index < 0 or index >= track.size():
+		return
+	var entry: Dictionary = track[index]
+	if not (entry.grip is Vector2 and entry.tip is Vector2):
+		return
+	track[index] = {"grip": entry.tip, "tip": entry.grip, "behind": bool(entry.behind)}
+	_after_track_changed()
+
+## Moves whichever dot is nearer `point` there (quick check clicks).
+func move_nearest_dot(index: int, point: Vector2) -> void:
+	if index < 0 or index >= track.size():
+		return
+	var entry: Dictionary = track[index]
+	if not (entry.grip is Vector2 and entry.tip is Vector2):
+		weapon_click(point)
+		return
+	var key := "grip" if point.distance_to(entry.grip) <= point.distance_to(entry.tip) else "tip"
+	track[index][key] = point
+	_after_track_changed()
+
+## Moves both dots of `index` by `delta` (frame pixels), keeping the angle.
+func move_weapon(index: int, delta: Vector2, rebuild: bool = true) -> void:
+	if index < 0 or index >= track.size():
+		return
+	var entry: Dictionary = track[index]
+	if not (entry.grip is Vector2 and entry.tip is Vector2):
+		return
+	track[index]["grip"] = Vector2(entry.grip) + delta
+	track[index]["tip"] = Vector2(entry.tip) + delta
+	if rebuild:
+		_after_track_changed()
+	elif _view != null:
+		_view.queue_redraw()
+
+func set_steady_size(on: bool) -> void:
+	steady_size = on
+	if _view != null:
+		_view.queue_redraw()
+
+## Snappy timing on: held wind-up and hit, fast swing; off: every frame the same.
+func set_snappy(on: bool) -> void:
+	snappy = on
+	var hit := -1
+	for attack in current_attacks():
+		hit = int(attack.hit)
+		break
+	if on and hit >= 0:
+		holds = Imp.snappy_holds(track, anchors, hit, WeaponClip.DEFAULT_FRAME_MS)
+	else:
+		for index in range(holds.size()):
+			holds[index] = WeaponClip.DEFAULT_FRAME_MS
+	_refresh_frame_controls()
+
+## Makes `index` the hit frame of a one-attack clip (and re-times it).
+func make_hit(index: int) -> void:
+	if index < 0 or index >= cut.size():
+		return
+	starts = []
+	hits = [index]
+	if snappy:
+		holds = Imp.snappy_holds(track, anchors, index, WeaponClip.DEFAULT_FRAME_MS)
+	_refresh_frame_controls()
+
+func set_blink(on: bool) -> void:
+	blink = on
+	if _quick_blink != null:
+		_quick_blink.set_pressed_no_signal(on)
+	_blink_ref = false
+	_blink_time = 0.0
+	if _view != null:
+		_view.queue_redraw()
+
+## Length every frame's weapon is drawn at when steady_size is on (the middle
+## of the placed lengths; 0 with nothing placed).
+func steady_length() -> float:
+	var lengths: Array = []
+	for entry in track:
+		if entry.grip is Vector2 and entry.tip is Vector2:
+			lengths.append(Vector2(entry.grip).distance_to(entry.tip))
+	if lengths.is_empty():
+		return 0.0
+	lengths.sort()
+	return float(lengths[lengths.size() / 2])
+
+## Where the weapon's far end is drawn on `index` (the dot, or at the steady
+## length along it).
+func effective_tip(index: int) -> Variant:
+	if index < 0 or index >= track.size():
+		return null
+	var entry: Dictionary = track[index]
+	if not (entry.grip is Vector2 and entry.tip is Vector2) or not steady_size:
+		return entry.tip
+	var length := steady_length()
+	var along: Vector2 = Vector2(entry.tip) - Vector2(entry.grip)
+	if length <= 0.0 or along.length() < 0.001:
+		return entry.tip
+	return Vector2(entry.grip) + along.normalized() * length
+
+func _popup_quick(dialog: FileDialog) -> void:
+	var last := str(Imp.load_settings().get("last_dir", ""))
+	if not last.is_empty() and DirAccess.dir_exists_absolute(last):
+		dialog.current_dir = last
+	dialog.popup_centered_ratio(0.7)
 
 ## Rebuilds the front hand of `index` around its grip.
 func _auto_hand(index: int) -> void:
@@ -1015,8 +1434,11 @@ func _update_hand_texture(index: int) -> void:
 	var mask: Variant = hand_masks[index]
 	if mask == null:
 		hand_textures[index] = null
+		hand_pictures[index] = null
 		return
 	var picture := Imp.masked(cut[index], mask)
+	hand_pictures[index] = picture
+	_hand_uploads.erase(index)
 	if hand_textures[index] is ImageTexture and (hand_textures[index] as ImageTexture).get_size() == Vector2(picture.get_size()):
 		(hand_textures[index] as ImageTexture).update(picture)
 	else:
@@ -1031,7 +1453,25 @@ func paint_hand(index: int, point: Vector2, erase: bool = false) -> void:
 		hand_masks[index] = Image.create_empty(cut[index].get_width(), cut[index].get_height(), false, Image.FORMAT_L8)
 	Imp.paint_mask(hand_masks[index], point, brush, 0 if erase else 255)
 	hand_painted[index] = true
-	_update_hand_texture(index)
+	var picture: Variant = hand_pictures[index]
+	if picture is Image and hand_textures[index] is ImageTexture:
+		# Only the brush footprint changed: redo those pixels, and upload the
+		# texture once this frame however many mouse events arrive.
+		var r := int(ceil(brush)) + 1
+		Imp.remask_region(picture, cut[index], hand_masks[index], Rect2i(Vector2i(point) - Vector2i(r, r), Vector2i(r * 2 + 1, r * 2 + 1)))
+		if _hand_uploads.is_empty():
+			_flush_hand_uploads.call_deferred()
+		_hand_uploads[index] = true
+	else:
+		_update_hand_texture(index)
+		if _view != null:
+			_view.queue_redraw()
+
+func _flush_hand_uploads() -> void:
+	for index in _hand_uploads.keys():
+		if index < hand_textures.size() and hand_textures[index] is ImageTexture and hand_pictures[index] is Image:
+			(hand_textures[index] as ImageTexture).update(hand_pictures[index])
+	_hand_uploads.clear()
 	if _view != null:
 		_view.queue_redraw()
 
@@ -1359,7 +1799,15 @@ func _draw_align() -> void:
 	var shown := selected
 	if playing:
 		shown = preview_frame_at(play_time)
-	if not playing and onion and selected > 0:
+	# Blink: alternate the empty-hands frame and the frame with the weapon.
+	var ghost_phase := blink and _blink_ref and not playing and mode == "hero_weapon" and selected < ref_textures.size()
+	if ghost_phase:
+		_draw_reference(selected, pivot, s, Color.WHITE)
+		_view.draw_line(Vector2(0, pivot.y), Vector2(rect.size.x, pivot.y), Color(STRIP_LINE, 0.7), 1.0)
+		_view.draw_rect(Rect2(0, rect.size.y - 30, rect.size.x, 30), Color("101316"), true)
+		_view.draw_string(ThemeDB.fallback_font, Vector2(12, rect.size.y - 12), "frame %d / %d   blinking: the sheet WITH the weapon" % [selected + 1, cut.size()], HORIZONTAL_ALIGNMENT_LEFT, -1, 13, AMBER)
+		return
+	if not playing and onion and selected > 0 and not is_quick():
 		_draw_cut_frame(selected - 1, pivot, s, ONION)
 	if not playing and show_ref and mode == "hero_weapon":
 		_draw_reference(selected, pivot, s)
@@ -1367,6 +1815,10 @@ func _draw_align() -> void:
 		_draw_weapon(shown, pivot, s, true)
 	if shown >= 0:
 		_draw_cut_frame(shown, pivot, s, Color.WHITE)
+	if shown >= 0 and purpose == "hero" and shown < hand_track.size() and hand_track[shown] is Vector2:
+		var fist: Vector2 = pivot + (Vector2(hand_track[shown]) - Vector2(anchors[shown])) * s
+		_view.draw_arc(fist, 9.0, 0.0, TAU, 24, AMBER, 2.0, true)
+		_view.draw_circle(fist, 2.5, AMBER)
 	if shown >= 0 and mode == "hero_weapon":
 		_draw_weapon(shown, pivot, s, false)
 		_draw_hand(shown, pivot, s)
@@ -1382,6 +1834,8 @@ func _draw_align() -> void:
 		caption = "playing the combo  " + caption
 	elif tool == "erase":
 		caption += "   eraser: drag to erase stray bits"
+	elif tool == "weapon" and is_quick() and selected < track.size() and track[selected].grip is Vector2 and track[selected].tip is Vector2:
+		caption += "   green dot = fist, orange dot = far end of the gold weapon. Drag a dot, or drag the line to move the whole weapon."
 	elif tool == "weapon":
 		caption += "   place weapon: click the %s" % ("hand gripping it" if weapon_step == "grip" else "far end of the weapon")
 	elif tool == "reference":
@@ -1397,13 +1851,13 @@ func _draw_align() -> void:
 func _frame_origin(index: int, pivot: Vector2, s: float) -> Vector2:
 	return pivot - Vector2(anchors[index]) * s
 
-func _draw_reference(index: int, pivot: Vector2, s: float) -> void:
+func _draw_reference(index: int, pivot: Vector2, s: float, tint: Color = Color(1.0, 0.85, 0.55, 0.45)) -> void:
 	if index < 0 or index >= ref_textures.size():
 		return
 	var texture: Texture2D = ref_textures[index]
 	var scale := s * ref_scale
 	var origin := pivot + Vector2(ref_offsets[index]) * s - Vector2(ref_anchors[index]) * scale
-	_view.draw_texture_rect(texture, Rect2(origin, Vector2(texture.get_size()) * scale), false, Color(1.0, 0.85, 0.55, 0.45))
+	_view.draw_texture_rect(texture, Rect2(origin, Vector2(texture.get_size()) * scale), false, tint)
 
 ## The lab's weapon (or a stand-in bar) in the hands of frame `index`.
 func _draw_weapon(index: int, pivot: Vector2, s: float, behind_pass: bool) -> void:
@@ -1414,7 +1868,7 @@ func _draw_weapon(index: int, pivot: Vector2, s: float, behind_pass: bool) -> vo
 		return
 	var origin := _frame_origin(index, pivot, s)
 	var grip: Vector2 = entry.grip
-	var tip: Vector2 = entry.tip
+	var tip: Vector2 = effective_tip(index)
 	var texture: Texture2D = preview_weapon.get("texture")
 	if texture == null:
 		_view.draw_line(origin + grip * s, origin + tip * s, Color("c9d3dc"), maxf(3.0, 6.0 * s))
@@ -1569,6 +2023,11 @@ func _align_input(event: InputEvent) -> void:
 	if playing:
 		return
 	var frame_origin := pivot - Vector2(anchors[selected]) * s
+	if tool == "fist":
+		if event is InputEventMouseButton and (event as InputEventMouseButton).pressed and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
+			var click := event as InputEventMouseButton
+			mark_fist(selected, (click.position - frame_origin) / s, click.shift_pressed)
+		return
 	if tool == "weapon" or tool == "reference":
 		_weapon_input(event, frame_origin, s)
 		return
@@ -1611,15 +2070,30 @@ func _weapon_input(event: InputEvent, frame_origin: Vector2, s: float) -> void:
 		var button := event as InputEventMouseButton
 		if not button.pressed:
 			if tool == "weapon" and not _drag.is_empty() and not bool(_drag.moved) and str(_drag.get("handle", "")) == "":
-				weapon_click((button.position - frame_origin) / s)
+				if is_quick():
+					move_nearest_dot(selected, (button.position - frame_origin) / s)
+				else:
+					weapon_click((button.position - frame_origin) / s)
+			var dragged_handle: bool = not _drag.is_empty() and str(_drag.get("handle", "")) != "" and bool(_drag.get("moved", false))
 			_drag = {}
+			if dragged_handle:
+				# The automatic hand follows the grip once, on release.
+				_after_track_changed()
 			return
 		_drag = {"start": button.position, "last": button.position, "moved": false, "handle": ""}
 		if tool == "weapon" and selected < track.size():
 			for key in ["grip", "tip"]:
 				var point: Variant = track[selected][key]
-				if point is Vector2 and button.position.distance_to(frame_origin + Vector2(point) * s) < 9.0:
+				if point is Vector2 and button.position.distance_to(frame_origin + Vector2(point) * s) < (14.0 if is_quick() else 9.0):
 					_drag["handle"] = key
+			# Quick check: grabbing the line between the dots moves the whole weapon.
+			var entry: Dictionary = track[selected]
+			if str(_drag.handle) == "" and is_quick() and entry.grip is Vector2 and entry.tip is Vector2:
+				var a: Vector2 = frame_origin + Vector2(entry.grip) * s
+				var b: Vector2 = frame_origin + Vector2(entry.tip) * s
+				var closest := Geometry2D.get_closest_point_to_segment(button.position, a, b)
+				if closest.distance_to(button.position) < 9.0:
+					_drag["handle"] = "both"
 	elif event is InputEventMouseMotion and not _drag.is_empty():
 		var motion := event as InputEventMouseMotion
 		if motion.position.distance_to(_drag.start) > 3.0:
@@ -1628,9 +2102,13 @@ func _weapon_input(event: InputEvent, frame_origin: Vector2, s: float) -> void:
 		_drag["last"] = motion.position
 		if tool == "reference" and bool(_drag.moved):
 			nudge_reference(selected, delta, motion.shift_pressed)
+		elif tool == "weapon" and str(_drag.handle) == "both":
+			move_weapon(selected, delta, false)
 		elif tool == "weapon" and str(_drag.handle) != "":
 			track[selected][str(_drag.handle)] = Vector2(track[selected][str(_drag.handle)]) + delta
-			_after_track_changed()
+			# Just move the dot while dragging; rebuilding the hand is heavy.
+			if _view != null:
+				_view.queue_redraw()
 
 # ---------- UI ----------
 
@@ -1719,6 +2197,7 @@ func _build() -> void:
 	side.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	side.add_theme_constant_override("separation", 10)
 	side_scroll.add_child(side)
+	side.add_child(_build_quick_section())
 	side.add_child(_build_source_section())
 	side.add_child(_build_slice_section())
 	side.add_child(_build_cut_section())
@@ -1734,6 +2213,215 @@ func _build() -> void:
 	_video_dialog.file_selected.connect(func(path: String) -> void: open_video(path))
 	_ref_dialog = _file_dialog(FileDialog.FILE_MODE_OPEN_FILE, "Open the same animation with the weapon drawn in", PackedStringArray(["*.png, *.jpg, *.jpeg, *.webp ; Images"]))
 	_ref_dialog.file_selected.connect(func(path: String) -> void: open_reference(path))
+	_quick_body_dialog = _file_dialog(FileDialog.FILE_MODE_OPEN_FILE, "1  The poses with EMPTY hands (no weapon)", PackedStringArray(["*.png, *.jpg, *.jpeg, *.webp ; Images"]))
+	_quick_body_dialog.file_selected.connect(func(path: String) -> void: set_quick_sheet("body", path))
+	_quick_weapon_dialog = _file_dialog(FileDialog.FILE_MODE_OPEN_FILE, "2  The same poses WITH the weapon", PackedStringArray(["*.png, *.jpg, *.jpeg, *.webp ; Images"]))
+	_quick_weapon_dialog.file_selected.connect(func(path: String) -> void: set_quick_sheet("weapon", path))
+
+func _build_quick_section() -> Control:
+	var section := _section("QUICK SETUP: TWO SHEETS", "quick")
+	var body: VBoxContainer = section.get_meta("body")
+	_quick_intro = _note("")
+	body.add_child(_quick_intro)
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 8)
+	body.add_child(grid)
+	var body_button := _button("1  Empty-hands sheet...")
+	body_button.name = "QuickBodySheet"
+	body_button.tooltip_text = "The poses with closed, empty fists: no weapon anywhere."
+	body_button.pressed.connect(func() -> void: _popup_quick(_quick_body_dialog))
+	grid.add_child(body_button)
+	_quick_body_label = _file_label()
+	grid.add_child(_quick_body_label)
+	var weapon_button := _button("2  Same poses with the weapon...")
+	weapon_button.name = "QuickWeaponSheet"
+	weapon_button.tooltip_text = "The original sheet the empty-hands one was edited from: same poses, same order, weapon in the hands."
+	weapon_button.pressed.connect(func() -> void: _popup_quick(_quick_weapon_dialog))
+	grid.add_child(weapon_button)
+	_quick_weapon_label = _file_label()
+	grid.add_child(_quick_weapon_label)
+	_quick_run_button = _button("3  Line up & place the weapon")
+	_quick_run_button.name = "QuickRun"
+	_amber(_quick_run_button)
+	_quick_run_button.tooltip_text = "Cuts both sheets out, lines each pair of frames up by the feet and body, finds the weapon and puts it in the fists on every frame, then guesses the hit frame and timing."
+	_quick_run_button.pressed.connect(func() -> void: quick_run())
+	body.add_child(_quick_run_button)
+	# 4: check each frame.
+	_quick_check = VBoxContainer.new()
+	_quick_check.add_theme_constant_override("separation", 6)
+	body.add_child(_quick_check)
+	_quick_check.add_child(_small_heading("4  CHECK EACH FRAME"))
+	_quick_frame_label = Label.new()
+	_quick_frame_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_quick_frame_label.custom_minimum_size = Vector2(340, 0)
+	_quick_frame_label.add_theme_font_size_override("font_size", 13)
+	_quick_check.add_child(_quick_frame_label)
+	_quick_check.add_child(_note("Gold = the sheet with the weapon. The green dot belongs in the fist, the orange dot on the far end of the gold weapon. Drag a dot (or click near it) to move it; drag the line between them to move the whole weapon."))
+	var nav := HBoxContainer.new()
+	_quick_check.add_child(nav)
+	var previous := _button("< Previous")
+	previous.tooltip_text = "Previous frame (Q)"
+	previous.pressed.connect(func() -> void: select_frame(selected - 1))
+	nav.add_child(previous)
+	var looks := _button("Looks right >")
+	looks.name = "QuickLooksRight"
+	_amber(looks)
+	looks.tooltip_text = "This frame is fine: mark it and go to the next one (Enter)."
+	looks.pressed.connect(approve_frame)
+	nav.add_child(looks)
+	var fixes := HBoxContainer.new()
+	_quick_check.add_child(fixes)
+	var swap := _button("Swap ends")
+	swap.tooltip_text = "The weapon came out back to front: swap the green and orange dots."
+	swap.pressed.connect(func() -> void: swap_ends(selected))
+	fixes.add_child(swap)
+	var same := _button("Same as previous")
+	same.tooltip_text = "Copy the previous frame's weapon (kept the same distance from the feet)."
+	same.pressed.connect(func() -> void: copy_previous_track(selected))
+	fixes.add_child(same)
+	var again := _button("Find again")
+	again.tooltip_text = "Run the automatic placement on this frame again."
+	again.pressed.connect(func() -> void: auto_place([selected]))
+	fixes.add_child(again)
+	var toggles := HBoxContainer.new()
+	_quick_check.add_child(toggles)
+	_quick_behind = CheckBox.new()
+	_quick_behind.text = "Behind the body"
+	_quick_behind.tooltip_text = "Draw the weapon behind the hero on this frame (raised behind the head, for example)."
+	_quick_behind.toggled.connect(func(on: bool) -> void:
+		if not _loading:
+			set_behind(selected, on))
+	toggles.add_child(_quick_behind)
+	_quick_blink = CheckBox.new()
+	_quick_blink.text = "Blink the two sheets"
+	_quick_blink.tooltip_text = "Flip between the empty-hands frame and the frame with the weapon to see how well they line up."
+	_quick_blink.toggled.connect(func(on: bool) -> void:
+		if not _loading:
+			set_blink(on))
+	toggles.add_child(_quick_blink)
+	var hit_row := HBoxContainer.new()
+	_quick_check.add_child(hit_row)
+	_quick_hit_label = Label.new()
+	_quick_hit_label.add_theme_font_size_override("font_size", 13)
+	_quick_hit_label.add_theme_color_override("font_color", MUTED)
+	hit_row.add_child(_quick_hit_label)
+	_quick_hit_button = _button("Make this the hit frame")
+	_quick_hit_button.tooltip_text = "The frame where the weapon connects: damage lands as it shows."
+	_quick_hit_button.pressed.connect(func() -> void: make_hit(selected))
+	hit_row.add_child(_quick_hit_button)
+	var smooth := HBoxContainer.new()
+	_quick_check.add_child(smooth)
+	_quick_steady = CheckBox.new()
+	_quick_steady.text = "Same weapon size every frame"
+	_quick_steady.tooltip_text = "ChatGPT draws the weapon a little bigger or smaller from pose to pose. On: every frame uses the middle size, so the weapon doesn't pulse."
+	_quick_steady.toggled.connect(func(on: bool) -> void:
+		if not _loading:
+			set_steady_size(on))
+	smooth.add_child(_quick_steady)
+	_quick_snappy = CheckBox.new()
+	_quick_snappy.text = "Snappy timing"
+	_quick_snappy.tooltip_text = "Holds the wind-up and the hit a little longer and rushes the swing between them, so the attack feels heavier. Off: every frame the same length."
+	_quick_snappy.toggled.connect(func(on: bool) -> void:
+		if not _loading:
+			set_snappy(on))
+	smooth.add_child(_quick_snappy)
+	_quick_play = _button("Play (Space)")
+	_quick_play.toggle_mode = true
+	_quick_play.toggled.connect(func(on: bool) -> void:
+		if not _loading:
+			set_playing(on))
+	_quick_check.add_child(_quick_play)
+	# 5: save.
+	_quick_save = VBoxContainer.new()
+	_quick_save.add_theme_constant_override("separation", 6)
+	body.add_child(_quick_save)
+	_quick_save.add_child(_small_heading("5  SAVE"))
+	_quick_save_default = _button("Save as the type default")
+	_quick_save_default.name = "QuickSaveDefault"
+	_amber(_quick_save_default)
+	_quick_save_default.pressed.connect(func() -> void: save_clip("type"))
+	_quick_save.add_child(_quick_save_default)
+	_quick_save_weapon = _button("Save for this weapon only")
+	_quick_save_weapon.pressed.connect(func() -> void: save_clip("weapon"))
+	_quick_save.add_child(_quick_save_weapon)
+	_quick_more = _button("More options: slicing, cut-out, timing, hand brush")
+	_quick_more.name = "QuickMore"
+	_quick_more.toggle_mode = true
+	_quick_more.flat = true
+	_quick_more.add_theme_color_override("font_color", MUTED)
+	_quick_more.toggled.connect(func(on: bool) -> void:
+		if not _loading:
+			set_advanced(on))
+	body.add_child(_quick_more)
+	return section
+
+func _file_label() -> Label:
+	var label := Label.new()
+	label.text = "not picked"
+	label.clip_text = true
+	label.custom_minimum_size = Vector2(120, 0)
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	label.add_theme_font_size_override("font_size", 12)
+	label.add_theme_color_override("font_color", MUTED)
+	return label
+
+func _small_heading(text: String) -> Label:
+	var label := Label.new()
+	label.text = text
+	label.add_theme_font_size_override("font_size", 13)
+	label.add_theme_color_override("font_color", AMBER)
+	return label
+
+## Quick panel state (part of _refresh).
+func _refresh_quick() -> void:
+	if _quick_run_button == null:
+		return
+	var what := ("the %s" % clip_animation) if is_pose() else "the attack"
+	_quick_intro.text = "Make %s in ChatGPT twice: once holding the weapon, then the same sheet edited so the fists are empty. Pick both and press 3: the tool cuts them out, lines them up and puts the weapon in the hands on every frame. (One sheet with the weapon drawn in? Use More options.)" % what
+	for pair in [[_quick_body_label, quick_body_path], [_quick_weapon_label, quick_weapon_path]]:
+		var label: Label = pair[0]
+		var path: String = pair[1]
+		label.text = path.get_file() if not path.is_empty() else ("from the saved project" if not cut.is_empty() else "not picked")
+		label.add_theme_color_override("font_color", GOOD if not path.is_empty() else MUTED)
+	_quick_run_button.disabled = quick_busy or busy or quick_body_path.is_empty() or quick_weapon_path.is_empty()
+	_quick_run_button.text = "Working..." if quick_busy else ("3  Line up & place the weapon" if placed_count() == 0 else "3  Start over with these sheets")
+	var placing := mode == "hero_weapon" and not cut.is_empty() and placed_count() > 0
+	_quick_check.visible = placing and not quick_busy and not advanced
+	_quick_save.visible = placing and not quick_busy and not advanced
+	_quick_steady.button_pressed = steady_size
+	_quick_snappy.button_pressed = snappy
+	_quick_snappy.visible = not is_pose()
+	_quick_blink.button_pressed = blink
+	_quick_play.set_pressed_no_signal(playing)
+	_quick_more.button_pressed = advanced
+	_quick_more.text = ("Fewer options (back to the quick setup)" if advanced else "More options: slicing, cut-out, timing, hand brush")
+	_quick_save_default.visible = not type_label.is_empty()
+	_quick_save_default.text = ("Save as the %s %s (all %s weapons)" % [type_label, clip_animation, type_label.to_lower()]) if is_pose() else ("Save as the %s default (all %s weapons)" % [type_label, type_label.to_lower()])
+	_quick_save_weapon.visible = not editing_default
+	_quick_save_weapon.text = "Save for this weapon only" if not is_pose() else "Save as this weapon's %s" % clip_animation
+	_refresh_quick_frame()
+
+func _refresh_quick_frame() -> void:
+	if _quick_frame_label == null or cut.is_empty() or selected >= track.size():
+		return
+	var entry: Dictionary = track[selected]
+	var state := "the tool isn't sure about this one: check it closely." if auto_unsure.has(selected) else "looks placed."
+	if selected < checked.size() and bool(checked[selected]):
+		state = "okayed."
+	elif not (entry.grip is Vector2 and entry.tip is Vector2):
+		state = "no weapon yet: click the fist, then the far end of the gold weapon."
+	_quick_frame_label.text = "Frame %d of %d: %s   (%d of %d okayed)" % [selected + 1, cut.size(), state, checked_count(), cut.size()]
+	_quick_frame_label.add_theme_color_override("font_color", BAD if auto_unsure.has(selected) else INK)
+	_quick_behind.set_pressed_no_signal(bool(entry.behind))
+	var hit := -1
+	for attack in current_attacks():
+		hit = int(attack.hit)
+		break
+	_quick_hit_label.text = "Hit frame: %d" % (hit + 1) if hit >= 0 else "Hit frame: none"
+	_quick_hit_label.visible = not is_pose()
+	_quick_hit_button.visible = not is_pose()
+	_quick_hit_button.disabled = hit == selected
 
 func _build_source_section() -> Control:
 	var section := _section("1  SOURCE", "source")
@@ -2134,7 +2822,7 @@ func _build_save_section() -> Control:
 	body.add_child(hero_box)
 	body.move_child(hero_box, 1)
 	_hero_picker = OptionButton.new()
-	for pair in [["idle", "Idle (standing)"], ["walk", "Walk"], ["attack", "Attack (the normal attack, for weapons without their own)"]]:
+	for pair in HERO_STATE_CHOICES:
 		_hero_picker.add_item(str(pair[1]))
 		_hero_picker.set_item_metadata(_hero_picker.item_count - 1, pair[0])
 	_hero_picker.item_selected.connect(func(index: int) -> void:
@@ -2150,6 +2838,21 @@ func _build_save_section() -> Control:
 			still_only = on
 			_refresh())
 	hero_box.add_child(_still_check)
+	var fist_row := HBoxContainer.new()
+	hero_box.add_child(fist_row)
+	var fist_button := _button("Mark the front fist")
+	fist_button.name = "MarkFist"
+	fist_button.tooltip_text = "Then click the front fist in the view. The first click finds it on every frame; later clicks fix just that frame (Shift+click finds it on every frame again from there). Held weapons follow it in the game."
+	fist_button.pressed.connect(func() -> void:
+		tool = "fist"
+		step = "align"
+		_set_status("Click the front fist (the hand that holds the weapon) in the view.", AMBER)
+		_refresh())
+	fist_row.add_child(fist_button)
+	_fist_status = Label.new()
+	_fist_status.add_theme_font_size_override("font_size", 12)
+	_fist_status.add_theme_color_override("font_color", MUTED)
+	fist_row.add_child(_fist_status)
 	hero_box.add_child(_note("Replaces the hero's art everywhere in the game. The old files are backed up in art/side-view/backups/. Hero height (frame 1) sets the size, and the feet line up with the old art. Keep the hands empty: weapons are drawn into them."))
 	return section
 
@@ -2166,15 +2869,19 @@ func _refresh() -> void:
 	_sections["timing"].visible = has_cut
 	_sections["weapon"].visible = aligning and purpose != "hero"
 	var hero := purpose == "hero"
-	_start_check.visible = not hero
-	_hit_check.visible = not hero
-	_attacks_label.visible = not hero
+	var looping := hero or is_pose()
+	if _title != null:
+		_title.text = "HERO ANIMATION IMPORTER" if hero else ("WEAPON %s IMPORTER" % clip_animation.to_upper() if is_pose() else "CLIP IMPORTER")
+	_start_check.visible = not looping
+	_hit_check.visible = not looping
+	_attacks_label.visible = not looping
 	_hero_box.visible = hero
 	_mode_picker.visible = not hero
 	for index in range(_hero_picker.item_count):
 		if str(_hero_picker.get_item_metadata(index)) == hero_target:
 			_hero_picker.select(index)
 	_still_check.button_pressed = still_only
+	_fist_status.text = ("fist on %d/%d frames" % [fist_count(), cut.size()]) if not cut.is_empty() else ""
 	_weapon_free_check.button_pressed = mode == "hero_weapon"
 	_weapon_controls.visible = mode == "hero_weapon"
 	_front_hand_check.button_pressed = front_hand
@@ -2200,6 +2907,8 @@ func _refresh() -> void:
 	_save_default_button.disabled = busy or not has_cut
 	_save_default_button.visible = not type_label.is_empty()
 	_save_default_button.text = "Save as the %s default (all %s weapons)" % [type_label, type_label.to_lower()]
+	if is_pose():
+		_save_default_button.text = "Save as the %s %s (all %s weapons)" % [type_label, clip_animation, type_label.to_lower()]
 	if editing_default:
 		_save_button.visible = false
 	else:
@@ -2209,7 +2918,7 @@ func _refresh() -> void:
 		_save_button.text = ("Save the selected frame as the hero's %s" % hero_target) if still_only else "Save as the hero's %s" % hero_target
 		_amber(_save_button)
 	else:
-		_save_button.text = "Save for this weapon only"
+		_save_button.text = "Save for this weapon only" if not is_pose() else "Save as this weapon's %s" % clip_animation
 		for style in ["normal", "hover"]:
 			_save_button.remove_theme_stylebox_override(style)
 		for color in ["font_color", "font_hover_color"]:
@@ -2220,6 +2929,11 @@ func _refresh() -> void:
 	_mode_picker.select(maxi(0, WeaponClip.MODES.find(mode)))
 	_height_spin.value = body_height
 	_scale_spin.value = clip_scale
+	_sections["quick"].visible = purpose == "weapon"
+	if is_quick():
+		for key in ["source", "slice", "cut", "align", "weapon", "timing", "save"]:
+			_sections[key].visible = false
+	_refresh_quick()
 	_loading = false
 	_rebuild_strip()
 	_refresh_frame_controls()
@@ -2244,6 +2958,7 @@ func _refresh_frame_controls() -> void:
 			var entry: Dictionary = track[selected]
 			var here := "placed" if entry.grip is Vector2 and entry.tip is Vector2 else ("click the far end" if entry.grip is Vector2 else "click the hand")
 			_weapon_status.text = "Frame %d: %s.   Weapon placed on %d of %d frames." % [selected + 1, here, placed_count(), track.size()]
+	_refresh_quick_frame()
 	_loading = false
 	_refresh_attacks()
 	_refresh_strip_labels()
@@ -2300,8 +3015,19 @@ func _refresh_strip_labels() -> void:
 					tags += " A%d" % (number + 1)
 				if int(attacks[number].hit) == index:
 					tags += " HIT"
+		var looked := index < checked.size() and bool(checked[index])
+		if is_quick() and mode == "hero_weapon" and index < track.size():
+			if looked:
+				tags += " ok"
+			elif auto_unsure.has(index) or not (track[index].grip is Vector2 and track[index].tip is Vector2):
+				tags += " ?"
 		button.text = tags
-		button.add_theme_color_override("font_color", AMBER if index == selected else INK)
+		var color := INK
+		if is_quick() and looked:
+			color = GOOD
+		elif is_quick() and auto_unsure.has(index):
+			color = BAD
+		button.add_theme_color_override("font_color", AMBER if index == selected else color)
 
 func _method_id() -> String:
 	return str(METHODS[maxi(0, _method.selected)].id) if _method != null else "solid"

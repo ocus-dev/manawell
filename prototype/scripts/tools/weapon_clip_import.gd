@@ -613,6 +613,88 @@ static func body_center_x(image: Image) -> float:
 				weight += alpha
 	return round(total / weight) if weight > 0.0 else bounds.get_center().x
 
+## Follows a small patch (the front fist) from frame `from` to every other
+## frame: each frame searches near the point found in its neighbour for the
+## best match (sum of squared differences on alpha-weighted brightness, at
+## half resolution). Returns one Vector2 per frame (frame pixels).
+static func track_patch(frames: Array, from: int, point: Vector2, radius: int = 18, reach: int = 40) -> Array:
+	var small: Array = []
+	for image in frames:
+		var copy := (image as Image).duplicate() as Image
+		copy.convert(Image.FORMAT_RGBA8)
+		copy.resize(maxi(1, copy.get_width() / 2), maxi(1, copy.get_height() / 2), Image.INTERPOLATE_BILINEAR)
+		small.append(_luma(copy))
+	var full: Array = []
+	for image in frames:
+		var rgba := (image as Image).duplicate() as Image
+		rgba.convert(Image.FORMAT_RGBA8)
+		full.append(_luma(rgba))
+	var r := maxi(2, radius / 2)
+	var reach_small := maxi(2, reach / 2)
+	var result: Array = []
+	result.resize(frames.size())
+	result[from] = point
+	var template := _patch(small[from], point * 0.5, r)
+	var template_full := _patch(full[from], point, radius)
+	for direction in [1, -1]:
+		var last: Vector2 = point
+		var index: int = from + int(direction)
+		while index >= 0 and index < frames.size():
+			# Coarse search at half size, then a fine one around it at full size.
+			var coarse := _best_match(small[index], template, last * 0.5, r, reach_small, 0.05)
+			last = _best_match(full[index], template_full, coarse * 2.0, radius, 2, 0.0)
+			result[index] = last
+			index += int(direction)
+	return result
+
+static func _luma(image: Image) -> Dictionary:
+	var width := image.get_width()
+	var height := image.get_height()
+	var data := image.get_data()
+	var values := PackedFloat32Array()
+	values.resize(width * height)
+	for i in range(width * height):
+		var alpha := data[i * 4 + 3] / 255.0
+		values[i] = (0.3 * data[i * 4] + 0.59 * data[i * 4 + 1] + 0.11 * data[i * 4 + 2]) * alpha + (1.0 - alpha) * 400.0
+	return {"w": width, "h": height, "v": values}
+
+static func _patch(luma: Dictionary, center: Vector2, r: int) -> PackedFloat32Array:
+	var out := PackedFloat32Array()
+	var cx := int(round(center.x))
+	var cy := int(round(center.y))
+	for y in range(cy - r, cy + r + 1):
+		for x in range(cx - r, cx + r + 1):
+			out.append(_luma_at(luma, x, y))
+	return out
+
+static func _luma_at(luma: Dictionary, x: int, y: int) -> float:
+	if x < 0 or y < 0 or x >= int(luma.w) or y >= int(luma.h):
+		return 400.0
+	return (luma.v as PackedFloat32Array)[y * int(luma.w) + x]
+
+static func _best_match(luma: Dictionary, template: PackedFloat32Array, near: Vector2, r: int, reach: int, stay_weight: float = 0.05) -> Vector2:
+	var best := INF
+	var best_point := near
+	var cx := int(round(near.x))
+	var cy := int(round(near.y))
+	for dy in range(-reach, reach + 1, 1):
+		for dx in range(-reach, reach + 1, 1):
+			var total := 0.0
+			var k := 0
+			for y in range(cy + dy - r, cy + dy + r + 1, 2):
+				for x in range(cx + dx - r, cx + dx + r + 1, 2):
+					var diff := _luma_at(luma, x, y) - template[(y - (cy + dy - r)) * (2 * r + 1) + (x - (cx + dx - r))]
+					total += diff * diff
+					k += 1
+				if total >= best:
+					break
+			# Prefer staying put when two spots match equally well.
+			total += (dx * dx + dy * dy) * stay_weight
+			if total < best:
+				best = total
+				best_point = Vector2(cx + dx, cy + dy)
+	return best_point
+
 ## Height of the figure (used to scale a hero clip to the in-game hero).
 static func figure_height(image: Image) -> float:
 	return float(Art.visible_bounds(image).size.y)
@@ -763,8 +845,369 @@ static func align_reference(body: Image, body_anchor: Vector2, ref: Image, ref_a
 	return best
 
 ## Finds the weapon in the reference frame and where the body frame holds it.
-## Everything is in body-frame pixels. Returns {ok, grip, tip, behind, error}.
+## Everything is in body-frame pixels. Returns {ok, grip, tip, behind, how,
+## error}. Tries the ray finder first (handles weapons drawn across the body),
+## then the older contact finder.
 static func find_weapon(body: Image, body_anchor: Vector2, ref: Image, ref_anchor: Vector2, ref_scale: float, offset: Vector2, palette: PackedByteArray, debug: bool = false) -> Dictionary:
+	var found := find_weapon_ray(body, body_anchor, ref, ref_anchor, ref_scale, offset, debug)
+	if bool(found.get("ok", false)):
+		return found
+	var classic := find_weapon_classic(body, body_anchor, ref, ref_anchor, ref_scale, offset, palette, debug)
+	classic["how"] = "classic"
+	return classic
+
+## The ghost resampled into body-frame space on a canvas that holds both.
+## Returns {body: Image, ref: Image, origin: Vector2 (body px of canvas 0,0)}.
+static func _shared_canvas(body: Image, body_anchor: Vector2, ref: Image, ref_anchor: Vector2, ref_scale: float, offset: Vector2) -> Dictionary:
+	var ref_size := Vector2(ref.get_size()) * ref_scale
+	var ref_pos := body_anchor + offset - ref_anchor * ref_scale
+	var area := Rect2(Vector2.ZERO, Vector2(body.get_size())).merge(Rect2(ref_pos, ref_size)).grow(4.0)
+	var origin := area.position.floor()
+	var size := Vector2i((area.end - origin).ceil())
+	var body_canvas := Image.create_empty(size.x, size.y, false, Image.FORMAT_RGBA8)
+	var rgba := body
+	if body.get_format() != Image.FORMAT_RGBA8:
+		rgba = body.duplicate() as Image
+		rgba.convert(Image.FORMAT_RGBA8)
+	body_canvas.blit_rect(rgba, Rect2i(Vector2i.ZERO, body.get_size()), Vector2i((-origin).round()))
+	var scaled := ref.duplicate() as Image
+	scaled.convert(Image.FORMAT_RGBA8)
+	var scaled_size := Vector2i(maxi(1, int(round(ref_size.x))), maxi(1, int(round(ref_size.y))))
+	if scaled_size != scaled.get_size():
+		scaled.resize(scaled_size.x, scaled_size.y, Image.INTERPOLATE_NEAREST)
+	var ref_canvas := Image.create_empty(size.x, size.y, false, Image.FORMAT_RGBA8)
+	ref_canvas.blit_rect(scaled, Rect2i(Vector2i.ZERO, scaled_size), Vector2i((ref_pos - origin).round()))
+	return {"body": body_canvas, "ref": ref_canvas, "origin": origin}
+
+## Pixels of the ghost that are the weapon: outside the hero, or a colour the
+## hero doesn't have anywhere near that spot (so a blade drawn across the legs
+## counts, but a hand a pixel or two off doesn't). Thin slivers along the
+## outline (the two drawings never match exactly) are dropped.
+static func weapon_pixels(body_data: PackedByteArray, ref_data: PackedByteArray, width: int, height: int, body_distance: PackedInt32Array, erode: int = 2, threshold: float = 70.0) -> PackedByteArray:
+	var raw := PackedByteArray()
+	raw.resize(width * height)
+	var limit := int(threshold * threshold)
+	for y in range(height):
+		for x in range(width):
+			var pixel := y * width + x
+			var o := pixel * 4
+			if ref_data[o + 3] < 128:
+				continue
+			if body_distance[pixel] > 3:
+				raw[pixel] = 1
+				continue
+			var r := int(ref_data[o])
+			var g := int(ref_data[o + 1])
+			var b := int(ref_data[o + 2])
+			var matched := false
+			for dy in [0, -1, 1, -2, 2]:
+				var ny: int = y + dy
+				if ny < 0 or ny >= height:
+					continue
+				for dx in [0, -1, 1, -2, 2]:
+					var nx: int = x + dx
+					if nx < 0 or nx >= width:
+						continue
+					var q: int = (ny * width + nx) * 4
+					if body_data[q + 3] < 128:
+						continue
+					var dr: int = r - int(body_data[q])
+					var dg: int = g - int(body_data[q + 1])
+					var db: int = b - int(body_data[q + 2])
+					if dr * dr + dg * dg + db * db <= limit:
+						matched = true
+						break
+				if matched:
+					break
+			if not matched:
+				raw[pixel] = 1
+	if erode <= 0:
+		return raw
+	# Open the mask: erode by `erode` (4-connected), then grow back inside raw.
+	var outside := PackedByteArray()
+	outside.resize(width * height)
+	for pixel in range(width * height):
+		outside[pixel] = 1 - raw[pixel]
+	var inward := _distance_field(outside, width, height, erode + 2)
+	var core := PackedByteArray()
+	core.resize(width * height)
+	for pixel in range(width * height):
+		if raw[pixel] == 1 and inward[pixel] > erode:
+			core[pixel] = 1
+	var grown := _distance_field(core, width, height, erode + 2)
+	var result := PackedByteArray()
+	result.resize(width * height)
+	for pixel in range(width * height):
+		if raw[pixel] == 1 and grown[pixel] <= erode:
+			result[pixel] = 1
+	return result
+
+## Ray finder: the far end is the weapon pixel farthest from the hero; from
+## there a ray runs back along the weapon. Where the weapon disappears behind
+## the hands (a gap of hero pixels between two stretches of weapon) is the
+## grip; otherwise the grip is just inside the hero where the weapon touches
+## it. Returns {ok, grip, tip, behind, how ("gap" / "contact"), error}.
+static func find_weapon_ray(body: Image, body_anchor: Vector2, ref: Image, ref_anchor: Vector2, ref_scale: float, offset: Vector2, debug: bool = false) -> Dictionary:
+	var shared := _shared_canvas(body, body_anchor, ref, ref_anchor, ref_scale, offset)
+	var body_canvas: Image = shared.body
+	var origin: Vector2 = shared.origin
+	var width := body_canvas.get_width()
+	var height := body_canvas.get_height()
+	var body_data := body_canvas.get_data()
+	var ref_data := (shared.ref as Image).get_data()
+	var body_mask := PackedByteArray()
+	body_mask.resize(width * height)
+	for pixel in range(width * height):
+		if body_data[pixel * 4 + 3] >= 128:
+			body_mask[pixel] = 1
+	var figure := float(Art.visible_bounds(body).size.y)
+	if figure < 8.0:
+		return {"ok": false, "error": "empty frame"}
+	var fist := maxf(8.0, figure * 0.07)
+	var body_distance := _distance_field(body_mask, width, height, int(figure * 2.0))
+	var erode := clampi(int(round(figure * 0.008)), 1, 2)
+	var weapon := weapon_pixels(body_data, ref_data, width, height, body_distance, erode)
+	var pieces := _components(weapon, width, height, true)
+	if pieces.is_empty():
+		return {"ok": false, "error": "no weapon found"}
+	var largest := 0
+	for piece in pieces:
+		largest = maxi(largest, int(piece.size))
+	if largest < 40:
+		return {"ok": false, "error": "weapon too small to find"}
+	var keep_size := maxi(30, int(largest * 0.08))
+	var mask := PackedByteArray()
+	mask.resize(width * height)
+	var pixels := PackedInt32Array()
+	for piece in pieces:
+		if int(piece.size) >= keep_size:
+			for pixel in piece.pixels:
+				mask[pixel] = 1
+			pixels.append_array(piece.pixels)
+	# Far end: the weapon pixel farthest from the hero.
+	var tip := Vector2.ZERO
+	var farthest := -1
+	for pixel in pixels:
+		if body_distance[pixel] > farthest:
+			farthest = body_distance[pixel]
+			tip = Vector2(pixel % width, pixel / width)
+	# Direction back along the weapon: the ray from the tip through the most
+	# weapon pixels (a sample of them), refined by their principal axis.
+	var band := maxf(3.0, figure * 0.035)
+	var samples: Array = []
+	var stride := maxi(1, pixels.size() / 1500)
+	for index in range(0, pixels.size(), stride):
+		samples.append(Vector2(pixels[index] % width, pixels[index] / width) - tip)
+	var best_count := -1
+	var direction := Vector2.LEFT
+	for step_angle in range(0, 360, 3):
+		var d := Vector2.from_angle(deg_to_rad(step_angle))
+		var normal := Vector2(-d.y, d.x)
+		var count := 0
+		for point in samples:
+			var p: Vector2 = point
+			if p.dot(d) > 0.0 and absf(p.dot(normal)) < band:
+				count += 1
+		if count > best_count:
+			best_count = count
+			direction = d
+	var in_band: Array = []
+	var normal0 := Vector2(-direction.y, direction.x)
+	for point in samples:
+		var p: Vector2 = point
+		if p.dot(direction) > 0.0 and absf(p.dot(normal0)) < band:
+			in_band.append(p)
+	if in_band.size() >= 10:
+		var center := Vector2.ZERO
+		for p in in_band:
+			center += p
+		center /= float(in_band.size())
+		var xx := 0.0
+		var xy := 0.0
+		var yy := 0.0
+		for p in in_band:
+			var q: Vector2 = p - center
+			xx += q.x * q.x
+			xy += q.x * q.y
+			yy += q.y * q.y
+		var axis := Vector2.from_angle(0.5 * atan2(2.0 * xy, xx - yy))
+		direction = axis if axis.dot(direction) > 0.0 else -axis
+	var side := Vector2(-direction.y, direction.x)
+	# Walk the ray: W = weapon, b = hero, . = neither.
+	var walk: PackedByteArray = PackedByteArray()
+	var reach := int(figure * 1.2)
+	for k in range(reach):
+		var point := tip + direction * k
+		var kind := 0
+		for across in [0.0, -2.0, 2.0]:
+			if _solid_at(mask, width, height, point + side * across):
+				kind = 2
+				break
+		if kind == 0 and _solid_at(body_mask, width, height, point):
+			kind = 1
+		walk.append(kind)
+	var runs: Array = []
+	for k in range(walk.size()):
+		if not runs.is_empty() and int(runs[-1][0]) == walk[k]:
+			runs[-1][2] = k + 1
+		else:
+			runs.append([walk[k], k, k + 1])
+	var weapon_runs: Array = runs.filter(func(r: Array) -> bool: return int(r[0]) == 2 and int(r[2]) - int(r[1]) >= 2)
+	var grip := Vector2.INF
+	var how := ""
+	for index in range(weapon_runs.size() - 1):
+		var gap_start: int = weapon_runs[index][2]
+		var gap_end: int = weapon_runs[index + 1][1]
+		var gap := gap_end - gap_start
+		if gap < fist * 0.4 or gap > fist * 4.0:
+			continue
+		var on_body := 0
+		for k in range(gap_start, gap_end):
+			if walk[k] == 1:
+				on_body += 1
+		if float(on_body) / float(gap) >= 0.6:
+			grip = tip + direction * (gap_start + gap_end) * 0.5
+			how = "gap"
+			break
+	if grip == Vector2.INF:
+		# Where the weapon touches the hero, just inside the hero.
+		var contact := Vector2.ZERO
+		var contacts := 0
+		var weapon_center := Vector2.ZERO
+		for pixel in pixels:
+			var point := Vector2(pixel % width, pixel / width)
+			weapon_center += point
+			if body_distance[pixel] > 0 and body_distance[pixel] <= 3:
+				contact += point
+				contacts += 1
+		weapon_center /= float(pixels.size())
+		if contacts < 3:
+			return {"ok": false, "error": "the weapon doesn't touch the hero"}
+		contact /= float(contacts)
+		var entry := _nearest_solid(body_mask, width, height, contact, int(fist * 3.0))
+		if entry == Vector2.INF:
+			return {"ok": false, "error": "no hand near the weapon"}
+		var inward := (entry - weapon_center).normalized()
+		var depth := 0.0
+		while depth < fist * 1.6 and _solid_at(body_mask, width, height, entry + inward * (depth + 1.0)):
+			depth += 1.0
+		grip = entry + inward * depth * 0.5
+		how = "contact"
+	# The far end the game uses: the weapon pixel farthest from the grip, on
+	# the tip's side of the hand.
+	var toward := (tip - grip).normalized()
+	var far := -1.0
+	var far_point := tip
+	for pixel in pixels:
+		var point := Vector2(pixel % width, pixel / width)
+		var v := point - grip
+		var d2 := v.length_squared()
+		if d2 > far and v.normalized().dot(toward) > 0.7:
+			far = d2
+			far_point = point
+	tip = far_point
+	var along := (tip - grip).normalized()
+	var length := grip.distance_to(tip)
+	if length < fist * 1.5:
+		return {"ok": false, "error": "weapon too short"}
+	# Behind the body: past the hand the weapon line crosses the hero, but the
+	# ghost shows the hero (not the weapon) there.
+	var crossing := 0
+	var seen := 0
+	var t := fist * 1.5
+	while t < length:
+		var probe := grip + along * t
+		if _solid_at(body_mask, width, height, probe):
+			crossing += 1
+			if _solid_at(mask, width, height, probe):
+				seen += 1
+		t += 1.0
+	var behind := crossing >= 8 and float(seen) / float(crossing) < 0.35
+	var result := {"ok": true, "grip": (grip + origin).round(), "tip": (tip + origin).round(), "behind": behind, "how": how, "error": ""}
+	if debug:
+		var debug_weapon: Array = []
+		for pixel in pixels:
+			debug_weapon.append(Vector2(pixel % width, pixel / width) + origin)
+		result["weapon_px"] = debug_weapon
+	return result
+
+## Frame where the weapon lands: the one right after the biggest forward
+## sweep of the weapon's far end (relative to the feet). -1 without a track.
+## `track` entries are {grip, tip} in frame pixels, `anchors` the feet.
+static func guess_hit(track: Array, anchors: Array) -> int:
+	var best := -1
+	var best_score := 0.0
+	for index in range(1, mini(track.size(), anchors.size())):
+		var before: Dictionary = track[index - 1]
+		var after: Dictionary = track[index]
+		if not (before.get("tip") is Vector2 and after.get("tip") is Vector2):
+			continue
+		var move: Vector2 = (Vector2(after.tip) - Vector2(anchors[index])) - (Vector2(before.tip) - Vector2(anchors[index - 1]))
+		# Hero art faces right: strikes sweep forward (or down); wind-ups go back.
+		var score := move.length() * (1.0 if move.x > 0.0 or move.y > absf(move.x) else 0.35)
+		if score > best_score:
+			best_score = score
+			best = index
+	return best
+
+## Frame holds that give a swing weight: a held wind-up, a fast swing, a held
+## impact and a short settle. `hit` is the impact frame. Returns ms per frame.
+static func snappy_holds(track: Array, anchors: Array, hit: int, base_ms: float = 83.0) -> Array:
+	var count := mini(track.size(), anchors.size())
+	var holds: Array = []
+	for _i in range(count):
+		holds.append(base_ms)
+	if hit < 0 or hit >= count:
+		return holds
+	# Wind-up: before the hit, the frame whose far end is farthest from where
+	# it lands.
+	var windup := -1
+	var farthest := -1.0
+	var landing: Variant = track[hit].get("tip")
+	if landing is Vector2:
+		for index in range(hit):
+			var tip: Variant = track[index].get("tip")
+			if tip is Vector2:
+				var d := (Vector2(tip) - Vector2(anchors[index])).distance_to(Vector2(landing) - Vector2(anchors[hit]))
+				if d > farthest:
+					farthest = d
+					windup = index
+	for index in range(count):
+		var factor := 1.0
+		if index == hit:
+			factor = 1.6
+		elif index == windup:
+			factor = 1.5
+		elif windup >= 0 and index > windup and index < hit:
+			factor = 0.7
+		elif index == count - 1 and index > hit:
+			factor = 1.2
+		holds[index] = roundf(base_ms * factor)
+	return holds
+
+## The solid pixel nearest `point` within `radius` (Vector2.INF if none).
+static func _nearest_solid(mask: PackedByteArray, width: int, height: int, point: Vector2, radius: int) -> Vector2:
+	var cx := int(round(point.x))
+	var cy := int(round(point.y))
+	var best := Vector2.INF
+	var best_d := INF
+	for dy in range(-radius, radius + 1):
+		var y := cy + dy
+		if y < 0 or y >= height:
+			continue
+		for dx in range(-radius, radius + 1):
+			var x := cx + dx
+			if x < 0 or x >= width or mask[y * width + x] == 0:
+				continue
+			var d := float(dx * dx + dy * dy)
+			if d < best_d:
+				best_d = d
+				best = Vector2(x, y)
+	return best
+
+## The older finder: grows the clearest weapon piece through pixels outside the
+## hero and puts the grip where it touches the hero.
+static func find_weapon_classic(body: Image, body_anchor: Vector2, ref: Image, ref_anchor: Vector2, ref_scale: float, offset: Vector2, palette: PackedByteArray, debug: bool = false) -> Dictionary:
 	var bw := body.get_width()
 	var bh := body.get_height()
 	var body_data := body.get_data()
@@ -1008,8 +1451,14 @@ static func _principal_axis(pixels: PackedInt32Array, width: int) -> Dictionary:
 static func hand_mask(body: Image, grip: Vector2, radius: float = 0.0) -> Image:
 	var width := body.get_width()
 	var height := body.get_height()
-	var solid := solid_mask(body)
-	var r := radius if radius > 0.0 else maxf(8.0, float(Art.visible_bounds(body).size.y) * 0.07)
+	# Only pixels within `r` of the grip are ever visited, so read alpha
+	# straight from the frame instead of building a whole-frame solid mask.
+	var rgba := body
+	if body.get_format() != Image.FORMAT_RGBA8:
+		rgba = body.duplicate() as Image
+		rgba.convert(Image.FORMAT_RGBA8)
+	var body_data := rgba.get_data()
+	var r := radius if radius > 0.0 else maxf(8.0, _visible_height(body) * 0.07)
 	var mask := Image.create_empty(width, height, false, Image.FORMAT_L8)
 	var start := Vector2i(grip.round())
 	# Start from the nearest solid pixel to the grip.
@@ -1020,7 +1469,7 @@ static func hand_mask(body: Image, grip: Vector2, radius: float = 0.0) -> Image:
 		for dx in range(-rr, rr + 1):
 			var x := start.x + dx
 			var y := start.y + dy
-			if x >= 0 and y >= 0 and x < width and y < height and solid[y * width + x] == 1:
+			if x >= 0 and y >= 0 and x < width and y < height and body_data[(y * width + x) * 4 + 3] >= 128:
 				var d := float(dx * dx + dy * dy)
 				if d < best_distance:
 					best_distance = d
@@ -1039,19 +1488,42 @@ static func hand_mask(body: Image, grip: Vector2, radius: float = 0.0) -> Image:
 		data[pixel] = 255
 		var x := pixel % width
 		var y := pixel / width
-		for n in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+		for n in NEIGHBORS_4:
 			var nx: int = x + n.x
 			var ny: int = y + n.y
 			if nx < 0 or ny < 0 or nx >= width or ny >= height:
 				continue
 			var neighbor := ny * width + nx
-			if seen[neighbor] == 1 or solid[neighbor] == 0:
+			if seen[neighbor] == 1 or body_data[neighbor * 4 + 3] < 128:
 				continue
 			if Vector2(nx, ny).distance_to(grip) > r:
 				continue
 			seen[neighbor] = 1
 			queue.append(neighbor)
 	return Image.create_from_data(width, height, false, Image.FORMAT_L8, data)
+
+const NEIGHBORS_4: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
+
+## Visible height of a frame, measured once per frame image (kept as metadata).
+static func _visible_height(body: Image) -> float:
+	if body.has_meta("visible_height"):
+		return float(body.get_meta("visible_height"))
+	var height := float(Art.visible_bounds(body).size.y)
+	body.set_meta("visible_height", height)
+	return height
+
+## Redoes `masked` for just `rect` of an existing masked picture (after a
+## brush stroke), instead of the whole frame.
+static func remask_region(picture: Image, body: Image, mask: Image, rect: Rect2i) -> void:
+	var area := rect.intersection(Rect2i(Vector2i.ZERO, picture.get_size()))
+	for y in range(area.position.y, area.end.y):
+		for x in range(area.position.x, area.end.x):
+			if mask.get_pixel(x, y).r >= 0.5:
+				picture.set_pixel(x, y, body.get_pixel(x, y))
+			else:
+				var color := body.get_pixel(x, y)
+				color.a = 0.0
+				picture.set_pixel(x, y, color)
 
 ## `body` with only the pixels under `mask` (the hand drawn over the weapon).
 static func masked(body: Image, mask: Image) -> Image:

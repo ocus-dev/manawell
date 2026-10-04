@@ -27,6 +27,12 @@ var tank_base: float = 0.0
 var extraction_rate: float = 0.0
 var pressure_time_scale: float = 1.0
 var completed_surges: int = 0
+## Highest surge this run climbs to (0 = no limit). Surges still arrive one at
+## a time on the normal timer; once the limit is reached difficulty holds there.
+var surge_limit: int = 0
+## Pressure time toward the next surge. Only runs while below the limit, so
+## raising the limit mid-run carries on from here instead of jumping ahead.
+var surge_clock: float = 0.0
 var multiplier: float = 1.0
 var locked_payout: int = 0
 var sealing_remaining: float = 0.0
@@ -83,6 +89,7 @@ func start(
 	extraction_rate = new_extraction_rate
 	pressure_time_scale = new_pressure_time_scale
 	completed_surges = 0
+	surge_clock = 0.0
 	multiplier = BalanceData.multiplier_for(completed_surges)
 	locked_payout = 0
 	sealing_remaining = 0.0
@@ -99,6 +106,7 @@ func start(
 	weapon_projectile_speed = new_weapon_speed
 	return true
 
+## Used by the balance simulator (simulation/player_model.gd).
 func start_combat(
 	new_run_id: String,
 	hero_id: String = "hero_1",
@@ -119,6 +127,7 @@ func start_combat(
 	extraction_rate = 0.0
 	pressure_time_scale = 1.0
 	completed_surges = 0
+	surge_clock = 0.0
 	multiplier = 1.0
 	locked_payout = new_reward
 	sealing_remaining = 0.0
@@ -152,6 +161,8 @@ func advance(delta: float) -> bool:
 		return false
 	if phase == Phase.EXTRACTING:
 		simulation_elapsed += delta * pressure_time_scale
+		if not at_surge_limit():
+			surge_clock += delta * pressure_time_scale
 		if harvest_cycle_amount > 0.0 and harvest_cycle_interval > 0.0:
 			harvest_cycle_progress += delta
 			while harvest_cycle_progress >= harvest_cycle_interval:
@@ -211,6 +222,8 @@ func reset() -> void:
 	extraction_rate = 0.0
 	pressure_time_scale = 1.0
 	completed_surges = 0
+	surge_limit = 0
+	surge_clock = 0.0
 	multiplier = 1.0
 	locked_payout = 0
 	sealing_remaining = 0.0
@@ -238,10 +251,45 @@ func get_terminal_result() -> Dictionary:
 	}
 
 func _update_surges() -> void:
-	var expected_surges: int = floori(simulation_elapsed / BalanceData.SURGE_DURATION)
-	if expected_surges > completed_surges:
-		completed_surges = expected_surges
+	while not at_surge_limit() and surge_clock >= BalanceData.SURGE_DURATION:
+		surge_clock -= BalanceData.SURGE_DURATION
+		completed_surges += 1
 		multiplier = BalanceData.multiplier_for(completed_surges)
+	if at_surge_limit():
+		surge_clock = 0.0
+
+## True once the run has climbed to its surge limit (never with no limit).
+func at_surge_limit() -> bool:
+	return surge_limit > 0 and completed_surges >= surge_limit
+
+## 0 clears the limit. Lowering it below the current surge drops the run back
+## to the limit (difficulty and multiplier both); raising it lets surges carry
+## on climbing from where they are on the normal timer.
+func set_surge_limit(limit: int) -> void:
+	surge_limit = maxi(0, limit)
+	if surge_limit > 0 and completed_surges > surge_limit:
+		completed_surges = surge_limit
+		multiplier = BalanceData.multiplier_for(completed_surges)
+	if at_surge_limit():
+		surge_clock = 0.0
+
+## Seconds of real time until the next surge (0 while held at the limit).
+func seconds_to_next_surge() -> float:
+	if phase != Phase.EXTRACTING or at_surge_limit():
+		return 0.0
+	return maxf(0.0, (BalanceData.SURGE_DURATION - surge_clock) / pressure_time_scale)
+
+## Mana the drill makes per second right now, with the surge multiplier.
+func mana_per_second() -> float:
+	if phase != Phase.EXTRACTING:
+		return 0.0
+	return base_mana_per_second() * multiplier
+
+## The drill's own output before the surge multiplier.
+func base_mana_per_second() -> float:
+	if harvest_cycle_amount > 0.0 and harvest_cycle_interval > 0.0:
+		return harvest_cycle_amount / harvest_cycle_interval
+	return extraction_rate
 
 func _complete_success() -> void:
 	if phase != Phase.SEALING:

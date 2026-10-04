@@ -51,12 +51,12 @@
       83.0,
       83.0
     ],
-    "hand_sheet": "res://assets/weapons/sword/2/hand.png",
+    "hand_sheet": "res://assets/weapons/sword/3/hand.png",
     "label": "Attack",
     "mode": "hero_weapon",
     "project": "C:/Users/zoids/Desktop/Game project/manawell/art/weapons/clips/sword/sword_hands_6",
     "scale": 1.0,
-    "sheet": "res://assets/weapons/sword/2/clip.png",
+    "sheet": "res://assets/weapons/sword/3/clip.png",
     "track": [
       {
         "angle": 20.9426509010122,
@@ -159,7 +159,7 @@
       ],
       "opacity": 1.0,
       "rotation": 0.0,
-      "sheet": "res://assets/weapons/sword/2/effects/0.png",
+      "sheet": "res://assets/weapons/sword/3/effects/0.png",
       "size": 96.0,
       "trigger": "hit"
     },
@@ -182,7 +182,7 @@
       ],
       "opacity": 1.0,
       "rotation": 0.0,
-      "sheet": "res://assets/weapons/sword/2/effects/1.png",
+      "sheet": "res://assets/weapons/sword/3/effects/1.png",
       "size": 120.0,
       "trigger": "windup"
     }

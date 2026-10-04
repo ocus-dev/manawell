@@ -38,6 +38,8 @@ var weapon_swing: Dictionary = WeaponSwing.normalize(WeaponSwing.DEFAULT)
 var weapon_effects: Array = []
 var weapon_clip: Dictionary = {}
 var weapon_hand_fit: Dictionary = {}
+## The weapon's idle / walk ({idle: clip, walk: clip}, see WeaponTypes).
+var weapon_poses: Dictionary = {}
 var _swing_spins: Dictionary = {}
 var _swing_preset: OptionButton
 var weapon_interval: float = BalanceData.WEAPON_INTERVAL
@@ -109,7 +111,8 @@ func _exit_tree() -> void:
 
 ## Loads the weapon under test.
 ## `stats`: {"attack_damage", "attack_interval", "projectile_speed"} (resolved game values).
-func configure_weapon(label: String, texture: Texture2D, pivot: Dictionary, behavior_id: String, stats: Dictionary, swing: Dictionary = {}, effects: Array = [], attack_clip: Dictionary = {}, hand_fit: Dictionary = {}) -> void:
+func configure_weapon(label: String, texture: Texture2D, pivot: Dictionary, behavior_id: String, stats: Dictionary, swing: Dictionary = {}, effects: Array = [], attack_clip: Dictionary = {}, hand_fit: Dictionary = {}, pose_clips: Dictionary = {}) -> void:
+	weapon_poses = pose_clips.duplicate(true)
 	weapon_effects = effects.duplicate(true)
 	weapon_clip = attack_clip.duplicate(true)
 	weapon_hand_fit = hand_fit.duplicate(true)
@@ -135,6 +138,7 @@ func _apply_weapon_effects() -> void:
 	if weapon_hero != null:
 		weapon_hero.configure_held_weapon_effects(weapon_effects, weapon_interval * MELEE_STRIKE_FRACTION if is_melee() else 0.0)
 		weapon_hero.configure_attack_clip(weapon_clip, weapon_interval * MELEE_STRIKE_FRACTION if is_melee() else 0.0, weapon_interval, weapon_hand_fit)
+		weapon_hero.configure_pose_clips(weapon_poses, weapon_hand_fit)
 
 ## Longest attack in the weapon's clip (0 without one).
 func clip_attack_length() -> float:
@@ -251,14 +255,17 @@ func _simulate_weapon(step: float) -> void:
 		weapon_clock -= weapon_interval
 		var target := closest_ranged_target()
 		if target != null:
-			play_swing()
+			play_swing(false)
 			fire_shot(target)
 
-## Plays the hero's attack animation (and the held-weapon swing) without dealing damage.
-func play_swing() -> void:
+## Plays the hero's attack animation (and the held-weapon swing). Ranged
+## weapons also fire a shot: at the nearest monster, or straight ahead.
+func play_swing(fire: bool = true) -> void:
 	if weapon_hero != null and weapon_hero.visual != null:
 		weapon_hero.visual.play_attack()
 		swings += 1
+		if fire and not is_melee():
+			fire_shot(closest_ranged_target())
 
 func closest_ranged_target() -> Node:
 	var nearest: Node = null
@@ -323,8 +330,9 @@ func _cancel_melee() -> void:
 
 func fire_shot(target: Node) -> void:
 	var origin := CombatGeometryScript.muzzle_position("hero", weapon_hero.position, weapon_hero.last_facing)
-	var aim := CombatGeometryScript.body_center(target.monster_id(), target.position)
-	var direction := (aim - origin).normalized()
+	var direction := Vector2(float(weapon_hero.last_facing), 0.0)
+	if target != null:
+		direction = (CombatGeometryScript.body_center(target.monster_id(), target.position) - origin).normalized()
 	if direction.is_zero_approx():
 		direction = Vector2(float(weapon_hero.last_facing), 0.0)
 	shots.append({"position": origin, "velocity": direction * projectile_speed * SPATIAL_PIXELS_PER_UNIT, "life": SHOT_LIFETIME, "damage": weapon_damage})

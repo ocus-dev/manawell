@@ -15,25 +15,28 @@ func _init() -> void:
 	_cleanup()
 	var production: RefCounted = AccountStateScript.new()
 	var profile: RefCounted = WeaponTestProfileScript.new()
-	assert(production.published_weapons.has("new_weapon"), "published weapon index should be discoverable")
-	assert(ItemCatalogScript.has_item("new_weapon"), "published weapon should be visible to the item catalog")
-	var first: Dictionary = profile.acquire("light blade")
+	var published := _published_weapon()
+	var test_weapon := str(published.id)
+	assert(production.published_weapons.has(test_weapon), "published weapon index should be discoverable")
+	assert(ItemCatalogScript.has_item(test_weapon), "published weapon should be visible to the item catalog")
+	var first: Dictionary = profile.acquire(test_weapon)
 	assert(first.valid, str(first.get("error", "first acquisition failed")))
-	var second: Dictionary = profile.acquire("light blade")
+	var second: Dictionary = profile.acquire(test_weapon)
 	assert(second.valid, str(second.get("error", "second acquisition failed")))
 	assert(first.instance_id != second.instance_id, "each test acquisition must have a unique instance ID")
 	assert(production.item_instances.is_empty(), "test acquisition must not mutate the production profile")
 	var instance: Dictionary = first.instance
-	assert(instance.base_id == "light blade")
-	assert(instance.weapon_id == "light blade")
-	assert(int(instance.revision) == 1)
+	assert(instance.base_id == test_weapon)
+	assert(instance.weapon_id == test_weapon)
+	assert(int(instance.revision) == int(published.revision))
 	assert(instance.provenance.kind == "designer")
 	assert(ItemDefinitionsScript.new().validate_instance(instance, ItemDefinitionsScript.runtime_bases(), ItemDefinitionsScript.PRODUCTION_AFFIXES).valid)
 	assert(profile.equip("hero_1", first.instance_id))
 	assert(profile.account.hero_kits["hero_1"].weapon == first.instance_id)
 	var before: Dictionary = HeroStatResolverScript.resolve({}, {}, {"weapon": ""}).stats
 	var after: Dictionary = HeroStatResolverScript.resolve({}, profile.account.item_instances, profile.account.hero_kits["hero_1"]).stats
-	assert(float(after.attack_damage) > float(before.attack_damage), "equipped authored modifiers should affect resolved stats")
+	if _has_nonzero_modifier(test_weapon):
+		assert(after != before, "equipped authored modifiers should affect resolved stats")
 	assert(profile.unequip("hero_1"))
 	assert(str(profile.account.hero_kits["hero_1"].weapon).is_empty())
 	assert(profile.account.grant_item("core.heavy_breech"), profile.account.inventory_command_error)
@@ -47,7 +50,7 @@ func _init() -> void:
 	assert(restored.item_instances.has("legacy:core.heavy_breech"), "legacy instance remains usable after reload")
 	for index in range(97):
 		profile.account.item_instances["filler:%d" % index] = {}
-	assert(not profile.account.grant_published_weapon("light blade"), "full inventory must reject test acquisition")
+	assert(not profile.account.grant_published_weapon(test_weapon), "full inventory must reject test acquisition")
 	assert(profile.account.inventory_command_error.contains("full"))
 	_cleanup()
 	print("PASS published weapon acquisition: isolated profile, unique instances, revision identity, stats, save/reload, and capacity")
@@ -57,3 +60,19 @@ func _cleanup() -> void:
 	for path in [LIVE_PATH, TEMP_PATH, BACKUP_PATH, LIVE_PATH + ".recovery"]:
 		if FileAccess.file_exists(path):
 			DirAccess.remove_absolute(path)
+
+## The first weapon published to the game (whichever the designer has kept).
+func _published_weapon() -> Dictionary:
+	var index: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/weapons/index.json"))
+	var weapons: Dictionary = index.get("weapons", {}) if index is Dictionary else {}
+	var ids: Array = weapons.keys()
+	ids.sort()
+	assert(not ids.is_empty(), "at least one weapon must be published")
+	return {"id": str(ids[0]), "revision": int(weapons[ids[0]].get("revision", 1))}
+
+func _has_nonzero_modifier(weapon_id: String) -> bool:
+	var index: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/weapons/index.json"))
+	for modifier in index.weapons[weapon_id].get("base_modifiers", []):
+		if not is_zero_approx(float(modifier.get("value", 0.0))):
+			return true
+	return false

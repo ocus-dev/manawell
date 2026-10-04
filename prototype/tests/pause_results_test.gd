@@ -67,6 +67,13 @@ func _run() -> void:
 	assert(TestCheckScript.check(controller.run_state.phase == RunStateScript.Phase.SUCCESS, "controller reaches terminal success"))
 	controller.return_to_operations()
 	assert(TestCheckScript.check(controller.run_state.phase == RunStateScript.Phase.READY, "return command prepares without retrying"))
+	# Pause > Return to operations screen: ends the run and lands on Operations, no results card.
+	assert(TestCheckScript.check(pause_panel.get_node("PauseContent/Abandon").text == "Return to operations screen", "pause button reads Return to operations screen"))
+	controller.request_start_or_harvest()
+	assert(TestCheckScript.check(controller.run_state.phase == RunStateScript.Phase.EXTRACTING, "new run started"))
+	controller.abandon()
+	assert(TestCheckScript.check(controller.run_state.phase == RunStateScript.Phase.READY, "abandon goes straight back to operations"))
+	assert(TestCheckScript.check(controller.encounter_hud.operations.visible and controller.encounter_hud.router.mode == "hidden", "operations shown, no results card"))
 	controller.queue_free()
 	print("pause_results: pause=verified confirmation=verified escape-order=verified outcomes=run-derived router=exclusive")
 	quit(0)
